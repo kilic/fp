@@ -36,6 +36,19 @@ func (t tape) newReprAlloc(size int, swapReg GPPhysical) *repr {
 	return r
 }
 
+func (t *tape) newReprAtParam(size int, param string, dst Register, swapReg GPPhysical) *repr {
+	t.reserveGp(dst)
+	return t.newReprAtMemory(size, Mem{Base: Load(Param(param), dst)}, swapReg)
+}
+
+func (t *tape) newReprAtMemory(size int, base Mem, swapReg GPPhysical) *repr {
+	number := make([]limb, size)
+	for i := 0; i < size; i++ {
+		number[i] = newLimb(base.Offset(int(i*8)), swapReg)
+	}
+	return &repr{number, 0, size, base.Base}
+}
+
 func (t *tape) next(allocated bool) Op {
 	if op := t.gpSet.next(allocated); op != nil {
 		return op

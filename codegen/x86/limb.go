@@ -28,14 +28,6 @@ type repr struct {
 	base  Register // set base if loaded from memory
 }
 
-func newReprAtMemory(size int, from Mem, swapReg Register) *repr {
-	number := make([]limb, size)
-	for i := 0; i < size; i++ {
-		number[i] = newLimb(from.Offset(int(i*8)), swapReg)
-	}
-	return &repr{number, 0, size, from.Base}
-}
-
 func newReprEmpty(size int, swapReg Register) *repr {
 	number := make([]limb, size)
 	for i := 0; i < size; i++ {
