@@ -5,6 +5,10 @@ fi
 if [[ -z "$GEN_TO" ]]; then
   GEN_TO=$GEN_FROM
 fi
+if [[ -z "$GLOBAL_MODULUS" ]]; then
+  GLOBAL_MODULUS=true
+fi
+
 
 BASE=$PWD
 
@@ -35,7 +39,7 @@ function move_to_base() {
 function generate_declerations() {
   mkdir -p ./codegen/generated
   rm ./codegen/generated/arithmetic_decl.go 2>/dev/null || true
-  go run ./codegen/gocode/* -decl -out codegen/generated -from $GEN_FROM -to $GEN_TO
+  go run ./codegen/gocode/* -decl -out codegen/generated -from $GEN_FROM -to $GEN_TO -globmod=$GLOBAL_MODULUS
   goreturns -w ./codegen/generated/types.go
 
   echo -e "*** types are generated\n\t./codegen/generated/types.go\n"
@@ -44,7 +48,7 @@ function generate_declerations() {
 
 function generate_gocode() {
   mkdir -p ./codegen/generated
-  go run ./codegen/gocode/* -field -out ./codegen/generated -from $GEN_FROM -to $GEN_TO
+  go run ./codegen/gocode/* -field -out ./codegen/generated -from $GEN_FROM -to $GEN_TO -globmod=$GLOBAL_MODULUS
 
   echo -e "*** field impls are generated\n\t\
 ./codegen/generated/field_elements.go\n\t\
@@ -55,7 +59,7 @@ function generate_gocode() {
 }
 
 function generate_x86() {
-  go run ./codegen/x86/* -out ./codegen/generated/arithmetic.s -from $GEN_FROM -to $GEN_TO
+  go run ./codegen/x86/* -out ./codegen/generated/arithmetic.s -from $GEN_FROM -to $GEN_TO -globmod=$GLOBAL_MODULUS
   echo -e "*** arithmetics are generated\n\t./codegen/generated/arithmetic.s\n"
   go vet ./codegen/generated
 }

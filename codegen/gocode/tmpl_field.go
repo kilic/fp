@@ -1,5 +1,3 @@
-// +build ignore
-
 package main
 
 var fieldTemplates = []string{
@@ -30,154 +28,215 @@ var fieldTemplates = []string{
 
 const (
 	fTmplConstants = `
+{{if $GlobMod }}
 var inp{{ $N_LIMB }} uint64
-var modulus{{ $N_LIMB }} Fe{{ $N_BIT }} 
+var modulus{{ $N_LIMB }} {{ $FE }} 
+{{end}}
 `
 
 	fTmplFieldDef = `
-type Field{{ $N_BIT }} struct {
+type {{ $FIELD }} struct {
 // p2  = p-2
 // r1  = r modp
 // r2  = r^2 modp
 pBig *big.Int
-r1  *Fe{{ $N_BIT }} 
-r2  *Fe{{ $N_BIT }} 
-P   *Fe{{ $N_BIT }} }
+r1  *{{ $FE }} 
+r2  *{{ $FE }} 
+P   *{{ $FE }} 
+inp uint64
+zero *{{ $FE }} 
+one *{{ $FE }} 
+ }
 `
 
 	fTmplNew = `
-func NewField{{ $N_BIT }}(p []byte) *Field{{ $N_BIT }} {
+func New{{ $FIELD }}(p []byte) *{{ $FIELD }} {
 if len(p) > {{ $N_BIT }} {
 return nil }
-modulus{{ $N_LIMB }} = *new(Fe{{ $N_BIT }}).Unmarshal(p)
+{{if $GlobMod }}
+modulus{{ $N_LIMB }} = *new({{ $FE }}).Unmarshal(p) 
+{{else}}
+modulus{{ $N_LIMB }} := *new({{ $FE }}).Unmarshal(p)
+{{end}}
 pBig := new(big.Int).SetBytes(p)
 inpT := new(big.Int).ModInverse(new(big.Int).Neg(pBig), new(big.Int).SetBit(new(big.Int), 64, 1))
 if inpT == nil {
 return nil }
-inp{{ $N_LIMB }} = inpT.Uint64()
+{{if $GlobMod }}
+inp{{ $N_LIMB }} = inpT.Uint64() 
+{{else}} 
+inp{{ $N_LIMB }} := inpT.Uint64() 
+{{end}}
 r1Big := new(big.Int).SetBit(new(big.Int), {{ $N_BIT }}, 1)
-r1 := new(Fe{{ $N_BIT }}).SetBig(new(big.Int).Mod(r1Big, pBig))
-r2 := new(Fe{{ $N_BIT }}).SetBig(new(big.Int).Exp(r1Big, new(big.Int).SetUint64(2), pBig))
-return &Field{{ $N_BIT }}{
+r1 := new({{ $FE }}).SetBig(new(big.Int).Mod(r1Big, pBig))
+r2 := new({{ $FE }}).SetBig(new(big.Int).Exp(r1Big, new(big.Int).SetUint64(2), pBig))
+return &{{ $FIELD }}{
 pBig: pBig,
 r1:   r1,
 r2:   r2,
-P:    &modulus{{ $N_LIMB }}, }}
+P:    &modulus{{ $N_LIMB }},
+inp: inp{{ $N_LIMB }},
+zero: new({{ $FE }}).SetUint(0),
+one:  new({{ $FE }}).SetUint(1), }}
 `
 
 	fTmplNewFeBytes = `
-func (f *Field{{ $N_BIT }}) NewElementFromBytes(in []byte) *Fe{{ $N_BIT }} {
-fe := new(Fe{{ $N_BIT }}).Unmarshal(in)
+func (f *{{ $FIELD }}) NewElementFromBytes(in []byte) *{{ $FE }} {
+fe := new({{ $FE }}).Unmarshal(in)
 f.Mul(fe, fe, f.r2)
 return fe }
 `
 
 	fTmplNewFeUint = `
-func (f *Field{{ $N_BIT }}) NewElementFromUint(in uint64) *Fe{{ $N_BIT }} {
-fe := &Fe{{ $N_BIT }}{in}
+func (f *{{ $FIELD }}) NewElementFromUint(in uint64) *{{ $FE }} {
+fe := &{{ $FE }}{in}
 if in == 0 {
 return fe }
-montmul{{ $N_LIMB }}(fe, fe, f.r2)
+f.Mul(fe, fe, f.r2)
 return fe }
 `
 
 	fTmplNewFeBig = `
-func (f *Field{{ $N_BIT }}) NewElementFromBig(in *big.Int) *Fe{{ $N_BIT }} {
-fe := new(Fe{{ $N_BIT }}).SetBig(in)
-montmul{{ $N_LIMB }}(fe, fe, f.r2)
+func (f *{{ $FIELD }}) NewElementFromBig(in *big.Int) *{{ $FE }} {
+fe := new({{ $FE }}).SetBig(in)
+f.Mul(fe, fe, f.r2)
 return fe }
 `
 
 	fTmplNewFeString = `
-func (f *Field{{ $N_BIT }}) NewElementFromString(in string) (*Fe{{ $N_BIT }}, error) {
-fe, err := new(Fe{{ $N_BIT }}).SetString(in)
+func (f *{{ $FIELD }}) NewElementFromString(in string) (*{{ $FE }}, error) {
+fe, err := new({{ $FE }}).SetString(in)
 if err != nil {
 return nil, err }
-montmul{{ $N_LIMB }}(fe, fe, f.r2)
+f.Mul(fe, fe, f.r2)
 return fe, nil }
 `
 
 	fTmplZero = `
-func (f *Field{{ $N_BIT }}) Zero() *Fe{{ $N_BIT }} {
-return new(Fe{{ $N_BIT }}).SetUint(0) }
+func (f *{{ $FIELD }}) Zero() *{{ $FE }} {
+return new({{ $FE }}).SetUint(0) }
 `
 
 	fTmplOne = `
-func (f *Field{{ $N_BIT }}) One() *Fe{{ $N_BIT }} {
-return new(Fe{{ $N_BIT }}).Set(f.r1) }
+func (f *{{ $FIELD }}) One() *{{ $FE }} {
+return new({{ $FE }}).Set(f.r1) }
 `
 
 	fTmplCopy = `
-func (f *Field{{ $N_BIT }}) Copy(dst *Fe{{ $N_BIT }}, src *Fe{{ $N_BIT }}) *Fe{{ $N_BIT }} {
+func (f *{{ $FIELD }}) Copy(dst *{{ $FE }}, src *{{ $FE }}) *{{ $FE }} {
 return dst.Set(src) }
 `
 
 	fTmplRand = `
-func (f *Field{{ $N_BIT }}) RandElement(fe *Fe{{ $N_BIT }}, r io.Reader) error {
+func (f *{{ $FIELD }}) RandElement(fe *{{ $FE }}, r io.Reader) error {
 bi, err := rand.Int(r, f.pBig)
 if err != nil {
 return err }
 fe.SetBig(bi)
 return nil }		
 `
+
 	fTmplMont = `
-func (f *Field{{ $N_BIT }}) Mont(c, a *Fe{{ $N_BIT }}) {
-montmul{{ $N_LIMB }}(c, a, f.r2) }
+func (f *{{ $FIELD }}) Mont(c, a *{{ $FE }}) {
+{{if $GlobMod }}
+montmul{{ $N_LIMB }}(c, a, f.r2) 
+{{else}}
+montmul{{ $N_LIMB }}(c, a, f.r2, f.P, f.inp) 
+{{end}}
+}
 `
 
 	fTmplDemont = `
-func (f *Field{{ $N_BIT }}) Demont(c, a *Fe{{ $N_BIT }}) {
-mont{{ $N_LIMB }}(c, &[ {{ mul $N_LIMB 2 }} ]uint64{
-{{ range $x := iterUp 0 $N_LIMB }} a[ {{$x}} ], {{end}} }) }
+func (f *{{ $FIELD }}) Demont(c, a *{{ $FE }}) {
+{{if $GlobMod }}
+montmul{{ $N_LIMB }}(c, a, f.one) 
+{{else}}
+montmul{{ $N_LIMB }}(c, a, f.one, f.P, f.inp) 
+{{end}}
+}
 `
 
 	fTmplAdd = `
-func (f *Field{{ $N_BIT }}) Add(c, a, b *Fe{{ $N_BIT }}) {
-add{{ $N_LIMB }}(c, a, b) }
+func (f *{{ $FIELD }}) Add(c, a, b *{{ $FE }}) {
+{{if $GlobMod }}
+add{{ $N_LIMB }}(c, a, b)
+{{else}}
+add{{ $N_LIMB }}(c, a, b, f.P)
+{{end}}  }
 `
 
 	fTmplDouble = `
-func (f *Field{{ $N_BIT }}) Double(c, a *Fe{{ $N_BIT }}) {
-double{{ $N_LIMB }}(c, a) }
+func (f *{{ $FIELD }}) Double(c, a *{{ $FE }}) {
+{{if $GlobMod }}
+double{{ $N_LIMB }}(c, a) 
+{{else}}
+double{{ $N_LIMB }}(c, a, f.P) 
+{{end}} }
 `
 
 	fTmplSub = `
-func (f *Field{{ $N_BIT }}) Sub(c, a, b *Fe{{ $N_BIT }}) {
-sub{{ $N_LIMB }}(c, a, b) }
+func (f *{{ $FIELD }}) Sub(c, a, b *{{ $FE }}) {
+{{if $GlobMod }}
+sub{{ $N_LIMB }}(c, a, b) 
+{{else}}
+sub{{ $N_LIMB }}(c, a, b, f.P) 
+{{end}} }
 `
 
 	fTmplNeg = `
-func (f *Field{{ $N_BIT }}) Neg(c, a *Fe{{ $N_BIT }}) {
-neg{{ $N_LIMB }}(c, a) }
+func (f *{{ $FIELD }}) Neg(c, a *{{ $FE }}) {
+{{if $GlobMod }}
+neg{{ $N_LIMB }}(c, a) 
+{{else}}
+neg{{ $N_LIMB }}(c, a, f.P) 
+{{end}}
+}
 `
 
 	fTmplSquare = `
-func (f *Field{{ $N_BIT }}) Square(c, a *Fe{{ $N_BIT }}) {
-montmul{{ $N_LIMB }}(c, a, a) }
+func (f *{{ $FIELD }}) Square(c, a *{{ $FE }}) {
+{{if $GlobMod }}
+montmul{{ $N_LIMB }}(c, a, a) 
+{{else}}
+montmul{{ $N_LIMB }}(c, a, a, f.P, f.inp) 
+{{end}} }
 `
 
 	fTmplMul = `
-func (f *Field{{ $N_BIT }}) Mul(c, a, b *Fe{{ $N_BIT }}) {
-montmul{{ $N_LIMB }}(c, a, b) }
+func (f *{{ $FIELD }}) Mul(c, a, b *{{ $FE }}) {
+{{if $GlobMod }}
+montmul{{ $N_LIMB }}(c, a, b) 
+{{else}}
+montmul{{ $N_LIMB }}(c, a, b, f.P, f.inp) 
+{{end}}
+}
 `
 
 	fTmplExp = `
-func (f *Field{{ $N_BIT }}) Exp(c, a*Fe{{ $N_BIT }}, e *big.Int) {
-z := new(Fe{{ $N_BIT }}).Set(f.r1)
+func (f *{{ $FIELD }}) Exp(c, a*{{ $FE }}, e *big.Int) {
+z := new({{ $FE }}).Set(f.r1)
 for i := e.BitLen(); i >= 0; i-- {
+{{if $GlobMod }}
 montmul{{ $N_LIMB }}(z, z, z)
+{{else}}
+montmul{{ $N_LIMB }}(z, z, z, f.P, f.inp)
+{{end}}
 if e.Bit(i) == 1 {
-montmul{{ $N_LIMB }}(z, z, a) } }
+{{if $GlobMod }}
+montmul{{ $N_LIMB }}(z, z, a)
+{{else}}
+montmul{{ $N_LIMB }}(z, z, a, f.P, f.inp)
+{{end}}
+} }
 c.Set(z) }
 `
 
 	fTmplInvEEA = `
-func (f *Field{{ $N_BIT }}) InvEEA(inv, fe *Fe{{ $N_BIT }}) {
-u := new(Fe{{ $N_BIT }}).Set(fe)
-v := new(Fe{{ $N_BIT }}).Set(&modulus{{ $N_LIMB }})
-p := new(Fe{{ $N_BIT }}).Set(&modulus{{ $N_LIMB }})
-x1 := &Fe{{ $N_BIT }}{1}
-x2 := &Fe{{ $N_BIT }}{0}
+func (f *{{ $FIELD }}) InvEEA(inv, fe *{{ $FE }}) {
+u := new({{ $FE }}).Set(fe)
+v := new({{ $FE }}).Set(f.P)
+x1 := &{{ $FE }}{1}
+x2 := &{{ $FE }}{0}
 var e uint64
 for !u.IsOne() && !v.IsOne() {
 for u.IsEven() {
@@ -185,21 +244,29 @@ u.div2(0)
 if x1.IsEven() {
 x1.div2(0)
 } else {
-e = addn{{ $N_LIMB }}(x1, p)
+e = addn{{ $N_LIMB }}(x1, f.P)
 x1.div2(e) }}
 for v.IsEven() {
 v.div2(0)
 if x2.IsEven() {
 x2.div2(0)
 } else {
-e = addn{{ $N_LIMB }}(x2, p)
+e = addn{{ $N_LIMB }}(x2, f.P)
 x2.div2(e) }}
 if u.Cmp(v) == -1 {
 subn{{ $N_LIMB }}(v, u)
+{{if $GlobMod }}
 sub{{ $N_LIMB }}(x2, x2, x1)
+{{else}}
+sub{{ $N_LIMB }}(x2, x2, x1, f.P)
+{{end}}
 } else {
 subn{{ $N_LIMB }}(u, v)
-sub{{ $N_LIMB }}(x1, x1, x2) }}
+{{if $GlobMod }}
+sub{{ $N_LIMB }}(x1, x1, x2) 
+{{else}}
+sub{{ $N_LIMB }}(x1, x1, x2, f.P) 
+{{end}} }}
 if u.IsOne() {
 inv.Set(x1)
 return }
@@ -207,11 +274,11 @@ inv.Set(x2)}
 `
 
 	fTmplInvMontUp = `
-func (f *Field{{ $N_BIT }}) InvMontUp(inv, fe *Fe{{ $N_BIT }}) {
-u := new(Fe{{ $N_BIT }}).Set(&modulus{{ $N_LIMB }})
-v := new(Fe{{ $N_BIT }}).Set(fe)
-s := &Fe{{ $N_BIT }}{1, 0, 0, 0}
-r := &Fe{{ $N_BIT }}{0, 0, 0, 0}
+func (f *{{ $FIELD }}) InvMontUp(inv, fe *{{ $FE }}) {
+u := new({{ $FE }}).Set(f.P)
+v := new({{ $FE }}).Set(fe)
+s := &{{ $FE }}{1, 0, 0, 0}
+r := &{{ $FE }}{0, 0, 0, 0}
 var k int
 var z uint64
 var found = false
@@ -238,24 +305,28 @@ addn{{ $N_LIMB }}(s, r)
 z += r.mul2() }
 k += 1 }
 if found && k > {{ $N_BIT }} {
-if r.Cmp(&modulus{{ $N_LIMB }}) != -1 || z > 0 {
-subn{{ $N_LIMB }}(r, &modulus{{ $N_LIMB }}) }
-u.Set(&modulus{{ $N_LIMB }})
+if r.Cmp(f.P) != -1 || z > 0 {
+subn{{ $N_LIMB }}(r, f.P) }
+u.Set(f.P)
 subn{{ $N_LIMB }}(u, r)
 // Phase 2
 for i := k; i < {{ $N_BIT }}*2; i++ {
-double{{ $N_LIMB }}(u, u) }
+{{if $GlobMod }}
+double{{ $N_LIMB }}(u, u) 
+{{else}}
+double{{ $N_LIMB }}(u, u, f.P) 
+{{end}} }
 inv.Set(u)
 } else {
-inv.Set(&Fe{{ $N_BIT }}{0, 0, 0, 0}) }}
+inv.Set(&{{ $FE }}{0, 0, 0, 0}) }}
 `
 
 	fTemplInvMontDown = `
-func (f *Field{{ $N_BIT }}) InvMontDown(inv, fe *Fe{{ $N_BIT }}) {
-u := new(Fe{{ $N_BIT }}).Set(&modulus{{ $N_LIMB }})
-v := new(Fe{{ $N_BIT }}).Set(fe)
-s := &Fe{{ $N_BIT }}{1, 0, 0, 0}
-r := &Fe{{ $N_BIT }}{0, 0, 0, 0}
+func (f *{{ $FIELD }}) InvMontDown(inv, fe *{{ $FE }}) {
+u := new({{ $FE }}).Set(f.P)
+v := new({{ $FE }}).Set(fe)
+s := &{{ $FE }}{1, 0, 0, 0}
+r := &{{ $FE }}{0, 0, 0, 0}
 var k int
 var z uint64
 var found = false
@@ -282,9 +353,9 @@ addn{{ $N_LIMB }}(s, r)
 z += r.mul2() }
 k += 1 }
 if found && k > {{ $N_BIT }} {
-if r.Cmp(&modulus{{ $N_LIMB }}) != -1 || z > 0 {
-subn{{ $N_LIMB }}(r, &modulus{{ $N_LIMB }}) }
-u.Set(&modulus{{ $N_LIMB }})
+if r.Cmp(f.P) != -1 || z > 0 {
+subn{{ $N_LIMB }}(r, f.P) }
+u.Set(f.P)
 subn{{ $N_LIMB }}(u, r)
 // Phase 2
 var e uint64
@@ -292,10 +363,10 @@ for i := 0; i < k-{{ $N_BIT }}; i++ {
 if u.IsEven() {
 u.div2(0)
 } else {
-e = addn{{ $N_LIMB }}(u, &modulus{{ $N_LIMB }})
+e = addn{{ $N_LIMB }}(u, f.P)
 u.div2(e) }}
 inv.Set(u)
 } else {
-inv.Set(&Fe{{ $N_BIT }}{0, 0, 0, 0}) }}
+inv.Set(&{{ $FE }}{0, 0, 0, 0}) }}
 `
 )

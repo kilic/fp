@@ -1,5 +1,3 @@
-// +build ignore
-
 package main
 
 import (
@@ -14,49 +12,38 @@ import (
 func main() {
 	from := flag.Int("from", 4, "")
 	to := flag.Int("to", 16, "")
+	globalModulus := flag.Bool("globmod", false, "")
 	flag.Parse()
-	GenerateX86(*from, *to)
+	GenerateX86(*from, *to, *globalModulus)
 }
 
-func GenerateX86(from, to int) {
+func GenerateX86(from, to int, globalModulus bool) {
 	Package("github.com/kilic/fp/codegen/generated")
 	for i := from; i <= to; i++ {
-		generateAdd(i)
+		generateAdd(i, globalModulus)
 		generateAddNoCar(i)
-		generateSub(i)
+		generateSub(i, globalModulus)
 		generateSubNoCar(i)
-		generateDouble(i)
-		generateNeg(i)
+		generateDouble(i, globalModulus)
+		generateNeg(i, globalModulus)
 		generateMul(i)
+		generateMont(i, globalModulus)
+		generateMontMul(i, globalModulus)
 		generateSquare(i)
-		generateMont(i)
-		generateMontMul(i)
-		generateMontSquare(i)
+		generateMontSquare(i, globalModulus)
 	}
 	Generate()
 }
 
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
-func min(a, b int) int {
-	if a > b {
-		return b
-	}
-	return a
-}
-
-func generateAdd(size int) {
-	modulus := newReprAtMemory(size, NewDataAddr(Symbol{Name: fmt.Sprintf("·modulus%d", size)}, 0), RBX)
+func generateAdd(size int, globMod bool) {
+	/*
+		("func add%d(c, a, b *Fe%d)\n\n", i, i*64)
+		("func add%d(c, a, b, n *Fe%d)\n\n", i, i*64)
+	*/
 	Implement(fmt.Sprintf("add%d", size))
 	reservedGps := []Op{RAX, RBX, RDI, RSI}
 	tape := newTape(reservedGps...)
 	C_sum := tape.newReprAlloc(size, RBX)
-	C_red := tape.newReprAlloc(size, RBX)
 	Commentf("|")
 	A := newReprAtMemory(size, Mem{Base: Load(Param("a"), RDI)}, RBX)
 	B := newReprAtMemory(size, Mem{Base: Load(Param("b"), RSI)}, RBX)
@@ -67,8 +54,15 @@ func generateAdd(size int) {
 	}
 	ADCQ(Imm(0), RAX)
 	Commentf("|")
+	var modulus *repr
+	if globMod {
+		tape.free(B.base)
+		modulus = newReprAtMemory(size, NewDataAddr(Symbol{Name: fmt.Sprintf("·modulus%d", size)}, 0), RBX)
+	} else {
+		modulus = newReprAtMemory(size, Mem{Base: Load(Param("p"), B.base)}, RBX)
+	}
+	C_red := tape.newReprAlloc(size, RBX)
 	for i := 0; i < size; i++ {
-		// improvement : swap register could be used
 		C_red.next(_ITER).loadSubSafe(*C_sum.next(_ITER), *modulus.next(_ITER), i != 0)
 	}
 	SBBQ(Imm(0), RAX)
@@ -82,6 +76,9 @@ func generateAdd(size int) {
 }
 
 func generateAddNoCar(size int) {
+	/*
+		("func addn%d(a, b *Fe%d) uint64\n\n", i, i*64)
+	*/
 	Implement(fmt.Sprintf("addn%d", size))
 	reservedGps := []Op{RAX, RBX, RDI, RSI}
 	tape := newTape(reservedGps...)
@@ -104,13 +101,18 @@ func generateAddNoCar(size int) {
 	RET()
 }
 
-func generateDouble(size int) {
-	modulus := newReprAtMemory(size, NewDataAddr(Symbol{Name: fmt.Sprintf("·modulus%d", size)}, 0), RBX)
+func generateDouble(size int, globMod bool) {
+	/*
+		("func double%d(c, a *Fe%d)\n\n", i, i*64)
+		("func double%d(c, a, p *Fe%d)\n\n", i, i*64)
+	*/
 	Implement(fmt.Sprintf("double%d", size))
 	reservedGps := []Op{RAX, RBX, RDI}
 	tape := newTape(reservedGps...)
+	if !globMod {
+		tape.reserveGp(RSI)
+	}
 	C_sum := tape.newReprAlloc(size, RBX)
-	C_red := tape.newReprAlloc(size, RBX)
 	Commentf("|")
 	A := newReprAtMemory(size, Mem{Base: Load(Param("a"), RDI)}, RBX)
 	XORQ(RAX, RAX)
@@ -119,6 +121,13 @@ func generateDouble(size int) {
 	}
 	ADCQ(Imm(0), RAX)
 	Commentf("|")
+	var modulus *repr
+	if globMod {
+		modulus = newReprAtMemory(size, NewDataAddr(Symbol{Name: fmt.Sprintf("·modulus%d", size)}, 0), RBX)
+	} else {
+		modulus = newReprAtMemory(size, Mem{Base: Load(Param("p"), RSI)}, RBX)
+	}
+	C_red := tape.newReprAlloc(size, RBX)
 	for i := 0; i < size; i++ {
 		C_red.next(_ITER).loadSubSafe(*C_sum.next(_ITER), *modulus.next(_ITER), i != 0)
 	}
@@ -132,13 +141,15 @@ func generateDouble(size int) {
 	RET()
 }
 
-func generateSub(size int) {
-	modulus := newReprAtMemory(size, NewDataAddr(Symbol{Name: fmt.Sprintf("·modulus%d", size)}, 0), RBX)
+func generateSub(size int, globMod bool) {
+	/*
+	   ("func sub%d(c, a, b *Fe%d)\n\n", i, i*64)
+	   ("func sub%d(c, a, b, p *Fe%d)\n\n", i, i*64)
+	*/
 	Implement(fmt.Sprintf("sub%d", size))
 	reservedGps := []Op{RAX, RBX, RDI, RSI}
 	tape := newTape(reservedGps...)
 	C_sub := tape.newReprAlloc(size, RBX)
-	C_mod := tape.newReprAlloc(size, RBX)
 	zero := tape.newReprNoAlloc(size, RBX)
 	for i := 0; i < size; i++ {
 		zero.next(_ITER).set(RAX)
@@ -151,6 +162,14 @@ func generateSub(size int) {
 		C_sub.next(_ITER).loadSub(*A.next(_ITER), *B.next(_ITER), i != 0)
 	}
 	Commentf("|")
+	var modulus *repr
+	if globMod {
+		tape.free(B.base)
+		modulus = newReprAtMemory(size, NewDataAddr(Symbol{Name: fmt.Sprintf("·modulus%d", size)}, 0), RBX)
+	} else {
+		modulus = newReprAtMemory(size, Mem{Base: Load(Param("p"), B.base)}, RBX)
+	}
+	C_mod := tape.newReprAlloc(size, RBX)
 	for i := 0; i < size; i++ {
 		zero.next(_ITER).moveIfNotCFAux(*modulus.next(_ITER), *C_mod.next(_ITER))
 	}
@@ -164,6 +183,9 @@ func generateSub(size int) {
 }
 
 func generateSubNoCar(size int) {
+	/*
+		("func subn%d(a, b *Fe%d) uint64\n\n", i, i*64)
+	*/
 	Implement(fmt.Sprintf("subn%d", size))
 	reservedGps := []Op{RAX, RBX, RDI, RSI}
 	tape := newTape(reservedGps...)
@@ -186,15 +208,27 @@ func generateSubNoCar(size int) {
 	RET()
 }
 
-func generateNeg(size int) {
-	modulus := newReprAtMemory(size, NewDataAddr(Symbol{Name: fmt.Sprintf("·modulus%d", size)}, 0), RBX)
+func generateNeg(size int, globMod bool) {
+	/*
+	   ("func neg%d(c, a *Fe%d)\n\n", i, i*64)
+	   ("func neg%d(c, a, p *Fe%d)\n\n", i, i*64)
+	*/
 	Implement(fmt.Sprintf("neg%d", size))
 	reservedGps := []Op{RAX, RBX, RDI}
 	tape := newTape(reservedGps...)
+	if !globMod {
+		tape.reserveGp(RSI)
+	}
 	C_sub := tape.newReprAlloc(size, RBX)
 	Commentf("|")
 	A := newReprAtMemory(size, Mem{Base: Load(Param("a"), RDI)}, RBX)
 	Commentf("|")
+	var modulus *repr
+	if globMod {
+		modulus = newReprAtMemory(size, NewDataAddr(Symbol{Name: fmt.Sprintf("·modulus%d", size)}, 0), RBX)
+	} else {
+		modulus = newReprAtMemory(size, Mem{Base: Load(Param("p"), RSI)}, RBX)
+	}
 	for i := 0; i < size; i++ {
 		C_sub.next(_ITER).loadSub(*modulus.next(_ITER), *A.next(_ITER), i != 0)
 	}
@@ -208,6 +242,10 @@ func generateNeg(size int) {
 }
 
 func generateMul(size int) {
+	/*
+	   ("func mul%d(c *[%d]uint64, a, b *Fe%d)\n\n", i, i*2, i*64)
+	*/
+
 	Implement(fmt.Sprintf("mul%d", size))
 	Commentf("|")
 	reservedGps := []Op{RAX, RBX, RCX, RDX, RDI, RSI}
@@ -225,6 +263,145 @@ func generateMul(size int) {
 		w.next(_ITER).moveTo(*C.next(_ITER), _NO_ASSIGN)
 	}
 	tape.ret()
+	RET()
+}
+
+func generateMont(size int, globMod bool) {
+	/*
+		("func mont%d(c *Fe%d, w *[%d]uint64)\n\n", i, i*64, i*2, i*64)
+		("func mont%d(c *Fe%d, w *[%d]uint64, p *Fe%d,inp uint64)\n\n", i, i*64, i*2, i*64)
+	*/
+	Implement(fmt.Sprintf("mont%d", size))
+	reservedGps := []Op{RAX, RDX, RCX, RBX, RDI, RSI, R14, R13, R15} // FIX
+	tape := newTape(reservedGps...)
+	W := newReprAtMemory(size*2, Mem{Base: Load(Param("w"), RDI)}, nil)
+	var modulus *repr
+	var inp Mem
+	if globMod {
+		modulus = newReprAtMemory(size, NewDataAddr(Symbol{Name: fmt.Sprintf("·modulus%d", size)}, 0), RBX)
+		inp = NewDataAddr(Symbol{Name: fmt.Sprintf("·inp%d", size)}, 0)
+	} else {
+		tape.reserveGp(RSI)
+		modulus = newReprAtMemory(size, Mem{Base: Load(Param("p"), RSI)}, RBX)
+		inp = NewParamAddr("inp", 24)
+	}
+	carries := []Op{R14, R13, R15}
+	rotation := tape.newReprAlloc(size+1, RBX)
+	rotation.load(W)
+	C_mont := mont(tape, carries, inp, modulus, rotation, W)
+	Commentf("| Reduce by modulus")
+	tape.free(carries[:2]...)
+	tape.free(RAX, RDX, RCX)
+	C_red := tape.newReprAlloc(size, RBX)
+	for i := 0; i < size; i++ {
+		C_red.next(_ITER).loadSubSafe(*C_mont.next(_ITER), *modulus.next(_ITER), i != 0)
+	}
+	SBBQ(Imm(0), carries[2])
+	Commentf("| Compare & Return")
+	C := newReprAtMemory(2*size, Mem{Base: Load(Param("c"), RDI)}, RBX)
+	for i := 0; i < size; i++ {
+		C_red.next(_ITER).moveIfNotCF(*C_mont.next(_NO_ITER))
+		C_mont.next(_ITER).moveTo(*C.next(_ITER), _ASSING)
+	}
+	tape.ret()
+	RET()
+}
+
+func generateMontMul(size int, globMod bool) {
+	/*
+	 ("func montmul%d(c, a, b *Fe%d)\n\n", i, i*64)
+	 ("func montmul%d(c, a, b *Fe%d, p *Fe%d,inp uint64)\n\n", i, i*64, i*64)
+	*/
+	Implement(fmt.Sprintf("montmul%d", size))
+	reservedGps := []Op{RAX, RBX, RCX, RDX, RDI, RSI}
+	tape := newTape(reservedGps...)
+	Commentf("|")
+	Commentf("| Multiplication")
+	w := tape.newReprAlloc(size*2, RBX)
+	A := newReprAtMemory(size, Mem{Base: Load(Param("a"), RDI)}, RBX)
+	B := newReprAtMemory(size, Mem{Base: Load(Param("b"), RSI)}, RBX)
+	Commentf("|")
+	mul(w, A, B)
+	Commentf("|")
+	w.updateIndex(0)
+
+	Commentf("| Montgomerry Reduction")
+	var longCarry Op
+	if tape.sizeFreeGp() > 0 {
+		longCarry = tape.next(_ALLOC)
+	} else {
+		for j := w.size - 1; ; j-- {
+			if w.limbs[j].atReg() {
+				longCarry = w.limbs[j].s
+				w.limbs[j].moveTo(tape.next(_ALLOC), _ASSING)
+				break
+			}
+		}
+	}
+
+	var modulus *repr
+	var inp Mem
+	if globMod {
+		modulus = newReprAtMemory(size, NewDataAddr(Symbol{Name: fmt.Sprintf("·modulus%d", size)}, 0), nil)
+		inp = NewDataAddr(Symbol{Name: fmt.Sprintf("·inp%d", size)}, 0)
+	} else {
+		inp = NewParamAddr("inp", 32)
+		if tape.sizeFreeGp() > 0 {
+			r := tape.next(_ALLOC).(Register)
+			modulus = newReprAtMemory(size, Mem{Base: Load(Param("p"), r)}, nil)
+		} else {
+			// multiplication resut ([8]uint)
+			// donates a general purpose register
+			// for modulus address
+			for j := w.size - 1; ; j-- {
+				if w.limbs[j].atReg() {
+					r := w.limbs[j].s.(Register)
+					w.limbs[j].moveTo(tape.next(_ALLOC), _ASSING)
+					modulus = newReprAtMemory(size, Mem{Base: Load(Param("p"), r)}, nil)
+					break
+				}
+			}
+		}
+	}
+
+	carries := []Op{RDI, RSI, longCarry}
+	// tape.reserveGp(carries...) // Alreadry reserved in multiplication phase
+	rotation := w.slice(0, size+1)
+	C_mont := mont(tape, carries, inp, modulus, rotation, w)
+	Commentf("| Reduce by modulus")
+	tape.free(RAX, RDX, RCX, RSI)
+	C_red := tape.newReprAlloc(size, RBX)
+	for i := 0; i < size; i++ {
+		C_red.next(_ITER).loadSubSafe(*C_mont.next(_ITER), *modulus.next(_ITER), i != 0)
+	}
+	SBBQ(Imm(0), longCarry)
+	Commentf("| Compare & Return")
+	C := newReprAtMemory(2*size, Mem{Base: Load(Param("c"), RDI)}, RBX)
+	for i := 0; i < size; i++ {
+		C_red.next(_ITER).moveIfNotCF(*C_mont.next(_NO_ITER))
+		C_mont.next(_ITER).moveTo(*C.next(_ITER), _ASSING)
+	}
+	tape.ret()
+	RET()
+}
+
+func generateSquare(size int) {
+	/*
+		("func square%d(c *[%d]uint64, a *Fe%d)\n\n", i, i*2, i*64)
+		("func square%d(c *[%d]uint64, a *Fe%d)\n\n", i, i*2, i*64)
+	*/
+	Implement(fmt.Sprintf("square%d", size))
+	// todo
+	RET()
+}
+
+func generateMontSquare(size int, globMod bool) {
+	/*
+	   ("func montsquare%d(c, a *Fe%d)\n\n", i, i*64)
+	   ("func montsquare%d(c, a, p *Fe%d, inp uint64)\n\n", i, i*64)
+	*/
+	Implement(fmt.Sprintf("montsquare%d", size))
+	// todo
 	RET()
 }
 
@@ -264,36 +441,6 @@ func mul(w, a, b *repr) {
 			}
 		}
 	}
-}
-
-func generateMont(size int) {
-
-	modulus := newReprAtMemory(size, NewDataAddr(Symbol{Name: fmt.Sprintf("·modulus%d", size)}, 0), nil)
-	inp := NewDataAddr(Symbol{Name: fmt.Sprintf("·inp%d", size)}, 0)
-	Implement(fmt.Sprintf("mont%d", size))
-	W := newReprAtMemory(size*2, Mem{Base: Load(Param("w"), RDI)}, nil)
-	reservedGps := []Op{RAX, RDX, RCX, RBX, RDI, R14, R13, R15}
-	tape := newTape(reservedGps...)
-	carries := []Op{R14, R13, R15}
-	rotation := tape.newReprAlloc(size+1, RBX)
-	rotation.load(W)
-	C_mont := mont(tape, carries, inp, modulus, rotation, W)
-	Commentf("| Reduce by modulus")
-	tape.free(carries[:2]...)
-	tape.free(RAX, RDX, RCX)
-	C_red := tape.newReprAlloc(size, RBX)
-	for i := 0; i < size; i++ {
-		C_red.next(_ITER).loadSubSafe(*C_mont.next(_ITER), *modulus.next(_ITER), i != 0)
-	}
-	SBBQ(Imm(0), carries[2])
-	Commentf("| Compare & Return")
-	C := newReprAtMemory(2*size, Mem{Base: Load(Param("c"), RDI)}, RBX)
-	for i := 0; i < size; i++ {
-		C_red.next(_ITER).moveIfNotCF(*C_mont.next(_NO_ITER))
-		C_mont.next(_ITER).moveTo(*C.next(_ITER), _ASSING)
-	}
-	tape.ret()
-	RET()
 }
 
 func mont(tape *tape, carries []Op, inp Op, modulus, rotation, w *repr) *repr {
@@ -345,77 +492,4 @@ func mont(tape *tape, carries []Op, inp Op, modulus, rotation, w *repr) *repr {
 		ADCQ(Imm(0), longCarry)
 	}
 	return C_mont
-}
-
-func generateMontMul(size int) {
-	modulus := newReprAtMemory(size, NewDataAddr(Symbol{Name: fmt.Sprintf("·modulus%d", size)}, 0), nil)
-	inp := NewDataAddr(Symbol{Name: fmt.Sprintf("·inp%d", size)}, 0)
-	Implement(fmt.Sprintf("montmul%d", size))
-	Commentf("|")
-	Commentf("| Multiplication")
-	reservedGps := []Op{RAX, RBX, RCX, RDX, RDI, RSI}
-	tape := newTape(reservedGps...)
-	w := tape.newReprAlloc(size*2, RBX)
-	A := newReprAtMemory(size, Mem{Base: Load(Param("a"), RDI)}, RBX)
-	B := newReprAtMemory(size, Mem{Base: Load(Param("b"), RSI)}, RBX)
-	Commentf("|")
-	mul(w, A, B)
-	Commentf("|")
-	w.updateIndex(0)
-
-	Commentf("| Montgomerry Reduction")
-	// RDI and RSI was referencing to field element inputs.
-	// Inputs are already processed, and related registers is
-	// going to be allocated for short carries in montgomerry operation
-	// in which we exactly need two of them.
-	// We also need a register to oparate the long carry
-	// that is used in montgomery limb iterations.
-	// At this point all cpu registers are probably full with multiplication result.
-	// Therefore the last general purpose that is allocated for multiplication result
-	// is going to be reserved for long carry.
-	// And new stack position is to be allocated in return of the exchange.
-	var longCarry Op
-	if tape.sizeFreeGp() > 0 {
-		longCarry = tape.next(_ALLOC)
-	} else {
-		for j := w.size - 1; ; j-- {
-			if w.limbs[j].atReg() {
-				longCarry = w.limbs[j].s
-				w.limbs[j].moveTo(tape.next(_ALLOC), _ASSING)
-				break
-			}
-		}
-	}
-	// todo : consider notation
-	carries := []Op{RDI, RSI, longCarry}
-	// tape.reserveGp(carries...) // Alreadry reserved in multiplication phase
-	rotation := w.slice(0, size+1)
-	C_mont := mont(tape, carries, inp, modulus, rotation, w)
-	Commentf("| Reduce by modulus")
-	tape.free(RAX, RDX, RCX, RSI)
-	C_red := tape.newReprAlloc(size, RBX)
-	for i := 0; i < size; i++ {
-		C_red.next(_ITER).loadSubSafe(*C_mont.next(_ITER), *modulus.next(_ITER), i != 0)
-	}
-	SBBQ(Imm(0), longCarry)
-	Commentf("| Compare & Return")
-	C := newReprAtMemory(2*size, Mem{Base: Load(Param("c"), RDI)}, RBX)
-	for i := 0; i < size; i++ {
-		C_red.next(_ITER).moveIfNotCF(*C_mont.next(_NO_ITER))
-		C_mont.next(_ITER).moveTo(*C.next(_ITER), _ASSING)
-	}
-	tape.ret()
-	RET()
-}
-
-func generateSquare(size int) {
-	Implement(fmt.Sprintf("square%d", size))
-	// todo
-	RET()
-}
-
-func generateMontSquare(size int) {
-	Implement(fmt.Sprintf("montsquare%d", size))
-	// todo
-	RET()
 }

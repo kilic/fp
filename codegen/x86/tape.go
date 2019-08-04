@@ -1,16 +1,9 @@
-// +build ignore
-
 package main
 
 import (
 	. "github.com/mmcloughlin/avo/build"
 	. "github.com/mmcloughlin/avo/operand"
 	. "github.com/mmcloughlin/avo/reg"
-)
-
-const (
-	CLEAN = iota
-	NOCLEAN
 )
 
 func isMem(op Op) bool { return IsM64(op) }
@@ -112,7 +105,6 @@ func (set *gpSet) allocate(size int) ([]Op, int) {
 func (set *gpSet) reserve(ops ...Op) []Op {
 	regs := []Op{}
 	for _, op := range ops {
-		// todo : consider removing limb
 		if isLimb(op) {
 			op = op.(limb).s
 		}
@@ -127,7 +119,6 @@ func (set *gpSet) reserve(ops ...Op) []Op {
 func (set *gpSet) free(ops ...Op) []Op {
 	regs := []Op{}
 	for _, op := range ops {
-		// todo : consider removing limb
 		if isLimb(op) {
 			op = op.(limb).s
 		}

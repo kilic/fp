@@ -1,5 +1,3 @@
-// +build ignore
-
 package main
 
 var fieldElementTestTemplates = []string{
@@ -25,27 +23,27 @@ m.Run()}
 
 	testEncDec = `
 t.Run("Encoding & Decoding", func(t *testing.T) {
-var field *Field{{ $N_BIT }}
+var field *{{ $FIELD }}
 for i := 0; i < n; i++ {
 for true {
 p, err := rand.Prime(rand.Reader, {{ $N_BIT }})
 if err != nil {
 t.Fatal(err) }
-field = NewField{{ $N_BIT }}(p.Bytes())
+field = New{{ $FIELD }}(p.Bytes())
 if field != nil {
 break } } }
 t.Run("1", func(t *testing.T) {
 bytes := []byte{
 0, }
-if !new(Fe{{ $N_BIT }}).Unmarshal(bytes).Equals(&Fe{{ $N_BIT }}{0}) {
+if !new({{ $FE }}).Unmarshal(bytes).Equals(&{{ $FE }}{0}) {
 t.Errorf("bad encoding\n") } })
 t.Run("2", func(t *testing.T) {
 bytes := []byte{
 254, 253, }
-if new(Fe{{ $N_BIT }}).Unmarshal(bytes).Equals(&Fe{{ $N_BIT }}{0xfe, 0xfd}) {
+if new({{ $FE }}).Unmarshal(bytes).Equals(&{{ $FE }}{0xfe, 0xfd}) {
 t.Errorf("bad encoding\n") } })
 t.Run("3", func(t *testing.T) {
-var a, b Fe{{ $N_BIT }}
+var a, b {{ $FE }}
 er1 := field.RandElement(&a, rand.Reader)
 if er1 != nil {
 t.Fatal(er1) }
@@ -55,21 +53,21 @@ b.Unmarshal(bytes[:])
 if !a.Equals(&b) {
 t.Errorf("bad encoding or decoding\n") } })
 t.Run("4", func(t *testing.T) {
-var a Fe{{ $N_BIT }}
+var a {{ $FE }}
 er1 := field.RandElement(&a, rand.Reader)
 if er1 != nil {
 t.Fatal(er1) }
-b, er1 := new(Fe{{ $N_BIT }}).SetString(a.String())
+b, er1 := new({{ $FE }}).SetString(a.String())
 if er1 != nil {
 t.Fatal(er1) }
 if !a.Equals(b) {
 t.Errorf("bad encoding or decoding\n") } })
 t.Run("5", func(t *testing.T) {
-var a Fe{{ $N_BIT }}
+var a {{ $FE }}
 er1 := field.RandElement(&a, rand.Reader)
 if er1 != nil {
 t.Fatal(er1) }
-b := new(Fe{{ $N_BIT }}).SetBig(a.Big())
+b := new({{ $FE }}).SetBig(a.Big())
 if er1 != nil {
 t.Fatal(er1) }
 if !a.Equals(b) {
@@ -78,15 +76,15 @@ t.Errorf("bad encoding or decoding\n") } }) })
 
 	testAddition = `
 t.Run("Addition", func(t *testing.T) {
-var a, b, c, u, v Fe{{ $N_BIT }}
-zero := new(Fe{{ $N_BIT }}).SetUint(0)
+var a, b, c, u, v {{ $FE }}
+zero := new({{ $FE }}).SetUint(0)
 for i := 0; i < n; i++ {
-var field *Field{{ $N_BIT }}
+var field *{{ $FIELD }}
 for true {
 p, err := rand.Prime(rand.Reader, {{ $N_BIT }})
 if err != nil {
 t.Fatal(err)}
-field = NewField{{ $N_BIT }}(p.Bytes())
+field = New{{ $FIELD }}(p.Bytes())
 if field != nil { 
 break }}
 er1 := field.RandElement(&a, rand.Reader)
@@ -115,15 +113,15 @@ t.Fatalf("Bad Negation\na:%s", a.String())} }})
 
 	testSubtraction = `
 t.Run("Subtraction", func(t *testing.T) {
-var a, b, c, u, v Fe{{ $N_BIT }}
-zero := new(Fe{{ $N_BIT }}).SetUint(0)
+var a, b, c, u, v {{ $FE }}
+zero := new({{ $FE }}).SetUint(0)
 for i := 0; i < n; i++ {
-var field *Field{{ $N_BIT }}
+var field *{{ $FIELD }}
 for true {
 p, err := rand.Prime(rand.Reader, {{ $N_BIT }})
 if err != nil {
 t.Fatal(err)}
-field = NewField{{ $N_BIT }}(p.Bytes())
+field = New{{ $FIELD }}(p.Bytes())
 if field != nil { 
 break }}
 er1 := field.RandElement(&a, rand.Reader)
@@ -154,14 +152,14 @@ t.Fatalf("Bad Negation\na:%s", a.String())} }})
 
 	testDoubling = `
 t.Run("Doubling", func(t *testing.T) {
-var a, u, v Fe{{ $N_BIT }}
+var a, u, v {{ $FE }}
 for i := 0; i < n; i++ {
-var field *Field{{ $N_BIT }}
+var field *{{ $FIELD }}
 for true {
 p, err := rand.Prime(rand.Reader, {{ $N_BIT }})
 if err != nil {
 t.Fatal(err)}
-field = NewField{{ $N_BIT }}(p.Bytes())
+field = New{{ $FIELD }}(p.Bytes())
 if field != nil {
 break}}
 err := field.RandElement(&a, rand.Reader)
@@ -175,16 +173,16 @@ t.Fatalf("Bad doubling\na: %s\nu: %s\nv: %s\n", a, u, v)} }})
 
 	testMontgomerry = `
 t.Run("Montgomerry", func(t *testing.T) {
-var a, b, c, u, v, w Fe{{ $N_BIT }}
-zero := new(Fe{{ $N_BIT }}).SetUint(0)
-one := new(Fe{{ $N_BIT }}).SetUint(1)
+var a, b, c, u, v, w {{ $FE }}
+zero := new({{ $FE }}).SetUint(0)
+one := new({{ $FE }}).SetUint(1)
 for i := 0; i < n; i++ {
-var field *Field{{ $N_BIT }}
+var field *{{ $FIELD }}
 for true {
 p, err := rand.Prime(rand.Reader, {{ $N_BIT }})
 if err != nil {
 t.Fatal(err)}
-field = NewField{{ $N_BIT }}(p.Bytes())
+field = New{{ $FIELD }}(p.Bytes())
 if field != nil {
 break }}
 er1 := field.RandElement(&a, rand.Reader)
@@ -231,15 +229,15 @@ t.Fatalf("Distributivity does not hold\na: %s\nb: %s\nc: %s\nu: %s\nv: %s\np: %s
 
 	testExponentiation = `
 t.Run("Exponentiation", func(t *testing.T) {
-var a, u, v Fe{{ $N_BIT }}
+var a, u, v {{ $FE }}
 bytes := make([]byte, {{ $N_LIMB }} *8)
 for i := 0; i < n; i++ {
-var field *Field{{ $N_BIT }}
+var field *{{ $FIELD }}
 for true {
 p, err := rand.Prime(rand.Reader, {{ $N_BIT }})
 if err != nil {
 t.Fatal(err) }
-field = NewField{{ $N_BIT }}(p.Bytes())
+field = New{{ $FIELD }}(p.Bytes())
 if field != nil {
 break }}
 er1 := field.RandElement(&a, rand.Reader)
@@ -269,16 +267,16 @@ t.Fatalf("Bad exponentiation, expected to equal r1\nu: %s\na: %s\nr1: %s\np: %s\
 
 	testInversion = `
 t.Run("Inversion", func(t *testing.T) {
-var u, a, v Fe{{ $N_BIT }}
-one := new(Fe{{ $N_BIT }}).SetUint(1)
+var u, a, v {{ $FE }}
+one := new({{ $FE }}).SetUint(1)
 bytes := make([]byte, {{ $N_LIMB }} *8)
 for i := 0; i < n; i++ {
-var field *Field{{ $N_BIT }}
+var field *{{ $FIELD }}
 for true {
 p, err := rand.Prime(rand.Reader, {{ $N_BIT }})
 if err != nil {
 t.Fatal(err) }
-field = NewField{{ $N_BIT }}(p.Bytes())
+field = New{{ $FIELD }}(p.Bytes())
 if field != nil {
 break }}
 er1 := field.RandElement(&a, rand.Reader)
@@ -305,14 +303,14 @@ if !u.Equals(one) {
 t.Fatalf("Bad inversion") }} })
 `
 	benches = `
-func BenchmarkField{{ $N_BIT }}(t *testing.B) {
-var a, b, c Fe{{ $N_BIT }}
-var field *Field{{ $N_BIT }}
+func Benchmark{{ $FIELD }}(t *testing.B) {
+var a, b, c {{ $FE }}
+var field *{{ $FIELD }}
 for true {
 p, err := rand.Prime(rand.Reader, {{ $N_BIT }})
 if err != nil {
 t.Fatal(err) }
-field = NewField{{ $N_BIT }}(p.Bytes())
+field = New{{ $FIELD }}(p.Bytes())
 if field != nil {
 break }}
 er1 := field.RandElement(&a, rand.Reader)
