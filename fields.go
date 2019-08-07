@@ -10,38 +10,43 @@ var inp4 uint64
 var modulus4 Fe256
 
 type Field256 struct {
-	// p2  = p-2
-	// r1  = r modp
-	// r2  = r^2 modp
+	// r1  = r mod p
+	// r2  = r^2 mod p
+	// inp = -p^(-1) mod 2^64
 	pBig *big.Int
 	r1   *Fe256
 	r2   *Fe256
 	P    *Fe256
+	inp  uint64
 }
 
 func NewField256(p []byte) *Field256 {
 	if len(p) > 256 {
 		return nil
 	}
-	modulus4 = *new(Fe256).Unmarshal(p)
 	pBig := new(big.Int).SetBytes(p)
 	inpT := new(big.Int).ModInverse(new(big.Int).Neg(pBig), new(big.Int).SetBit(new(big.Int), 64, 1))
 	if inpT == nil {
 		return nil
 	}
-	inp4 = inpT.Uint64()
+	inp := inpT.Uint64()
+	r1, r2, modulus := &Fe256{}, &Fe256{}, &Fe256{}
+	modulus.FromBytes(p)
+	modulus4 = *modulus
+	inp4 = inp
 	r1Big := new(big.Int).SetBit(new(big.Int), 256, 1)
-	r1 := new(Fe256).SetBig(new(big.Int).Mod(r1Big, pBig))
-	r2 := new(Fe256).SetBig(new(big.Int).Exp(r1Big, new(big.Int).SetUint64(2), pBig))
+	r1.SetBig(new(big.Int).Mod(r1Big, pBig))
+	r2.SetBig(new(big.Int).Exp(r1Big, new(big.Int).SetUint64(2), pBig))
 	return &Field256{
 		pBig: pBig,
 		r1:   r1,
 		r2:   r2,
-		P:    &modulus4}
+		P:    modulus,
+		inp:  inp}
 }
 
 func (f *Field256) NewElementFromBytes(in []byte) *Fe256 {
-	fe := new(Fe256).Unmarshal(in)
+	fe := new(Fe256).FromBytes(in)
 	f.Mul(fe, fe, f.r2)
 	return fe
 }
@@ -51,13 +56,13 @@ func (f *Field256) NewElementFromUint(in uint64) *Fe256 {
 	if in == 0 {
 		return fe
 	}
-	montmul4(fe, fe, f.r2)
+	f.Mul(fe, fe, f.r2)
 	return fe
 }
 
 func (f *Field256) NewElementFromBig(in *big.Int) *Fe256 {
 	fe := new(Fe256).SetBig(in)
-	montmul4(fe, fe, f.r2)
+	f.Mul(fe, fe, f.r2)
 	return fe
 }
 
@@ -66,7 +71,7 @@ func (f *Field256) NewElementFromString(in string) (*Fe256, error) {
 	if err != nil {
 		return nil, err
 	}
-	montmul4(fe, fe, f.r2)
+	f.Mul(fe, fe, f.r2)
 	return fe, nil
 }
 
@@ -82,13 +87,12 @@ func (f *Field256) Copy(dst *Fe256, src *Fe256) *Fe256 {
 	return dst.Set(src)
 }
 
-func (f *Field256) RandElement(fe *Fe256, r io.Reader) error {
+func (f *Field256) RandElement(fe *Fe256, r io.Reader) (*Fe256, error) {
 	bi, err := rand.Int(r, f.pBig)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	fe.SetBig(bi)
-	return nil
+	return fe.SetBig(bi), nil
 }
 
 func (f *Field256) Mont(c, a *Fe256) {
@@ -96,8 +100,7 @@ func (f *Field256) Mont(c, a *Fe256) {
 }
 
 func (f *Field256) Demont(c, a *Fe256) {
-	mont4(c, &[8]uint64{
-		a[0], a[1], a[2], a[3]})
+	montmul4(c, a, &Fe256{1})
 }
 
 func (f *Field256) Add(c, a, b *Fe256) {
@@ -136,7 +139,7 @@ func (f *Field256) Exp(c, a *Fe256, e *big.Int) {
 }
 
 func (f *Field256) InvMontUp(inv, fe *Fe256) {
-	u := new(Fe256).Set(&modulus4)
+	u := new(Fe256).Set(f.P)
 	v := new(Fe256).Set(fe)
 	s := &Fe256{1, 0, 0, 0}
 	r := &Fe256{0, 0, 0, 0}
@@ -169,10 +172,10 @@ func (f *Field256) InvMontUp(inv, fe *Fe256) {
 		k += 1
 	}
 	if found && k > 256 {
-		if r.Cmp(&modulus4) != -1 || z > 0 {
-			subn4(r, &modulus4)
+		if r.Cmp(f.P) != -1 || z > 0 {
+			subn4(r, f.P)
 		}
-		u.Set(&modulus4)
+		u.Set(f.P)
 		subn4(u, r)
 		// Phase 2
 		for i := k; i < 256*2; i++ {
@@ -185,7 +188,7 @@ func (f *Field256) InvMontUp(inv, fe *Fe256) {
 }
 
 func (f *Field256) InvMontDown(inv, fe *Fe256) {
-	u := new(Fe256).Set(&modulus4)
+	u := new(Fe256).Set(f.P)
 	v := new(Fe256).Set(fe)
 	s := &Fe256{1, 0, 0, 0}
 	r := &Fe256{0, 0, 0, 0}
@@ -218,10 +221,10 @@ func (f *Field256) InvMontDown(inv, fe *Fe256) {
 		k += 1
 	}
 	if found && k > 256 {
-		if r.Cmp(&modulus4) != -1 || z > 0 {
-			subn4(r, &modulus4)
+		if r.Cmp(f.P) != -1 || z > 0 {
+			subn4(r, f.P)
 		}
-		u.Set(&modulus4)
+		u.Set(f.P)
 		subn4(u, r)
 		// Phase 2
 		var e uint64
@@ -229,7 +232,7 @@ func (f *Field256) InvMontDown(inv, fe *Fe256) {
 			if u.IsEven() {
 				u.div2(0)
 			} else {
-				e = addn4(u, &modulus4)
+				e = addn4(u, f.P)
 				u.div2(e)
 			}
 		}
@@ -241,8 +244,7 @@ func (f *Field256) InvMontDown(inv, fe *Fe256) {
 
 func (f *Field256) InvEEA(inv, fe *Fe256) {
 	u := new(Fe256).Set(fe)
-	v := new(Fe256).Set(&modulus4)
-	p := new(Fe256).Set(&modulus4)
+	v := new(Fe256).Set(f.P)
 	x1 := &Fe256{1}
 	x2 := &Fe256{0}
 	var e uint64
@@ -252,7 +254,7 @@ func (f *Field256) InvEEA(inv, fe *Fe256) {
 			if x1.IsEven() {
 				x1.div2(0)
 			} else {
-				e = addn4(x1, p)
+				e = addn4(x1, f.P)
 				x1.div2(e)
 			}
 		}
@@ -261,7 +263,7 @@ func (f *Field256) InvEEA(inv, fe *Fe256) {
 			if x2.IsEven() {
 				x2.div2(0)
 			} else {
-				e = addn4(x2, p)
+				e = addn4(x2, f.P)
 				x2.div2(e)
 			}
 		}
@@ -284,38 +286,43 @@ var inp5 uint64
 var modulus5 Fe320
 
 type Field320 struct {
-	// p2  = p-2
-	// r1  = r modp
-	// r2  = r^2 modp
+	// r1  = r mod p
+	// r2  = r^2 mod p
+	// inp = -p^(-1) mod 2^64
 	pBig *big.Int
 	r1   *Fe320
 	r2   *Fe320
 	P    *Fe320
+	inp  uint64
 }
 
 func NewField320(p []byte) *Field320 {
 	if len(p) > 320 {
 		return nil
 	}
-	modulus5 = *new(Fe320).Unmarshal(p)
 	pBig := new(big.Int).SetBytes(p)
 	inpT := new(big.Int).ModInverse(new(big.Int).Neg(pBig), new(big.Int).SetBit(new(big.Int), 64, 1))
 	if inpT == nil {
 		return nil
 	}
-	inp5 = inpT.Uint64()
+	inp := inpT.Uint64()
+	r1, r2, modulus := &Fe320{}, &Fe320{}, &Fe320{}
+	modulus.FromBytes(p)
+	modulus5 = *modulus
+	inp5 = inp
 	r1Big := new(big.Int).SetBit(new(big.Int), 320, 1)
-	r1 := new(Fe320).SetBig(new(big.Int).Mod(r1Big, pBig))
-	r2 := new(Fe320).SetBig(new(big.Int).Exp(r1Big, new(big.Int).SetUint64(2), pBig))
+	r1.SetBig(new(big.Int).Mod(r1Big, pBig))
+	r2.SetBig(new(big.Int).Exp(r1Big, new(big.Int).SetUint64(2), pBig))
 	return &Field320{
 		pBig: pBig,
 		r1:   r1,
 		r2:   r2,
-		P:    &modulus5}
+		P:    modulus,
+		inp:  inp}
 }
 
 func (f *Field320) NewElementFromBytes(in []byte) *Fe320 {
-	fe := new(Fe320).Unmarshal(in)
+	fe := new(Fe320).FromBytes(in)
 	f.Mul(fe, fe, f.r2)
 	return fe
 }
@@ -325,13 +332,13 @@ func (f *Field320) NewElementFromUint(in uint64) *Fe320 {
 	if in == 0 {
 		return fe
 	}
-	montmul5(fe, fe, f.r2)
+	f.Mul(fe, fe, f.r2)
 	return fe
 }
 
 func (f *Field320) NewElementFromBig(in *big.Int) *Fe320 {
 	fe := new(Fe320).SetBig(in)
-	montmul5(fe, fe, f.r2)
+	f.Mul(fe, fe, f.r2)
 	return fe
 }
 
@@ -340,7 +347,7 @@ func (f *Field320) NewElementFromString(in string) (*Fe320, error) {
 	if err != nil {
 		return nil, err
 	}
-	montmul5(fe, fe, f.r2)
+	f.Mul(fe, fe, f.r2)
 	return fe, nil
 }
 
@@ -356,13 +363,12 @@ func (f *Field320) Copy(dst *Fe320, src *Fe320) *Fe320 {
 	return dst.Set(src)
 }
 
-func (f *Field320) RandElement(fe *Fe320, r io.Reader) error {
+func (f *Field320) RandElement(fe *Fe320, r io.Reader) (*Fe320, error) {
 	bi, err := rand.Int(r, f.pBig)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	fe.SetBig(bi)
-	return nil
+	return fe.SetBig(bi), nil
 }
 
 func (f *Field320) Mont(c, a *Fe320) {
@@ -370,8 +376,7 @@ func (f *Field320) Mont(c, a *Fe320) {
 }
 
 func (f *Field320) Demont(c, a *Fe320) {
-	mont5(c, &[10]uint64{
-		a[0], a[1], a[2], a[3], a[4]})
+	montmul5(c, a, &Fe320{1})
 }
 
 func (f *Field320) Add(c, a, b *Fe320) {
@@ -410,7 +415,7 @@ func (f *Field320) Exp(c, a *Fe320, e *big.Int) {
 }
 
 func (f *Field320) InvMontUp(inv, fe *Fe320) {
-	u := new(Fe320).Set(&modulus5)
+	u := new(Fe320).Set(f.P)
 	v := new(Fe320).Set(fe)
 	s := &Fe320{1, 0, 0, 0}
 	r := &Fe320{0, 0, 0, 0}
@@ -443,10 +448,10 @@ func (f *Field320) InvMontUp(inv, fe *Fe320) {
 		k += 1
 	}
 	if found && k > 320 {
-		if r.Cmp(&modulus5) != -1 || z > 0 {
-			subn5(r, &modulus5)
+		if r.Cmp(f.P) != -1 || z > 0 {
+			subn5(r, f.P)
 		}
-		u.Set(&modulus5)
+		u.Set(f.P)
 		subn5(u, r)
 		// Phase 2
 		for i := k; i < 320*2; i++ {
@@ -459,7 +464,7 @@ func (f *Field320) InvMontUp(inv, fe *Fe320) {
 }
 
 func (f *Field320) InvMontDown(inv, fe *Fe320) {
-	u := new(Fe320).Set(&modulus5)
+	u := new(Fe320).Set(f.P)
 	v := new(Fe320).Set(fe)
 	s := &Fe320{1, 0, 0, 0}
 	r := &Fe320{0, 0, 0, 0}
@@ -492,10 +497,10 @@ func (f *Field320) InvMontDown(inv, fe *Fe320) {
 		k += 1
 	}
 	if found && k > 320 {
-		if r.Cmp(&modulus5) != -1 || z > 0 {
-			subn5(r, &modulus5)
+		if r.Cmp(f.P) != -1 || z > 0 {
+			subn5(r, f.P)
 		}
-		u.Set(&modulus5)
+		u.Set(f.P)
 		subn5(u, r)
 		// Phase 2
 		var e uint64
@@ -503,7 +508,7 @@ func (f *Field320) InvMontDown(inv, fe *Fe320) {
 			if u.IsEven() {
 				u.div2(0)
 			} else {
-				e = addn5(u, &modulus5)
+				e = addn5(u, f.P)
 				u.div2(e)
 			}
 		}
@@ -515,8 +520,7 @@ func (f *Field320) InvMontDown(inv, fe *Fe320) {
 
 func (f *Field320) InvEEA(inv, fe *Fe320) {
 	u := new(Fe320).Set(fe)
-	v := new(Fe320).Set(&modulus5)
-	p := new(Fe320).Set(&modulus5)
+	v := new(Fe320).Set(f.P)
 	x1 := &Fe320{1}
 	x2 := &Fe320{0}
 	var e uint64
@@ -526,7 +530,7 @@ func (f *Field320) InvEEA(inv, fe *Fe320) {
 			if x1.IsEven() {
 				x1.div2(0)
 			} else {
-				e = addn5(x1, p)
+				e = addn5(x1, f.P)
 				x1.div2(e)
 			}
 		}
@@ -535,7 +539,7 @@ func (f *Field320) InvEEA(inv, fe *Fe320) {
 			if x2.IsEven() {
 				x2.div2(0)
 			} else {
-				e = addn5(x2, p)
+				e = addn5(x2, f.P)
 				x2.div2(e)
 			}
 		}
@@ -558,38 +562,43 @@ var inp6 uint64
 var modulus6 Fe384
 
 type Field384 struct {
-	// p2  = p-2
-	// r1  = r modp
-	// r2  = r^2 modp
+	// r1  = r mod p
+	// r2  = r^2 mod p
+	// inp = -p^(-1) mod 2^64
 	pBig *big.Int
 	r1   *Fe384
 	r2   *Fe384
 	P    *Fe384
+	inp  uint64
 }
 
 func NewField384(p []byte) *Field384 {
 	if len(p) > 384 {
 		return nil
 	}
-	modulus6 = *new(Fe384).Unmarshal(p)
 	pBig := new(big.Int).SetBytes(p)
 	inpT := new(big.Int).ModInverse(new(big.Int).Neg(pBig), new(big.Int).SetBit(new(big.Int), 64, 1))
 	if inpT == nil {
 		return nil
 	}
-	inp6 = inpT.Uint64()
+	inp := inpT.Uint64()
+	r1, r2, modulus := &Fe384{}, &Fe384{}, &Fe384{}
+	modulus.FromBytes(p)
+	modulus6 = *modulus
+	inp6 = inp
 	r1Big := new(big.Int).SetBit(new(big.Int), 384, 1)
-	r1 := new(Fe384).SetBig(new(big.Int).Mod(r1Big, pBig))
-	r2 := new(Fe384).SetBig(new(big.Int).Exp(r1Big, new(big.Int).SetUint64(2), pBig))
+	r1.SetBig(new(big.Int).Mod(r1Big, pBig))
+	r2.SetBig(new(big.Int).Exp(r1Big, new(big.Int).SetUint64(2), pBig))
 	return &Field384{
 		pBig: pBig,
 		r1:   r1,
 		r2:   r2,
-		P:    &modulus6}
+		P:    modulus,
+		inp:  inp}
 }
 
 func (f *Field384) NewElementFromBytes(in []byte) *Fe384 {
-	fe := new(Fe384).Unmarshal(in)
+	fe := new(Fe384).FromBytes(in)
 	f.Mul(fe, fe, f.r2)
 	return fe
 }
@@ -599,13 +608,13 @@ func (f *Field384) NewElementFromUint(in uint64) *Fe384 {
 	if in == 0 {
 		return fe
 	}
-	montmul6(fe, fe, f.r2)
+	f.Mul(fe, fe, f.r2)
 	return fe
 }
 
 func (f *Field384) NewElementFromBig(in *big.Int) *Fe384 {
 	fe := new(Fe384).SetBig(in)
-	montmul6(fe, fe, f.r2)
+	f.Mul(fe, fe, f.r2)
 	return fe
 }
 
@@ -614,7 +623,7 @@ func (f *Field384) NewElementFromString(in string) (*Fe384, error) {
 	if err != nil {
 		return nil, err
 	}
-	montmul6(fe, fe, f.r2)
+	f.Mul(fe, fe, f.r2)
 	return fe, nil
 }
 
@@ -630,13 +639,12 @@ func (f *Field384) Copy(dst *Fe384, src *Fe384) *Fe384 {
 	return dst.Set(src)
 }
 
-func (f *Field384) RandElement(fe *Fe384, r io.Reader) error {
+func (f *Field384) RandElement(fe *Fe384, r io.Reader) (*Fe384, error) {
 	bi, err := rand.Int(r, f.pBig)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	fe.SetBig(bi)
-	return nil
+	return fe.SetBig(bi), nil
 }
 
 func (f *Field384) Mont(c, a *Fe384) {
@@ -644,8 +652,7 @@ func (f *Field384) Mont(c, a *Fe384) {
 }
 
 func (f *Field384) Demont(c, a *Fe384) {
-	mont6(c, &[12]uint64{
-		a[0], a[1], a[2], a[3], a[4], a[5]})
+	montmul6(c, a, &Fe384{1})
 }
 
 func (f *Field384) Add(c, a, b *Fe384) {
@@ -684,7 +691,7 @@ func (f *Field384) Exp(c, a *Fe384, e *big.Int) {
 }
 
 func (f *Field384) InvMontUp(inv, fe *Fe384) {
-	u := new(Fe384).Set(&modulus6)
+	u := new(Fe384).Set(f.P)
 	v := new(Fe384).Set(fe)
 	s := &Fe384{1, 0, 0, 0}
 	r := &Fe384{0, 0, 0, 0}
@@ -717,10 +724,10 @@ func (f *Field384) InvMontUp(inv, fe *Fe384) {
 		k += 1
 	}
 	if found && k > 384 {
-		if r.Cmp(&modulus6) != -1 || z > 0 {
-			subn6(r, &modulus6)
+		if r.Cmp(f.P) != -1 || z > 0 {
+			subn6(r, f.P)
 		}
-		u.Set(&modulus6)
+		u.Set(f.P)
 		subn6(u, r)
 		// Phase 2
 		for i := k; i < 384*2; i++ {
@@ -733,7 +740,7 @@ func (f *Field384) InvMontUp(inv, fe *Fe384) {
 }
 
 func (f *Field384) InvMontDown(inv, fe *Fe384) {
-	u := new(Fe384).Set(&modulus6)
+	u := new(Fe384).Set(f.P)
 	v := new(Fe384).Set(fe)
 	s := &Fe384{1, 0, 0, 0}
 	r := &Fe384{0, 0, 0, 0}
@@ -766,10 +773,10 @@ func (f *Field384) InvMontDown(inv, fe *Fe384) {
 		k += 1
 	}
 	if found && k > 384 {
-		if r.Cmp(&modulus6) != -1 || z > 0 {
-			subn6(r, &modulus6)
+		if r.Cmp(f.P) != -1 || z > 0 {
+			subn6(r, f.P)
 		}
-		u.Set(&modulus6)
+		u.Set(f.P)
 		subn6(u, r)
 		// Phase 2
 		var e uint64
@@ -777,7 +784,7 @@ func (f *Field384) InvMontDown(inv, fe *Fe384) {
 			if u.IsEven() {
 				u.div2(0)
 			} else {
-				e = addn6(u, &modulus6)
+				e = addn6(u, f.P)
 				u.div2(e)
 			}
 		}
@@ -789,8 +796,7 @@ func (f *Field384) InvMontDown(inv, fe *Fe384) {
 
 func (f *Field384) InvEEA(inv, fe *Fe384) {
 	u := new(Fe384).Set(fe)
-	v := new(Fe384).Set(&modulus6)
-	p := new(Fe384).Set(&modulus6)
+	v := new(Fe384).Set(f.P)
 	x1 := &Fe384{1}
 	x2 := &Fe384{0}
 	var e uint64
@@ -800,7 +806,7 @@ func (f *Field384) InvEEA(inv, fe *Fe384) {
 			if x1.IsEven() {
 				x1.div2(0)
 			} else {
-				e = addn6(x1, p)
+				e = addn6(x1, f.P)
 				x1.div2(e)
 			}
 		}
@@ -809,7 +815,7 @@ func (f *Field384) InvEEA(inv, fe *Fe384) {
 			if x2.IsEven() {
 				x2.div2(0)
 			} else {
-				e = addn6(x2, p)
+				e = addn6(x2, f.P)
 				x2.div2(e)
 			}
 		}
@@ -832,38 +838,43 @@ var inp7 uint64
 var modulus7 Fe448
 
 type Field448 struct {
-	// p2  = p-2
-	// r1  = r modp
-	// r2  = r^2 modp
+	// r1  = r mod p
+	// r2  = r^2 mod p
+	// inp = -p^(-1) mod 2^64
 	pBig *big.Int
 	r1   *Fe448
 	r2   *Fe448
 	P    *Fe448
+	inp  uint64
 }
 
 func NewField448(p []byte) *Field448 {
 	if len(p) > 448 {
 		return nil
 	}
-	modulus7 = *new(Fe448).Unmarshal(p)
 	pBig := new(big.Int).SetBytes(p)
 	inpT := new(big.Int).ModInverse(new(big.Int).Neg(pBig), new(big.Int).SetBit(new(big.Int), 64, 1))
 	if inpT == nil {
 		return nil
 	}
-	inp7 = inpT.Uint64()
+	inp := inpT.Uint64()
+	r1, r2, modulus := &Fe448{}, &Fe448{}, &Fe448{}
+	modulus.FromBytes(p)
+	modulus7 = *modulus
+	inp7 = inp
 	r1Big := new(big.Int).SetBit(new(big.Int), 448, 1)
-	r1 := new(Fe448).SetBig(new(big.Int).Mod(r1Big, pBig))
-	r2 := new(Fe448).SetBig(new(big.Int).Exp(r1Big, new(big.Int).SetUint64(2), pBig))
+	r1.SetBig(new(big.Int).Mod(r1Big, pBig))
+	r2.SetBig(new(big.Int).Exp(r1Big, new(big.Int).SetUint64(2), pBig))
 	return &Field448{
 		pBig: pBig,
 		r1:   r1,
 		r2:   r2,
-		P:    &modulus7}
+		P:    modulus,
+		inp:  inp}
 }
 
 func (f *Field448) NewElementFromBytes(in []byte) *Fe448 {
-	fe := new(Fe448).Unmarshal(in)
+	fe := new(Fe448).FromBytes(in)
 	f.Mul(fe, fe, f.r2)
 	return fe
 }
@@ -873,13 +884,13 @@ func (f *Field448) NewElementFromUint(in uint64) *Fe448 {
 	if in == 0 {
 		return fe
 	}
-	montmul7(fe, fe, f.r2)
+	f.Mul(fe, fe, f.r2)
 	return fe
 }
 
 func (f *Field448) NewElementFromBig(in *big.Int) *Fe448 {
 	fe := new(Fe448).SetBig(in)
-	montmul7(fe, fe, f.r2)
+	f.Mul(fe, fe, f.r2)
 	return fe
 }
 
@@ -888,7 +899,7 @@ func (f *Field448) NewElementFromString(in string) (*Fe448, error) {
 	if err != nil {
 		return nil, err
 	}
-	montmul7(fe, fe, f.r2)
+	f.Mul(fe, fe, f.r2)
 	return fe, nil
 }
 
@@ -904,13 +915,12 @@ func (f *Field448) Copy(dst *Fe448, src *Fe448) *Fe448 {
 	return dst.Set(src)
 }
 
-func (f *Field448) RandElement(fe *Fe448, r io.Reader) error {
+func (f *Field448) RandElement(fe *Fe448, r io.Reader) (*Fe448, error) {
 	bi, err := rand.Int(r, f.pBig)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	fe.SetBig(bi)
-	return nil
+	return fe.SetBig(bi), nil
 }
 
 func (f *Field448) Mont(c, a *Fe448) {
@@ -918,8 +928,7 @@ func (f *Field448) Mont(c, a *Fe448) {
 }
 
 func (f *Field448) Demont(c, a *Fe448) {
-	mont7(c, &[14]uint64{
-		a[0], a[1], a[2], a[3], a[4], a[5], a[6]})
+	montmul7(c, a, &Fe448{1})
 }
 
 func (f *Field448) Add(c, a, b *Fe448) {
@@ -958,7 +967,7 @@ func (f *Field448) Exp(c, a *Fe448, e *big.Int) {
 }
 
 func (f *Field448) InvMontUp(inv, fe *Fe448) {
-	u := new(Fe448).Set(&modulus7)
+	u := new(Fe448).Set(f.P)
 	v := new(Fe448).Set(fe)
 	s := &Fe448{1, 0, 0, 0}
 	r := &Fe448{0, 0, 0, 0}
@@ -991,10 +1000,10 @@ func (f *Field448) InvMontUp(inv, fe *Fe448) {
 		k += 1
 	}
 	if found && k > 448 {
-		if r.Cmp(&modulus7) != -1 || z > 0 {
-			subn7(r, &modulus7)
+		if r.Cmp(f.P) != -1 || z > 0 {
+			subn7(r, f.P)
 		}
-		u.Set(&modulus7)
+		u.Set(f.P)
 		subn7(u, r)
 		// Phase 2
 		for i := k; i < 448*2; i++ {
@@ -1007,7 +1016,7 @@ func (f *Field448) InvMontUp(inv, fe *Fe448) {
 }
 
 func (f *Field448) InvMontDown(inv, fe *Fe448) {
-	u := new(Fe448).Set(&modulus7)
+	u := new(Fe448).Set(f.P)
 	v := new(Fe448).Set(fe)
 	s := &Fe448{1, 0, 0, 0}
 	r := &Fe448{0, 0, 0, 0}
@@ -1040,10 +1049,10 @@ func (f *Field448) InvMontDown(inv, fe *Fe448) {
 		k += 1
 	}
 	if found && k > 448 {
-		if r.Cmp(&modulus7) != -1 || z > 0 {
-			subn7(r, &modulus7)
+		if r.Cmp(f.P) != -1 || z > 0 {
+			subn7(r, f.P)
 		}
-		u.Set(&modulus7)
+		u.Set(f.P)
 		subn7(u, r)
 		// Phase 2
 		var e uint64
@@ -1051,7 +1060,7 @@ func (f *Field448) InvMontDown(inv, fe *Fe448) {
 			if u.IsEven() {
 				u.div2(0)
 			} else {
-				e = addn7(u, &modulus7)
+				e = addn7(u, f.P)
 				u.div2(e)
 			}
 		}
@@ -1063,8 +1072,7 @@ func (f *Field448) InvMontDown(inv, fe *Fe448) {
 
 func (f *Field448) InvEEA(inv, fe *Fe448) {
 	u := new(Fe448).Set(fe)
-	v := new(Fe448).Set(&modulus7)
-	p := new(Fe448).Set(&modulus7)
+	v := new(Fe448).Set(f.P)
 	x1 := &Fe448{1}
 	x2 := &Fe448{0}
 	var e uint64
@@ -1074,7 +1082,7 @@ func (f *Field448) InvEEA(inv, fe *Fe448) {
 			if x1.IsEven() {
 				x1.div2(0)
 			} else {
-				e = addn7(x1, p)
+				e = addn7(x1, f.P)
 				x1.div2(e)
 			}
 		}
@@ -1083,7 +1091,7 @@ func (f *Field448) InvEEA(inv, fe *Fe448) {
 			if x2.IsEven() {
 				x2.div2(0)
 			} else {
-				e = addn7(x2, p)
+				e = addn7(x2, f.P)
 				x2.div2(e)
 			}
 		}
@@ -1106,38 +1114,43 @@ var inp8 uint64
 var modulus8 Fe512
 
 type Field512 struct {
-	// p2  = p-2
-	// r1  = r modp
-	// r2  = r^2 modp
+	// r1  = r mod p
+	// r2  = r^2 mod p
+	// inp = -p^(-1) mod 2^64
 	pBig *big.Int
 	r1   *Fe512
 	r2   *Fe512
 	P    *Fe512
+	inp  uint64
 }
 
 func NewField512(p []byte) *Field512 {
 	if len(p) > 512 {
 		return nil
 	}
-	modulus8 = *new(Fe512).Unmarshal(p)
 	pBig := new(big.Int).SetBytes(p)
 	inpT := new(big.Int).ModInverse(new(big.Int).Neg(pBig), new(big.Int).SetBit(new(big.Int), 64, 1))
 	if inpT == nil {
 		return nil
 	}
-	inp8 = inpT.Uint64()
+	inp := inpT.Uint64()
+	r1, r2, modulus := &Fe512{}, &Fe512{}, &Fe512{}
+	modulus.FromBytes(p)
+	modulus8 = *modulus
+	inp8 = inp
 	r1Big := new(big.Int).SetBit(new(big.Int), 512, 1)
-	r1 := new(Fe512).SetBig(new(big.Int).Mod(r1Big, pBig))
-	r2 := new(Fe512).SetBig(new(big.Int).Exp(r1Big, new(big.Int).SetUint64(2), pBig))
+	r1.SetBig(new(big.Int).Mod(r1Big, pBig))
+	r2.SetBig(new(big.Int).Exp(r1Big, new(big.Int).SetUint64(2), pBig))
 	return &Field512{
 		pBig: pBig,
 		r1:   r1,
 		r2:   r2,
-		P:    &modulus8}
+		P:    modulus,
+		inp:  inp}
 }
 
 func (f *Field512) NewElementFromBytes(in []byte) *Fe512 {
-	fe := new(Fe512).Unmarshal(in)
+	fe := new(Fe512).FromBytes(in)
 	f.Mul(fe, fe, f.r2)
 	return fe
 }
@@ -1147,13 +1160,13 @@ func (f *Field512) NewElementFromUint(in uint64) *Fe512 {
 	if in == 0 {
 		return fe
 	}
-	montmul8(fe, fe, f.r2)
+	f.Mul(fe, fe, f.r2)
 	return fe
 }
 
 func (f *Field512) NewElementFromBig(in *big.Int) *Fe512 {
 	fe := new(Fe512).SetBig(in)
-	montmul8(fe, fe, f.r2)
+	f.Mul(fe, fe, f.r2)
 	return fe
 }
 
@@ -1162,7 +1175,7 @@ func (f *Field512) NewElementFromString(in string) (*Fe512, error) {
 	if err != nil {
 		return nil, err
 	}
-	montmul8(fe, fe, f.r2)
+	f.Mul(fe, fe, f.r2)
 	return fe, nil
 }
 
@@ -1178,13 +1191,12 @@ func (f *Field512) Copy(dst *Fe512, src *Fe512) *Fe512 {
 	return dst.Set(src)
 }
 
-func (f *Field512) RandElement(fe *Fe512, r io.Reader) error {
+func (f *Field512) RandElement(fe *Fe512, r io.Reader) (*Fe512, error) {
 	bi, err := rand.Int(r, f.pBig)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	fe.SetBig(bi)
-	return nil
+	return fe.SetBig(bi), nil
 }
 
 func (f *Field512) Mont(c, a *Fe512) {
@@ -1192,8 +1204,7 @@ func (f *Field512) Mont(c, a *Fe512) {
 }
 
 func (f *Field512) Demont(c, a *Fe512) {
-	mont8(c, &[16]uint64{
-		a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]})
+	montmul8(c, a, &Fe512{1})
 }
 
 func (f *Field512) Add(c, a, b *Fe512) {
@@ -1232,7 +1243,7 @@ func (f *Field512) Exp(c, a *Fe512, e *big.Int) {
 }
 
 func (f *Field512) InvMontUp(inv, fe *Fe512) {
-	u := new(Fe512).Set(&modulus8)
+	u := new(Fe512).Set(f.P)
 	v := new(Fe512).Set(fe)
 	s := &Fe512{1, 0, 0, 0}
 	r := &Fe512{0, 0, 0, 0}
@@ -1265,10 +1276,10 @@ func (f *Field512) InvMontUp(inv, fe *Fe512) {
 		k += 1
 	}
 	if found && k > 512 {
-		if r.Cmp(&modulus8) != -1 || z > 0 {
-			subn8(r, &modulus8)
+		if r.Cmp(f.P) != -1 || z > 0 {
+			subn8(r, f.P)
 		}
-		u.Set(&modulus8)
+		u.Set(f.P)
 		subn8(u, r)
 		// Phase 2
 		for i := k; i < 512*2; i++ {
@@ -1281,7 +1292,7 @@ func (f *Field512) InvMontUp(inv, fe *Fe512) {
 }
 
 func (f *Field512) InvMontDown(inv, fe *Fe512) {
-	u := new(Fe512).Set(&modulus8)
+	u := new(Fe512).Set(f.P)
 	v := new(Fe512).Set(fe)
 	s := &Fe512{1, 0, 0, 0}
 	r := &Fe512{0, 0, 0, 0}
@@ -1314,10 +1325,10 @@ func (f *Field512) InvMontDown(inv, fe *Fe512) {
 		k += 1
 	}
 	if found && k > 512 {
-		if r.Cmp(&modulus8) != -1 || z > 0 {
-			subn8(r, &modulus8)
+		if r.Cmp(f.P) != -1 || z > 0 {
+			subn8(r, f.P)
 		}
-		u.Set(&modulus8)
+		u.Set(f.P)
 		subn8(u, r)
 		// Phase 2
 		var e uint64
@@ -1325,7 +1336,7 @@ func (f *Field512) InvMontDown(inv, fe *Fe512) {
 			if u.IsEven() {
 				u.div2(0)
 			} else {
-				e = addn8(u, &modulus8)
+				e = addn8(u, f.P)
 				u.div2(e)
 			}
 		}
@@ -1337,8 +1348,7 @@ func (f *Field512) InvMontDown(inv, fe *Fe512) {
 
 func (f *Field512) InvEEA(inv, fe *Fe512) {
 	u := new(Fe512).Set(fe)
-	v := new(Fe512).Set(&modulus8)
-	p := new(Fe512).Set(&modulus8)
+	v := new(Fe512).Set(f.P)
 	x1 := &Fe512{1}
 	x2 := &Fe512{0}
 	var e uint64
@@ -1348,7 +1358,7 @@ func (f *Field512) InvEEA(inv, fe *Fe512) {
 			if x1.IsEven() {
 				x1.div2(0)
 			} else {
-				e = addn8(x1, p)
+				e = addn8(x1, f.P)
 				x1.div2(e)
 			}
 		}
@@ -1357,7 +1367,7 @@ func (f *Field512) InvEEA(inv, fe *Fe512) {
 			if x2.IsEven() {
 				x2.div2(0)
 			} else {
-				e = addn8(x2, p)
+				e = addn8(x2, f.P)
 				x2.div2(e)
 			}
 		}

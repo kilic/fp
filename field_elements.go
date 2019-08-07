@@ -8,10 +8,11 @@ import (
 	"math/bits"
 )
 
-func (fe *Fe256) Marshal(out []byte) []byte {
+func (fe *Fe256) Bytes() []byte {
+	out := make([]byte, 32)
 	var a int
 	for i := 0; i < 4; i++ {
-		a = 4*8 - i*8
+		a = 32 - i*8
 		out[a-1] = byte(fe[i])
 		out[a-2] = byte(fe[i] >> 8)
 		out[a-3] = byte(fe[i] >> 16)
@@ -24,13 +25,13 @@ func (fe *Fe256) Marshal(out []byte) []byte {
 	return out
 }
 
-func (fe *Fe256) Unmarshal(in []byte) *Fe256 {
-	size := 4 * 8
-	padded := make([]byte, size)
+func (fe *Fe256) FromBytes(in []byte) *Fe256 {
+	size := 32
 	l := len(in)
 	if l >= size {
 		l = size
 	}
+	padded := make([]byte, size)
 	copy(padded[size-l:], in[:])
 	var a int
 	for i := 0; i < 4; i++ {
@@ -44,7 +45,7 @@ func (fe *Fe256) Unmarshal(in []byte) *Fe256 {
 }
 
 func (fe *Fe256) SetBig(a *big.Int) *Fe256 {
-	return fe.Unmarshal(a.Bytes())
+	return fe.FromBytes(a.Bytes())
 }
 
 func (fe *Fe256) SetUint(a uint64) *Fe256 {
@@ -59,11 +60,11 @@ func (fe *Fe256) SetString(s string) (*Fe256, error) {
 	if s[:2] == "0x" {
 		s = s[2:]
 	}
-	h, err := hex.DecodeString(s)
+	bytes, err := hex.DecodeString(s)
 	if err != nil {
 		return nil, err
 	}
-	return fe.Unmarshal(h), nil
+	return fe.FromBytes(bytes), nil
 }
 
 func (fe *Fe256) Set(fe2 *Fe256) *Fe256 {
@@ -75,8 +76,7 @@ func (fe *Fe256) Set(fe2 *Fe256) *Fe256 {
 }
 
 func (fe *Fe256) Big() *big.Int {
-	h := [4 * 8]byte{}
-	return new(big.Int).SetBytes(fe.Marshal(h[:]))
+	return new(big.Int).SetBytes(fe.Bytes())
 }
 
 func (fe Fe256) String() (s string) {
@@ -105,7 +105,6 @@ func (fe *Fe256) IsOne() bool {
 }
 
 func (fe *Fe256) Cmp(fe2 *Fe256) int64 {
-
 	if fe[3] > fe2[3] {
 		return 1
 	} else if fe[3] < fe2[3] {
@@ -179,7 +178,7 @@ func (f *Fe256) rand(max *Fe256, r io.Reader) error {
 			return err
 		}
 		bytes[0] &= uint8(int(1<<b) - 1)
-		f.Unmarshal(bytes)
+		f.FromBytes(bytes)
 		if f.Cmp(max) < 0 {
 			break
 		}
@@ -187,10 +186,11 @@ func (f *Fe256) rand(max *Fe256, r io.Reader) error {
 	return nil
 }
 
-func (fe *Fe320) Marshal(out []byte) []byte {
+func (fe *Fe320) Bytes() []byte {
+	out := make([]byte, 40)
 	var a int
 	for i := 0; i < 5; i++ {
-		a = 5*8 - i*8
+		a = 40 - i*8
 		out[a-1] = byte(fe[i])
 		out[a-2] = byte(fe[i] >> 8)
 		out[a-3] = byte(fe[i] >> 16)
@@ -203,13 +203,13 @@ func (fe *Fe320) Marshal(out []byte) []byte {
 	return out
 }
 
-func (fe *Fe320) Unmarshal(in []byte) *Fe320 {
-	size := 5 * 8
-	padded := make([]byte, size)
+func (fe *Fe320) FromBytes(in []byte) *Fe320 {
+	size := 40
 	l := len(in)
 	if l >= size {
 		l = size
 	}
+	padded := make([]byte, size)
 	copy(padded[size-l:], in[:])
 	var a int
 	for i := 0; i < 5; i++ {
@@ -223,7 +223,7 @@ func (fe *Fe320) Unmarshal(in []byte) *Fe320 {
 }
 
 func (fe *Fe320) SetBig(a *big.Int) *Fe320 {
-	return fe.Unmarshal(a.Bytes())
+	return fe.FromBytes(a.Bytes())
 }
 
 func (fe *Fe320) SetUint(a uint64) *Fe320 {
@@ -239,11 +239,11 @@ func (fe *Fe320) SetString(s string) (*Fe320, error) {
 	if s[:2] == "0x" {
 		s = s[2:]
 	}
-	h, err := hex.DecodeString(s)
+	bytes, err := hex.DecodeString(s)
 	if err != nil {
 		return nil, err
 	}
-	return fe.Unmarshal(h), nil
+	return fe.FromBytes(bytes), nil
 }
 
 func (fe *Fe320) Set(fe2 *Fe320) *Fe320 {
@@ -256,8 +256,7 @@ func (fe *Fe320) Set(fe2 *Fe320) *Fe320 {
 }
 
 func (fe *Fe320) Big() *big.Int {
-	h := [5 * 8]byte{}
-	return new(big.Int).SetBytes(fe.Marshal(h[:]))
+	return new(big.Int).SetBytes(fe.Bytes())
 }
 
 func (fe Fe320) String() (s string) {
@@ -286,7 +285,6 @@ func (fe *Fe320) IsOne() bool {
 }
 
 func (fe *Fe320) Cmp(fe2 *Fe320) int64 {
-
 	if fe[4] > fe2[4] {
 		return 1
 	} else if fe[4] < fe2[4] {
@@ -367,7 +365,7 @@ func (f *Fe320) rand(max *Fe320, r io.Reader) error {
 			return err
 		}
 		bytes[0] &= uint8(int(1<<b) - 1)
-		f.Unmarshal(bytes)
+		f.FromBytes(bytes)
 		if f.Cmp(max) < 0 {
 			break
 		}
@@ -375,10 +373,11 @@ func (f *Fe320) rand(max *Fe320, r io.Reader) error {
 	return nil
 }
 
-func (fe *Fe384) Marshal(out []byte) []byte {
+func (fe *Fe384) Bytes() []byte {
+	out := make([]byte, 48)
 	var a int
 	for i := 0; i < 6; i++ {
-		a = 6*8 - i*8
+		a = 48 - i*8
 		out[a-1] = byte(fe[i])
 		out[a-2] = byte(fe[i] >> 8)
 		out[a-3] = byte(fe[i] >> 16)
@@ -391,13 +390,13 @@ func (fe *Fe384) Marshal(out []byte) []byte {
 	return out
 }
 
-func (fe *Fe384) Unmarshal(in []byte) *Fe384 {
-	size := 6 * 8
-	padded := make([]byte, size)
+func (fe *Fe384) FromBytes(in []byte) *Fe384 {
+	size := 48
 	l := len(in)
 	if l >= size {
 		l = size
 	}
+	padded := make([]byte, size)
 	copy(padded[size-l:], in[:])
 	var a int
 	for i := 0; i < 6; i++ {
@@ -411,7 +410,7 @@ func (fe *Fe384) Unmarshal(in []byte) *Fe384 {
 }
 
 func (fe *Fe384) SetBig(a *big.Int) *Fe384 {
-	return fe.Unmarshal(a.Bytes())
+	return fe.FromBytes(a.Bytes())
 }
 
 func (fe *Fe384) SetUint(a uint64) *Fe384 {
@@ -428,11 +427,11 @@ func (fe *Fe384) SetString(s string) (*Fe384, error) {
 	if s[:2] == "0x" {
 		s = s[2:]
 	}
-	h, err := hex.DecodeString(s)
+	bytes, err := hex.DecodeString(s)
 	if err != nil {
 		return nil, err
 	}
-	return fe.Unmarshal(h), nil
+	return fe.FromBytes(bytes), nil
 }
 
 func (fe *Fe384) Set(fe2 *Fe384) *Fe384 {
@@ -446,8 +445,7 @@ func (fe *Fe384) Set(fe2 *Fe384) *Fe384 {
 }
 
 func (fe *Fe384) Big() *big.Int {
-	h := [6 * 8]byte{}
-	return new(big.Int).SetBytes(fe.Marshal(h[:]))
+	return new(big.Int).SetBytes(fe.Bytes())
 }
 
 func (fe Fe384) String() (s string) {
@@ -476,7 +474,6 @@ func (fe *Fe384) IsOne() bool {
 }
 
 func (fe *Fe384) Cmp(fe2 *Fe384) int64 {
-
 	if fe[5] > fe2[5] {
 		return 1
 	} else if fe[5] < fe2[5] {
@@ -564,7 +561,7 @@ func (f *Fe384) rand(max *Fe384, r io.Reader) error {
 			return err
 		}
 		bytes[0] &= uint8(int(1<<b) - 1)
-		f.Unmarshal(bytes)
+		f.FromBytes(bytes)
 		if f.Cmp(max) < 0 {
 			break
 		}
@@ -572,10 +569,11 @@ func (f *Fe384) rand(max *Fe384, r io.Reader) error {
 	return nil
 }
 
-func (fe *Fe448) Marshal(out []byte) []byte {
+func (fe *Fe448) Bytes() []byte {
+	out := make([]byte, 56)
 	var a int
 	for i := 0; i < 7; i++ {
-		a = 7*8 - i*8
+		a = 56 - i*8
 		out[a-1] = byte(fe[i])
 		out[a-2] = byte(fe[i] >> 8)
 		out[a-3] = byte(fe[i] >> 16)
@@ -588,13 +586,13 @@ func (fe *Fe448) Marshal(out []byte) []byte {
 	return out
 }
 
-func (fe *Fe448) Unmarshal(in []byte) *Fe448 {
-	size := 7 * 8
-	padded := make([]byte, size)
+func (fe *Fe448) FromBytes(in []byte) *Fe448 {
+	size := 56
 	l := len(in)
 	if l >= size {
 		l = size
 	}
+	padded := make([]byte, size)
 	copy(padded[size-l:], in[:])
 	var a int
 	for i := 0; i < 7; i++ {
@@ -608,7 +606,7 @@ func (fe *Fe448) Unmarshal(in []byte) *Fe448 {
 }
 
 func (fe *Fe448) SetBig(a *big.Int) *Fe448 {
-	return fe.Unmarshal(a.Bytes())
+	return fe.FromBytes(a.Bytes())
 }
 
 func (fe *Fe448) SetUint(a uint64) *Fe448 {
@@ -626,11 +624,11 @@ func (fe *Fe448) SetString(s string) (*Fe448, error) {
 	if s[:2] == "0x" {
 		s = s[2:]
 	}
-	h, err := hex.DecodeString(s)
+	bytes, err := hex.DecodeString(s)
 	if err != nil {
 		return nil, err
 	}
-	return fe.Unmarshal(h), nil
+	return fe.FromBytes(bytes), nil
 }
 
 func (fe *Fe448) Set(fe2 *Fe448) *Fe448 {
@@ -645,8 +643,7 @@ func (fe *Fe448) Set(fe2 *Fe448) *Fe448 {
 }
 
 func (fe *Fe448) Big() *big.Int {
-	h := [7 * 8]byte{}
-	return new(big.Int).SetBytes(fe.Marshal(h[:]))
+	return new(big.Int).SetBytes(fe.Bytes())
 }
 
 func (fe Fe448) String() (s string) {
@@ -675,7 +672,6 @@ func (fe *Fe448) IsOne() bool {
 }
 
 func (fe *Fe448) Cmp(fe2 *Fe448) int64 {
-
 	if fe[6] > fe2[6] {
 		return 1
 	} else if fe[6] < fe2[6] {
@@ -770,7 +766,7 @@ func (f *Fe448) rand(max *Fe448, r io.Reader) error {
 			return err
 		}
 		bytes[0] &= uint8(int(1<<b) - 1)
-		f.Unmarshal(bytes)
+		f.FromBytes(bytes)
 		if f.Cmp(max) < 0 {
 			break
 		}
@@ -778,10 +774,11 @@ func (f *Fe448) rand(max *Fe448, r io.Reader) error {
 	return nil
 }
 
-func (fe *Fe512) Marshal(out []byte) []byte {
+func (fe *Fe512) Bytes() []byte {
+	out := make([]byte, 64)
 	var a int
 	for i := 0; i < 8; i++ {
-		a = 8*8 - i*8
+		a = 64 - i*8
 		out[a-1] = byte(fe[i])
 		out[a-2] = byte(fe[i] >> 8)
 		out[a-3] = byte(fe[i] >> 16)
@@ -794,13 +791,13 @@ func (fe *Fe512) Marshal(out []byte) []byte {
 	return out
 }
 
-func (fe *Fe512) Unmarshal(in []byte) *Fe512 {
-	size := 8 * 8
-	padded := make([]byte, size)
+func (fe *Fe512) FromBytes(in []byte) *Fe512 {
+	size := 64
 	l := len(in)
 	if l >= size {
 		l = size
 	}
+	padded := make([]byte, size)
 	copy(padded[size-l:], in[:])
 	var a int
 	for i := 0; i < 8; i++ {
@@ -814,7 +811,7 @@ func (fe *Fe512) Unmarshal(in []byte) *Fe512 {
 }
 
 func (fe *Fe512) SetBig(a *big.Int) *Fe512 {
-	return fe.Unmarshal(a.Bytes())
+	return fe.FromBytes(a.Bytes())
 }
 
 func (fe *Fe512) SetUint(a uint64) *Fe512 {
@@ -833,11 +830,11 @@ func (fe *Fe512) SetString(s string) (*Fe512, error) {
 	if s[:2] == "0x" {
 		s = s[2:]
 	}
-	h, err := hex.DecodeString(s)
+	bytes, err := hex.DecodeString(s)
 	if err != nil {
 		return nil, err
 	}
-	return fe.Unmarshal(h), nil
+	return fe.FromBytes(bytes), nil
 }
 
 func (fe *Fe512) Set(fe2 *Fe512) *Fe512 {
@@ -853,8 +850,7 @@ func (fe *Fe512) Set(fe2 *Fe512) *Fe512 {
 }
 
 func (fe *Fe512) Big() *big.Int {
-	h := [8 * 8]byte{}
-	return new(big.Int).SetBytes(fe.Marshal(h[:]))
+	return new(big.Int).SetBytes(fe.Bytes())
 }
 
 func (fe Fe512) String() (s string) {
@@ -883,7 +879,6 @@ func (fe *Fe512) IsOne() bool {
 }
 
 func (fe *Fe512) Cmp(fe2 *Fe512) int64 {
-
 	if fe[7] > fe2[7] {
 		return 1
 	} else if fe[7] < fe2[7] {
@@ -985,7 +980,7 @@ func (f *Fe512) rand(max *Fe512, r io.Reader) error {
 			return err
 		}
 		bytes[0] &= uint8(int(1<<b) - 1)
-		f.Unmarshal(bytes)
+		f.FromBytes(bytes)
 		if f.Cmp(max) < 0 {
 			break
 		}
