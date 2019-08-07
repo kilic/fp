@@ -1,16 +1,9 @@
-// +build ignore
-
 package main
 
 import (
 	. "github.com/mmcloughlin/avo/build"
 	. "github.com/mmcloughlin/avo/operand"
 	. "github.com/mmcloughlin/avo/reg"
-)
-
-const (
-	CLEAN = iota
-	NOCLEAN
 )
 
 func isMem(op Op) bool { return IsM64(op) }
@@ -41,6 +34,19 @@ func (t tape) newReprAlloc(size int, swapReg GPPhysical) *repr {
 		r.limbs[i].set(t.next(_ALLOC))
 	}
 	return r
+}
+
+func (t *tape) newReprAtParam(size int, param string, dst Register, swapReg GPPhysical) *repr {
+	t.reserveGp(dst)
+	return t.newReprAtMemory(size, Mem{Base: Load(Param(param), dst)}, swapReg)
+}
+
+func (t *tape) newReprAtMemory(size int, base Mem, swapReg GPPhysical) *repr {
+	number := make([]limb, size)
+	for i := 0; i < size; i++ {
+		number[i] = newLimb(base.Offset(int(i*8)), swapReg)
+	}
+	return &repr{number, 0, size, base.Base}
 }
 
 func (t *tape) next(allocated bool) Op {
@@ -112,7 +118,6 @@ func (set *gpSet) allocate(size int) ([]Op, int) {
 func (set *gpSet) reserve(ops ...Op) []Op {
 	regs := []Op{}
 	for _, op := range ops {
-		// todo : consider removing limb
 		if isLimb(op) {
 			op = op.(limb).s
 		}
@@ -127,7 +132,6 @@ func (set *gpSet) reserve(ops ...Op) []Op {
 func (set *gpSet) free(ops ...Op) []Op {
 	regs := []Op{}
 	for _, op := range ops {
-		// todo : consider removing limb
 		if isLimb(op) {
 			op = op.(limb).s
 		}

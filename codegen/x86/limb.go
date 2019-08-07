@@ -1,5 +1,3 @@
-// +build ignore
-
 package main
 
 import (
@@ -27,14 +25,7 @@ type repr struct {
 	limbs []limb
 	i     int
 	size  int
-}
-
-func newReprAtMemory(size int, from Mem, swapReg Register) *repr {
-	number := make([]limb, size)
-	for i := 0; i < size; i++ {
-		number[i] = newLimb(from.Offset(int(i*8)), swapReg)
-	}
-	return &repr{number, 0, size}
+	base  Register // set base if loaded from memory
 }
 
 func newReprEmpty(size int, swapReg Register) *repr {
@@ -42,7 +33,7 @@ func newReprEmpty(size int, swapReg Register) *repr {
 	for i := 0; i < size; i++ {
 		number[i] = newLimbEmpty(swapReg)
 	}
-	return &repr{number, 0, size}
+	return &repr{number, 0, size, nil}
 }
 
 // load will cause changing of source index

@@ -1,10 +1,8 @@
-// +build ignore
-
 package main
 
 var fieldElementTemplates = []string{
-	feTmplMarshal,
-	feTmplUnmarshal,
+	feTmplBytes,
+	feTmplFromBytes,
 	feTmplSetBig,
 	feTmplSetUint,
 	feTmplSetString,
@@ -26,14 +24,15 @@ var fieldElementTemplates = []string{
 
 const (
 	// 	feTmplDefine = `
-	// type Fe{{ $N_BIT }} [ {{ $N_LIMB }} ]uint64
+	// type {{ $FE }} [ {{ $N_LIMB }} ]uint64
 	// `
 
-	feTmplMarshal = `
-func (fe *Fe{{ $N_BIT }}) Marshal(out []byte) []byte {
+	feTmplBytes = `
+func (fe *{{ $FE }}) Bytes() []byte {
+out := make([]byte, {{ $N_BYTES }} )
 var a int
 for i := 0; i < {{ $N_LIMB }}; i++ {
-a = {{ $N_LIMB }}*8 - i*8
+a = {{ $N_BYTES }} - i*8
 out[a-1] = byte(fe[i])
 out[a-2] = byte(fe[i] >> 8)
 out[a-3] = byte(fe[i] >> 16)
@@ -45,13 +44,13 @@ out[a-8] = byte(fe[i] >> 56)}
 return out}
 `
 
-	feTmplUnmarshal = `
-func (fe *Fe{{ $N_BIT }}) Unmarshal(in []byte) *Fe{{ $N_BIT }} {
-size := {{ $N_LIMB }} * 8
-padded := make([]byte, size)
+	feTmplFromBytes = `
+func (fe *{{ $FE }}) FromBytes(in []byte) *{{ $FE }} {
+size := {{ $N_BYTES }}
 l := len(in)
 if l >= size {
-l = size}
+	l = size}
+padded := make([]byte, size)
 copy(padded[size-l:], in[:])
 var a int
 for i := 0; i < {{ $N_LIMB }}; i++ {
@@ -64,66 +63,68 @@ return fe}
 `
 
 	feTmplSetBig = `
-func (fe *Fe{{ $N_BIT }}) SetBig(a *big.Int) *Fe{{ $N_BIT }} {
-return fe.Unmarshal(a.Bytes())}	
+func (fe *{{ $FE }}) SetBig(a *big.Int) *{{ $FE }} {
+return fe.FromBytes(a.Bytes())}	
 `
 
-	// todo : add util func div by 4 or mul by
-	feTmplBig = `
-func (fe *Fe{{ $N_BIT }}) Big() *big.Int {
-h := [{{ $N_LIMB }} * 8 ]byte{}
-return new(big.Int).SetBytes(fe.Marshal(h[:]))
-}`
-
 	feTmplSetUint = `
-func (fe *Fe{{ $N_BIT }}) SetUint(a uint64) *Fe{{ $N_BIT }} {
+func (fe *{{ $FE }}) SetUint(a uint64) *{{ $FE }} {
 fe[0] = a
-{{ range $x := iterUp 1 $N_LIMB }} fe[ {{ $x }} ] = 0 
-{{ end }} return fe }
+{{- range $x := iterUp 1 $N_LIMB }} 
+fe[ {{ $x }} ] = 0 
+{{- end }} 
+return fe }
 `
 
 	feTmplSetString = `
-func (fe *Fe{{ $N_BIT }}) SetString(s string) (*Fe{{ $N_BIT }}, error) {
+func (fe *{{ $FE }}) SetString(s string) (*{{ $FE }}, error) {
 if s[:2] == "0x" {
 s = s[2:]}
-h, err := hex.DecodeString(s)
+bytes, err := hex.DecodeString(s)
 if err != nil {
 return nil, err}
-return fe.Unmarshal(h), nil}
+return fe.FromBytes(bytes), nil}
 `
 
 	feTmplSet = `
-func (fe *Fe{{ $N_BIT }}) Set(fe2 *Fe{{ $N_BIT }}) *Fe{{ $N_BIT }} {
-{{ range $x := iterUp 0 $N_LIMB }} fe[ {{ $x }} ] = fe2[ {{ $x }} ]
-{{ end }} return fe }
+func (fe *{{ $FE }}) Set(fe2 *{{ $FE }}) *{{ $FE }} {
+{{- range $x := iterUp 0 $N_LIMB }} 
+fe[ {{ $x }} ] = fe2[ {{ $x }} ]
+{{- end }} 
+return fe }
 `
 
+	feTmplBig = `
+func (fe *{{ $FE }}) Big() *big.Int {
+return new(big.Int).SetBytes(fe.Bytes())
+}`
+
 	feTmplString = `
-func (fe Fe{{ $N_BIT }}) String() (s string) {
+func (fe {{ $FE }}) String() (s string) {
 for i := {{ decr $N_LIMB }}; i >= 0; i-- {
 s = fmt.Sprintf("%s%16.16x", s, fe[i]) }
 return "0x" + s }
 `
 
 	feTmplCompare = `
-func (fe *Fe{{ $N_BIT }}) Cmp(fe2 *Fe{{ $N_BIT }}) int64 {
-{{range $i := iterDown $N_LIMB }} 
+func (fe *{{ $FE }}) Cmp(fe2 *{{ $FE }}) int64 {
+{{- range $i := iterDown $N_LIMB }} 
 if fe[{{ $i }}] > fe2[{{ $i }}] {
 return 1
 } else if fe[{{ $i }}] < fe2[{{ $i }}] {
-return -1
-}{{end}}
+return -1 }
+{{- end }}
 return 0 }
 `
 
 	feTmplIsEven = `
-func (fe *Fe{{ $N_BIT }}) IsEven() bool {
+func (fe *{{ $FE }}) IsEven() bool {
 var mask uint64 = 1
 return fe[0]&mask == 0 }
 `
 
 	feTmplIsOdd = `
-func (fe *Fe{{ $N_BIT }}) IsOdd() bool {
+func (fe *{{ $FE }}) IsOdd() bool {
 var mask uint64 = 1
 return fe[0]&mask != 0 }
 `
@@ -145,14 +146,16 @@ return fe2[0] == fe[0] {{ range $x := iterUp 1 $N_LIMB }} && fe2[ {{ $x }} ] == 
 
 	feTmplRightSh = `
 func (fe *Fe{{$N_BIT}}) div2(e uint64) {
-{{ range $x := iterUp 1 $N_LIMB }}; fe[{{ decr $x }}] = fe[ {{ decr $x }} ]>>1 | fe[{{$x}}]<<63 ; {{ end }}
+{{- range $x := iterUp 1 $N_LIMB }}; 
+fe[{{ decr $x }}] = fe[ {{ decr $x }} ]>>1 | fe[{{$x}}]<<63 ; 
+{{- end }}
 fe[{{ decr $N_LIMB }}] = fe[{{ decr $N_LIMB }}] >> 1 | e << 63 }
 `
 
 	feTmplLeftSh = `
 func (fe *Fe{{$N_BIT}}) mul2() uint64 {
-e := fe[{{ decr $N_LIMB }}] >> 63
-{{ range $i := iterDown $N_LIMB }} ; {{if $i}} fe[ {{$i}} ] = fe[ {{$i}} ]<<1 | fe[ {{decr $i}} ]>>63 {{else}}fe[0] = fe[0] << 1{{end}}; {{ end }}
+e := fe[{{ decr $N_LIMB }}] >> 63 
+{{ range $i := iterDown $N_LIMB }}; {{if $i}} fe[ {{$i}} ] = fe[ {{$i}} ]<<1 | fe[ {{decr $i}} ]>>63 {{else}}fe[0] = fe[0] << 1{{end}}; {{ end }}
 return e }
 `
 
@@ -172,7 +175,7 @@ return 0}
 `
 
 	feTmplRand = `
-func (f *Fe{{ $N_BIT }}) rand(max *Fe{{ $N_BIT }}, r io.Reader) error {
+func (f *{{ $FE }}) rand(max *{{ $FE }}, r io.Reader) error {
 bitLen := bits.Len64(max[{{ decr $N_LIMB }}]) + ({{ $N_LIMB }} -1)*64
 k := (bitLen + 7) / 8
 b := uint(bitLen % 8)
@@ -184,7 +187,7 @@ _, err := io.ReadFull(r, bytes)
 if err != nil {
 return err }
 bytes[0] &= uint8(int(1<<b) - 1)
-f.Unmarshal(bytes)
+f.FromBytes(bytes)
 if f.Cmp(max) < 0 {
 break } }
 return nil }
