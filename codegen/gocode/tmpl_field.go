@@ -28,61 +28,53 @@ var fieldTemplates = []string{
 
 const (
 	fTmplConstants = `
-{{if $GlobMod }}
+{{- if $GlobMod }}
 var inp{{ $N_LIMB }} uint64
 var modulus{{ $N_LIMB }} {{ $FE }} 
-{{end}}
+{{- end }}
 `
 
 	fTmplFieldDef = `
 type {{ $FIELD }} struct {
-// p2  = p-2
-// r1  = r modp
-// r2  = r^2 modp
+// r1  = r mod p
+// r2  = r^2 mod p
+// inp = -p^(-1) mod 2^64
 pBig *big.Int
 r1  *{{ $FE }} 
 r2  *{{ $FE }} 
 P   *{{ $FE }} 
-inp uint64
-zero *{{ $FE }} 
-one *{{ $FE }} 
- }
+inp uint64}
 `
 
 	fTmplNew = `
 func New{{ $FIELD }}(p []byte) *{{ $FIELD }} {
 if len(p) > {{ $N_BIT }} {
 return nil }
-{{if $GlobMod }}
-modulus{{ $N_LIMB }} = *new({{ $FE }}).Unmarshal(p) 
-{{else}}
-modulus{{ $N_LIMB }} := *new({{ $FE }}).Unmarshal(p)
-{{end}}
 pBig := new(big.Int).SetBytes(p)
 inpT := new(big.Int).ModInverse(new(big.Int).Neg(pBig), new(big.Int).SetBit(new(big.Int), 64, 1))
 if inpT == nil {
-return nil }
-{{if $GlobMod }}
-inp{{ $N_LIMB }} = inpT.Uint64() 
-{{else}} 
-inp{{ $N_LIMB }} := inpT.Uint64() 
-{{end}}
+return nil}
+inp := inpT.Uint64() 
+r1, r2, modulus := &{{ $FE }}{}, &{{ $FE }}{}, &{{ $FE }}{}
+modulus.FromBytes(p)
+{{- if $GlobMod }} 
+modulus{{ $N_LIMB }} = *modulus
+inp{{ $N_LIMB }} = inp 
+{{- end }}
 r1Big := new(big.Int).SetBit(new(big.Int), {{ $N_BIT }}, 1)
-r1 := new({{ $FE }}).SetBig(new(big.Int).Mod(r1Big, pBig))
-r2 := new({{ $FE }}).SetBig(new(big.Int).Exp(r1Big, new(big.Int).SetUint64(2), pBig))
+r1.SetBig(new(big.Int).Mod(r1Big, pBig))
+r2.SetBig(new(big.Int).Exp(r1Big, new(big.Int).SetUint64(2), pBig))
 return &{{ $FIELD }}{
 pBig: pBig,
 r1:   r1,
 r2:   r2,
-P:    &modulus{{ $N_LIMB }},
-inp: inp{{ $N_LIMB }},
-zero: new({{ $FE }}).SetUint(0),
-one:  new({{ $FE }}).SetUint(1), }}
-`
+P:    modulus,
+inp:  inp}}
+	`
 
 	fTmplNewFeBytes = `
 func (f *{{ $FIELD }}) NewElementFromBytes(in []byte) *{{ $FE }} {
-fe := new({{ $FE }}).Unmarshal(in)
+fe := new({{ $FE }}).FromBytes(in)
 f.Mul(fe, fe, f.r2)
 return fe }
 `
@@ -128,87 +120,87 @@ return dst.Set(src) }
 `
 
 	fTmplRand = `
-func (f *{{ $FIELD }}) RandElement(fe *{{ $FE }}, r io.Reader) error {
+func (f *{{ $FIELD }}) RandElement(fe *{{ $FE }}, r io.Reader) (*{{ $FE }}, error) {
 bi, err := rand.Int(r, f.pBig)
 if err != nil {
-return err }
-fe.SetBig(bi)
-return nil }		
+return nil, err }
+return fe.SetBig(bi), nil}		
 `
 
 	fTmplMont = `
 func (f *{{ $FIELD }}) Mont(c, a *{{ $FE }}) {
-{{if $GlobMod }}
+{{- if $GlobMod }} 
 montmul{{ $N_LIMB }}(c, a, f.r2) 
-{{else}}
+{{- else }}
 montmul{{ $N_LIMB }}(c, a, f.r2, f.P, f.inp) 
-{{end}}
+{{- end }}
 }
 `
 
 	fTmplDemont = `
 func (f *{{ $FIELD }}) Demont(c, a *{{ $FE }}) {
-{{if $GlobMod }}
-montmul{{ $N_LIMB }}(c, a, f.one) 
-{{else}}
-montmul{{ $N_LIMB }}(c, a, f.one, f.P, f.inp) 
-{{end}}
+{{- if $GlobMod }} 
+montmul{{ $N_LIMB }}(c, a, &{{ $FE }}{1}) 
+{{- else }}
+montmul{{ $N_LIMB }}(c, a, &{{ $FE }}{1}, f.P, f.inp) 
+{{- end }}
 }
 `
 
 	fTmplAdd = `
 func (f *{{ $FIELD }}) Add(c, a, b *{{ $FE }}) {
-{{if $GlobMod }}
+{{- if $GlobMod }} 
 add{{ $N_LIMB }}(c, a, b)
-{{else}}
+{{- else }}
 add{{ $N_LIMB }}(c, a, b, f.P)
-{{end}}  }
+{{- end }}  }
 `
 
 	fTmplDouble = `
 func (f *{{ $FIELD }}) Double(c, a *{{ $FE }}) {
-{{if $GlobMod }}
+{{- if $GlobMod }} 
 double{{ $N_LIMB }}(c, a) 
-{{else}}
+{{- else }}
 double{{ $N_LIMB }}(c, a, f.P) 
-{{end}} }
+{{- end }} }
 `
 
 	fTmplSub = `
 func (f *{{ $FIELD }}) Sub(c, a, b *{{ $FE }}) {
-{{if $GlobMod }}
+{{- if $GlobMod }} 
 sub{{ $N_LIMB }}(c, a, b) 
-{{else}}
+{{- else }}
 sub{{ $N_LIMB }}(c, a, b, f.P) 
-{{end}} }
+{{- end }} }
 `
 
 	fTmplNeg = `
 func (f *{{ $FIELD }}) Neg(c, a *{{ $FE }}) {
-{{if $GlobMod }}
+{{- if $GlobMod }}
 neg{{ $N_LIMB }}(c, a) 
-{{else}}
+{{- else }}
 neg{{ $N_LIMB }}(c, a, f.P) 
-{{end}}
+{{- end }}
 }
 `
 
 	fTmplSquare = `
 func (f *{{ $FIELD }}) Square(c, a *{{ $FE }}) {
-{{if $GlobMod }}
+{{- if $GlobMod }} 
 montmul{{ $N_LIMB }}(c, a, a) 
-{{else}}
+{{- else }}
 montmul{{ $N_LIMB }}(c, a, a, f.P, f.inp) 
-{{end}} }
+{{- end }} 
+}
 `
 
 	fTmplMul = `
 func (f *{{ $FIELD }}) Mul(c, a, b *{{ $FE }}) {
-{{if $GlobMod }}
+{{- if $GlobMod }} 
 montmul{{ $N_LIMB }}(c, a, b) 
-{{else}}
+{{- else }}
 montmul{{ $N_LIMB }}(c, a, b, f.P, f.inp) 
-{{end}}
+{{- end }}
 }
 `
 
@@ -216,17 +208,17 @@ montmul{{ $N_LIMB }}(c, a, b, f.P, f.inp)
 func (f *{{ $FIELD }}) Exp(c, a*{{ $FE }}, e *big.Int) {
 z := new({{ $FE }}).Set(f.r1)
 for i := e.BitLen(); i >= 0; i-- {
-{{if $GlobMod }}
+{{- if $GlobMod }} 
 montmul{{ $N_LIMB }}(z, z, z)
-{{else}}
+{{- else }}
 montmul{{ $N_LIMB }}(z, z, z, f.P, f.inp)
-{{end}}
+{{- end }}
 if e.Bit(i) == 1 {
-{{if $GlobMod }}
+{{- if $GlobMod }}
 montmul{{ $N_LIMB }}(z, z, a)
-{{else}}
+{{- else }}
 montmul{{ $N_LIMB }}(z, z, a, f.P, f.inp)
-{{end}}
+{{- end }}
 } }
 c.Set(z) }
 `
@@ -255,18 +247,19 @@ e = addn{{ $N_LIMB }}(x2, f.P)
 x2.div2(e) }}
 if u.Cmp(v) == -1 {
 subn{{ $N_LIMB }}(v, u)
-{{if $GlobMod }}
+{{- if $GlobMod }} 
 sub{{ $N_LIMB }}(x2, x2, x1)
-{{else}}
-sub{{ $N_LIMB }}(x2, x2, x1, f.P)
-{{end}}
+{{- else }}
+sub{{ $N_LIMB }}(x2, x2, x1, f.P) 
+{{- end }}
 } else {
-subn{{ $N_LIMB }}(u, v)
-{{if $GlobMod }}
-sub{{ $N_LIMB }}(x1, x1, x2) 
-{{else}}
+subn{{ $N_LIMB }}(u, v) 
+{{- if $GlobMod }}
+sub{{ $N_LIMB }}(x1, x1, x2)  
+{{- else }}
 sub{{ $N_LIMB }}(x1, x1, x2, f.P) 
-{{end}} }}
+{{- end }} 
+}}
 if u.IsOne() {
 inv.Set(x1)
 return }
@@ -311,11 +304,11 @@ u.Set(f.P)
 subn{{ $N_LIMB }}(u, r)
 // Phase 2
 for i := k; i < {{ $N_BIT }}*2; i++ {
-{{if $GlobMod }}
+{{- if $GlobMod }}
 double{{ $N_LIMB }}(u, u) 
-{{else}}
+{{- else }}
 double{{ $N_LIMB }}(u, u, f.P) 
-{{end}} }
+{{- end }} }
 inv.Set(u)
 } else {
 inv.Set(&{{ $FE }}{0, 0, 0, 0}) }}

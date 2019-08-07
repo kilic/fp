@@ -77,7 +77,7 @@ for i in "$@"; do
     generate_all
     ;;
   '--test')
-    go test ./codegen/generated -run '' -iter 10
+    go test ./codegen/generated -run '' -iter 10 -v
     ;;
   '--bench')
     go test -benchmem -run=^$ -bench ./codegen/generated
