@@ -37,8 +37,8 @@ func TestMain(m *testing.M) {
 	codeStr += `
 func TestField(t *testing.T) {`
 	codeStr += `
-	// example: subtest single run 
-	// go test -run 'Element/256_Enc' -iter 1 -v
+	// example: subtest single run for XXX bit field
+	// go test -run 'Field/XXX_Enc' -iter 1 -v
 `
 	codeStr += fmt.Sprintf("for i := %d; i <= %d; i++ {", from, to)
 	codeStr += strTestEncoding
@@ -127,10 +127,7 @@ limb(i int) uint64}
 
 	tmplTestRandField = `
 func ceil64(len int) int {
-size := 1 + ((len - 1) / 64)
-if size < 5 {
-return 4 }
-return size }
+return 1 + ((len - 1) / 64)}
 {{ $FIELDS := .LimbSizes }} 
 func randTestField(bitlen int) field {
 var field field
@@ -394,6 +391,11 @@ t.Run(fmt.Sprintf("%d Montgomerry", i*64), func(t *testing.T) {
 		if !u.equals(v) {
 			t.Fatalf("Distributivity does not hold\na: %s\nb: %s\nc: %s\nu: %s\nv: %s\np: %s\n", a, b, c, u, v, field.p())
 		}
+		field.square(u, a)
+		field.mul(v, a, a)
+		if !u.equals(v) {
+			t.Fatalf("Bad squaring\na: %s\nu: %s\nv: %s\np: %s\n", a, u, v, field.p())
+		}
 	}
 })`
 
@@ -497,10 +499,10 @@ t.Run("Multiplication", func(t *testing.B) {
 t.ResetTimer()
 for i := 0; i < t.N; i++ {
 field.Mul(&c, &a, &b) }})
-// t.Run("Squaring", func(t *testing.B) {
-// t.ResetTimer()
-// for i := 0; i < t.N; i++ {
-// field.Square(&c, &a) }})
+t.Run("Squaring", func(t *testing.B) {
+t.ResetTimer()
+for i := 0; i < t.N; i++ {
+field.Square(&c, &a) }})
 t.Run("Inversion", func(t *testing.B) {
 t.ResetTimer()
 for i := 0; i < t.N; i++ {

@@ -187,9 +187,9 @@ neg{{ $N_LIMB }}(c, a, f.P)
 	fTmplSquare = `
 func (f *{{ $FIELD }}) Square(c, a *{{ $FE }}) {
 {{- if $GlobMod }} 
-montmul{{ $N_LIMB }}(c, a, a) 
+montsquare{{ $N_LIMB }}(c, a) 
 {{- else }}
-montmul{{ $N_LIMB }}(c, a, a, f.P, f.inp) 
+montsquare{{ $N_LIMB }}(c, a, f.P, f.inp) 
 {{- end }} 
 }
 `
@@ -270,8 +270,8 @@ inv.Set(x2)}
 func (f *{{ $FIELD }}) InvMontUp(inv, fe *{{ $FE }}) {
 u := new({{ $FE }}).Set(f.P)
 v := new({{ $FE }}).Set(fe)
-s := &{{ $FE }}{1, 0, 0, 0}
-r := &{{ $FE }}{0, 0, 0, 0}
+s := &{{ $FE }}{1}
+r := &{{ $FE }}{0}
 var k int
 var z uint64
 var found = false
@@ -311,15 +311,15 @@ double{{ $N_LIMB }}(u, u, f.P)
 {{- end }} }
 inv.Set(u)
 } else {
-inv.Set(&{{ $FE }}{0, 0, 0, 0}) }}
+inv.Set(&{{ $FE }}{0}) }}
 `
 
 	fTemplInvMontDown = `
 func (f *{{ $FIELD }}) InvMontDown(inv, fe *{{ $FE }}) {
 u := new({{ $FE }}).Set(f.P)
 v := new({{ $FE }}).Set(fe)
-s := &{{ $FE }}{1, 0, 0, 0}
-r := &{{ $FE }}{0, 0, 0, 0}
+s := &{{ $FE }}{1}
+r := &{{ $FE }}{0}
 var k int
 var z uint64
 var found = false
@@ -360,6 +360,6 @@ e = addn{{ $N_LIMB }}(u, f.P)
 u.div2(e) }}
 inv.Set(u)
 } else {
-inv.Set(&{{ $FE }}{0, 0, 0, 0}) }}
+inv.Set(&{{ $FE }}{0}) }}
 `
 )

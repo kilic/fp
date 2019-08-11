@@ -11,7 +11,7 @@ import (
 const (
 	_MUL_ADD   = true
 	_MUL_MOVE  = false
-	_ASSING    = true
+	_ASSIGN    = true
 	_NO_ASSIGN = false
 	_NO_ITER   = false
 	_ITER      = true
@@ -26,14 +26,15 @@ type repr struct {
 	i     int
 	size  int
 	base  Register // set base if loaded from memory
+	swap  GPPhysical
 }
 
-func newReprEmpty(size int, swapReg Register) *repr {
+func newReprEmpty(size int, swap GPPhysical) *repr {
 	number := make([]limb, size)
 	for i := 0; i < size; i++ {
-		number[i] = newLimbEmpty(swapReg)
+		number[i] = newLimbEmpty(swap)
 	}
-	return &repr{number, 0, size, nil}
+	return &repr{number, 0, size, nil, swap}
 }
 
 // load will cause changing of source index
@@ -159,11 +160,11 @@ func (l *limb) load(src Op, dst Op) {
 	MOVQ(src, l.s)
 }
 
-func (l *limb) moveTo(dst Op, assing bool) {
+func (l *limb) moveTo(dst Op, assign bool) {
 	if isLimb(dst) {
 		dst = dst.(limb).s
 	}
-	if assing {
+	if assign {
 		l.load(l.s, dst)
 		return
 	}
@@ -374,6 +375,7 @@ func (l *limb) add(op Op, car bool) {
 	operation(op, l.s)
 }
 
-func (l *limb) addCarry() {
+func (l *limb) addCarry() *limb {
 	ADCQ(Imm(0), l.s)
+	return l
 }
