@@ -20,11 +20,7 @@ func TestMain(m *testing.M) {
 }
 
 func ceil64(len int) int {
-	size := 1 + ((len - 1) / 64)
-	if size < 5 {
-		return 4
-	}
-	return size
+	return 1 + ((len - 1) / 64)
 }
 
 func randTestField(bitlen int) field {
@@ -54,8 +50,8 @@ func randTestField(bitlen int) field {
 }
 
 func TestField(t *testing.T) {
-	// example: subtest single run
-	// go test -run 'Element/256_Enc' -iter 1 -v
+	// example: subtest single run for XXX bit field
+	// go test -run 'Field/XXX_Enc' -iter 1 -v
 	for i := 4; i <= 8; i++ {
 		t.Run(fmt.Sprintf("%d Encoding & Decoding", i*64), func(t *testing.T) {
 			field := randTestField(i * 64)
@@ -241,6 +237,11 @@ func TestField(t *testing.T) {
 				if !u.equals(v) {
 					t.Fatalf("Distributivity does not hold\na: %s\nb: %s\nc: %s\nu: %s\nv: %s\np: %s\n", a, b, c, u, v, field.p())
 				}
+				field.square(u, a)
+				field.mul(v, a, a)
+				if !u.equals(v) {
+					t.Fatalf("Bad squaring\na: %s\nu: %s\nv: %s\np: %s\n", a, u, v, field.p())
+				}
 			}
 		})
 		t.Run(fmt.Sprintf("%d Exponentiation", i*64), func(t *testing.T) {
@@ -351,10 +352,12 @@ func BenchmarkField256(t *testing.B) {
 			field.Mul(&c, &a, &b)
 		}
 	})
-	// t.Run("Squaring", func(t *testing.B) {
-	// t.ResetTimer()
-	// for i := 0; i < t.N; i++ {
-	// field.Square(&c, &a) }})
+	t.Run("Squaring", func(t *testing.B) {
+		t.ResetTimer()
+		for i := 0; i < t.N; i++ {
+			field.Square(&c, &a)
+		}
+	})
 	t.Run("Inversion", func(t *testing.B) {
 		t.ResetTimer()
 		for i := 0; i < t.N; i++ {
@@ -409,10 +412,12 @@ func BenchmarkField320(t *testing.B) {
 			field.Mul(&c, &a, &b)
 		}
 	})
-	// t.Run("Squaring", func(t *testing.B) {
-	// t.ResetTimer()
-	// for i := 0; i < t.N; i++ {
-	// field.Square(&c, &a) }})
+	t.Run("Squaring", func(t *testing.B) {
+		t.ResetTimer()
+		for i := 0; i < t.N; i++ {
+			field.Square(&c, &a)
+		}
+	})
 	t.Run("Inversion", func(t *testing.B) {
 		t.ResetTimer()
 		for i := 0; i < t.N; i++ {
@@ -467,10 +472,12 @@ func BenchmarkField384(t *testing.B) {
 			field.Mul(&c, &a, &b)
 		}
 	})
-	// t.Run("Squaring", func(t *testing.B) {
-	// t.ResetTimer()
-	// for i := 0; i < t.N; i++ {
-	// field.Square(&c, &a) }})
+	t.Run("Squaring", func(t *testing.B) {
+		t.ResetTimer()
+		for i := 0; i < t.N; i++ {
+			field.Square(&c, &a)
+		}
+	})
 	t.Run("Inversion", func(t *testing.B) {
 		t.ResetTimer()
 		for i := 0; i < t.N; i++ {
@@ -525,10 +532,12 @@ func BenchmarkField448(t *testing.B) {
 			field.Mul(&c, &a, &b)
 		}
 	})
-	// t.Run("Squaring", func(t *testing.B) {
-	// t.ResetTimer()
-	// for i := 0; i < t.N; i++ {
-	// field.Square(&c, &a) }})
+	t.Run("Squaring", func(t *testing.B) {
+		t.ResetTimer()
+		for i := 0; i < t.N; i++ {
+			field.Square(&c, &a)
+		}
+	})
 	t.Run("Inversion", func(t *testing.B) {
 		t.ResetTimer()
 		for i := 0; i < t.N; i++ {
@@ -583,10 +592,12 @@ func BenchmarkField512(t *testing.B) {
 			field.Mul(&c, &a, &b)
 		}
 	})
-	// t.Run("Squaring", func(t *testing.B) {
-	// t.ResetTimer()
-	// for i := 0; i < t.N; i++ {
-	// field.Square(&c, &a) }})
+	t.Run("Squaring", func(t *testing.B) {
+		t.ResetTimer()
+		for i := 0; i < t.N; i++ {
+			field.Square(&c, &a)
+		}
+	})
 	t.Run("Inversion", func(t *testing.B) {
 		t.ResetTimer()
 		for i := 0; i < t.N; i++ {

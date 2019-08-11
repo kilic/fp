@@ -198,9 +198,6 @@ TEXT ·mul4(SB), $0-24
 	MOVQ b+16(FP), SI
 
 	// |
-	// |
-	XORQ R8, R8
-	XORQ R9, R9
 	XORQ R10, R10
 	XORQ R11, R11
 	XORQ R12, R12
@@ -213,24 +210,28 @@ TEXT ·mul4(SB), $0-24
 	MOVQ (SI), CX
 
 	// | a0 * b0
+	// | (w0, w1) @ (R8, R9)
 	MOVQ (DI), AX
 	MULQ CX
 	MOVQ AX, R8
 	MOVQ DX, R9
 
 	// | a1 * b0
+	// | (w1, w2) @ (R9, R10)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R9
 	ADCQ DX, R10
 
 	// | a2 * b0
+	// | (w2, w3) @ (R10, R11)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R10
 	ADCQ DX, R11
 
 	// | a3 * b0
+	// | (w3, w4) @ (R11, R12)
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -241,6 +242,7 @@ TEXT ·mul4(SB), $0-24
 	MOVQ 8(SI), CX
 
 	// | a0 * b1
+	// | (w1, w2, w3, w4) @ (R9, R10, R11, R12)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R9
@@ -249,6 +251,7 @@ TEXT ·mul4(SB), $0-24
 	ADCQ $0x00, R12
 
 	// | a1 * b1
+	// | (w2, w3, w4, w5) @ (R10, R11, R12, R13)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R10
@@ -257,6 +260,7 @@ TEXT ·mul4(SB), $0-24
 	ADCQ $0x00, R13
 
 	// | a2 * b1
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -265,6 +269,7 @@ TEXT ·mul4(SB), $0-24
 	ADCQ $0x00, R14
 
 	// | a3 * b1
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -277,6 +282,7 @@ TEXT ·mul4(SB), $0-24
 	MOVQ 16(SI), CX
 
 	// | a0 * b2
+	// | (w2, w3, w4, w5) @ (R10, R11, R12, R13)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R10
@@ -285,6 +291,7 @@ TEXT ·mul4(SB), $0-24
 	ADCQ $0x00, R13
 
 	// | a1 * b2
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -293,6 +300,7 @@ TEXT ·mul4(SB), $0-24
 	ADCQ $0x00, R14
 
 	// | a2 * b2
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -301,6 +309,7 @@ TEXT ·mul4(SB), $0-24
 	ADCQ $0x00, R15
 
 	// | a3 * b2
+	// | (w5, w6, w7) @ (R13, R14, R15)
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -312,6 +321,7 @@ TEXT ·mul4(SB), $0-24
 	MOVQ 24(SI), CX
 
 	// | a0 * b3
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -320,6 +330,7 @@ TEXT ·mul4(SB), $0-24
 	ADCQ $0x00, R14
 
 	// | a1 * b3
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -328,6 +339,7 @@ TEXT ·mul4(SB), $0-24
 	ADCQ $0x00, R15
 
 	// | a2 * b3
+	// | (w5, w6, w7) @ (R13, R14, R15)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -335,6 +347,7 @@ TEXT ·mul4(SB), $0-24
 	ADCQ $0x00, R15
 
 	// | a3 * b3
+	// | (w6, w7) @ (R14, R15)
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -346,10 +359,10 @@ TEXT ·mul4(SB), $0-24
 	MOVQ R9, 8(DI)
 	MOVQ R10, 16(DI)
 	MOVQ R11, 24(DI)
-	MOVQ R12, (DI)
-	MOVQ R13, 8(DI)
-	MOVQ R14, 16(DI)
-	MOVQ R15, 24(DI)
+	MOVQ R12, 32(DI)
+	MOVQ R13, 40(DI)
+	MOVQ R14, 48(DI)
+	MOVQ R15, 56(DI)
 	RET
 
 // func mont4(c *Fe256, w *[8]uint64)
@@ -362,20 +375,19 @@ TEXT ·mont4(SB), $0-16
 	MOVQ 32(DI), R12
 
 	// |
-	// |
-	// | u @ CX = w0 * inp
+	// | (u @ CX) = (w0 @ R8) * inp
 	MOVQ R8, AX
 	MULQ ·inp4+0(SB)
 	MOVQ AX, CX
 
-	// | w0
+	// | w0 @ R8
 	XORQ R14, R14
 	MOVQ ·modulus4+0(SB), AX
 	MULQ CX
 	ADDQ AX, R8
 	ADCQ DX, R14
 
-	// | w1
+	// | w1 @ R9
 	XORQ R13, R13
 	MOVQ ·modulus4+8(SB), AX
 	MULQ CX
@@ -384,7 +396,7 @@ TEXT ·mont4(SB), $0-16
 	ADDQ R14, R9
 	ADCQ $0x00, R13
 
-	// | w2
+	// | w2 @ R10
 	XORQ R14, R14
 	MOVQ ·modulus4+16(SB), AX
 	MULQ CX
@@ -393,7 +405,7 @@ TEXT ·mont4(SB), $0-16
 	ADDQ R13, R10
 	ADCQ $0x00, R14
 
-	// | w3
+	// | w3 @ R11
 	XORQ R13, R13
 	MOVQ ·modulus4+24(SB), AX
 	MULQ CX
@@ -402,7 +414,7 @@ TEXT ·mont4(SB), $0-16
 	ADDQ R14, R11
 	ADCQ $0x00, R13
 
-	// | w4
+	// | w4 @ R12
 	ADDQ R13, R12
 	MOVQ $0x0000000000000000, R15
 	ADCQ $0x00, R15
@@ -410,19 +422,19 @@ TEXT ·mont4(SB), $0-16
 	// |
 	MOVQ 40(DI), R8
 
-	// | u @ CX = w1 * inp
+	// | (u @ CX) = (w1 @ R9) * inp
 	MOVQ R9, AX
 	MULQ ·inp4+0(SB)
 	MOVQ AX, CX
 
-	// | w1
+	// | w1 @ R9
 	XORQ R14, R14
 	MOVQ ·modulus4+0(SB), AX
 	MULQ CX
 	ADDQ AX, R9
 	ADCQ DX, R14
 
-	// | w2
+	// | w2 @ R10
 	XORQ R13, R13
 	MOVQ ·modulus4+8(SB), AX
 	MULQ CX
@@ -431,7 +443,7 @@ TEXT ·mont4(SB), $0-16
 	ADDQ R14, R10
 	ADCQ $0x00, R13
 
-	// | w3
+	// | w3 @ R11
 	XORQ R14, R14
 	MOVQ ·modulus4+16(SB), AX
 	MULQ CX
@@ -440,7 +452,7 @@ TEXT ·mont4(SB), $0-16
 	ADDQ R13, R11
 	ADCQ $0x00, R14
 
-	// | w4
+	// | w4 @ R12
 	XORQ R13, R13
 	MOVQ ·modulus4+24(SB), AX
 	MULQ CX
@@ -449,7 +461,7 @@ TEXT ·mont4(SB), $0-16
 	ADDQ R14, R12
 	ADCQ $0x00, R13
 
-	// | w5
+	// | w5 @ R8
 	ADDQ R13, R15
 	ADCQ R15, R8
 	MOVQ $0x0000000000000000, R15
@@ -458,19 +470,19 @@ TEXT ·mont4(SB), $0-16
 	// |
 	MOVQ 48(DI), R9
 
-	// | u @ CX = w2 * inp
+	// | (u @ CX) = (w2 @ R10) * inp
 	MOVQ R10, AX
 	MULQ ·inp4+0(SB)
 	MOVQ AX, CX
 
-	// | w2
+	// | w2 @ R10
 	XORQ R14, R14
 	MOVQ ·modulus4+0(SB), AX
 	MULQ CX
 	ADDQ AX, R10
 	ADCQ DX, R14
 
-	// | w3
+	// | w3 @ R11
 	XORQ R13, R13
 	MOVQ ·modulus4+8(SB), AX
 	MULQ CX
@@ -479,7 +491,7 @@ TEXT ·mont4(SB), $0-16
 	ADDQ R14, R11
 	ADCQ $0x00, R13
 
-	// | w4
+	// | w4 @ R12
 	XORQ R14, R14
 	MOVQ ·modulus4+16(SB), AX
 	MULQ CX
@@ -488,7 +500,7 @@ TEXT ·mont4(SB), $0-16
 	ADDQ R13, R12
 	ADCQ $0x00, R14
 
-	// | w5
+	// | w5 @ R8
 	XORQ R13, R13
 	MOVQ ·modulus4+24(SB), AX
 	MULQ CX
@@ -497,7 +509,7 @@ TEXT ·mont4(SB), $0-16
 	ADDQ R14, R8
 	ADCQ $0x00, R13
 
-	// | w6
+	// | w6 @ R9
 	ADDQ R13, R15
 	ADCQ R15, R9
 	MOVQ $0x0000000000000000, R15
@@ -506,19 +518,19 @@ TEXT ·mont4(SB), $0-16
 	// |
 	MOVQ 56(DI), R10
 
-	// | u @ CX = w3 * inp
+	// | (u @ CX) = (w3 @ R11) * inp
 	MOVQ R11, AX
 	MULQ ·inp4+0(SB)
 	MOVQ AX, CX
 
-	// | w3
+	// | w3 @ R11
 	XORQ R14, R14
 	MOVQ ·modulus4+0(SB), AX
 	MULQ CX
 	ADDQ AX, R11
 	ADCQ DX, R14
 
-	// | w4
+	// | w4 @ R12
 	XORQ R13, R13
 	MOVQ ·modulus4+8(SB), AX
 	MULQ CX
@@ -527,7 +539,7 @@ TEXT ·mont4(SB), $0-16
 	ADDQ R14, R12
 	ADCQ $0x00, R13
 
-	// | w5
+	// | w5 @ R8
 	XORQ R14, R14
 	MOVQ ·modulus4+16(SB), AX
 	MULQ CX
@@ -536,7 +548,7 @@ TEXT ·mont4(SB), $0-16
 	ADDQ R13, R8
 	ADCQ $0x00, R14
 
-	// | w6
+	// | w6 @ R9
 	XORQ R13, R13
 	MOVQ ·modulus4+24(SB), AX
 	MULQ CX
@@ -545,7 +557,7 @@ TEXT ·mont4(SB), $0-16
 	ADDQ R14, R9
 	ADCQ $0x00, R13
 
-	// | w7
+	// | w7 @ R10
 	ADDQ R13, R15
 	ADCQ R15, R10
 	MOVQ $0x0000000000000000, R15
@@ -583,8 +595,6 @@ TEXT ·montmul4(SB), $8-24
 
 	// |
 	// |
-	XORQ R8, R8
-	XORQ R9, R9
 	XORQ R10, R10
 	XORQ R11, R11
 	XORQ R12, R12
@@ -597,24 +607,28 @@ TEXT ·montmul4(SB), $8-24
 	MOVQ (SI), CX
 
 	// | a0 * b0
+	// | (w0, w1) @ (R8, R9)
 	MOVQ (DI), AX
 	MULQ CX
 	MOVQ AX, R8
 	MOVQ DX, R9
 
 	// | a1 * b0
+	// | (w1, w2) @ (R9, R10)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R9
 	ADCQ DX, R10
 
 	// | a2 * b0
+	// | (w2, w3) @ (R10, R11)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R10
 	ADCQ DX, R11
 
 	// | a3 * b0
+	// | (w3, w4) @ (R11, R12)
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -625,6 +639,7 @@ TEXT ·montmul4(SB), $8-24
 	MOVQ 8(SI), CX
 
 	// | a0 * b1
+	// | (w1, w2, w3, w4) @ (R9, R10, R11, R12)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R9
@@ -633,6 +648,7 @@ TEXT ·montmul4(SB), $8-24
 	ADCQ $0x00, R12
 
 	// | a1 * b1
+	// | (w2, w3, w4, w5) @ (R10, R11, R12, R13)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R10
@@ -641,6 +657,7 @@ TEXT ·montmul4(SB), $8-24
 	ADCQ $0x00, R13
 
 	// | a2 * b1
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -649,6 +666,7 @@ TEXT ·montmul4(SB), $8-24
 	ADCQ $0x00, R14
 
 	// | a3 * b1
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -661,6 +679,7 @@ TEXT ·montmul4(SB), $8-24
 	MOVQ 16(SI), CX
 
 	// | a0 * b2
+	// | (w2, w3, w4, w5) @ (R10, R11, R12, R13)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R10
@@ -669,6 +688,7 @@ TEXT ·montmul4(SB), $8-24
 	ADCQ $0x00, R13
 
 	// | a1 * b2
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -677,6 +697,7 @@ TEXT ·montmul4(SB), $8-24
 	ADCQ $0x00, R14
 
 	// | a2 * b2
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -685,6 +706,7 @@ TEXT ·montmul4(SB), $8-24
 	ADCQ $0x00, R15
 
 	// | a3 * b2
+	// | (w5, w6, w7) @ (R13, R14, R15)
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -696,6 +718,7 @@ TEXT ·montmul4(SB), $8-24
 	MOVQ 24(SI), CX
 
 	// | a0 * b3
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -704,6 +727,7 @@ TEXT ·montmul4(SB), $8-24
 	ADCQ $0x00, R14
 
 	// | a1 * b3
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -712,6 +736,7 @@ TEXT ·montmul4(SB), $8-24
 	ADCQ $0x00, R15
 
 	// | a2 * b3
+	// | (w5, w6, w7) @ (R13, R14, R15)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -719,6 +744,7 @@ TEXT ·montmul4(SB), $8-24
 	ADCQ $0x00, R15
 
 	// | a3 * b3
+	// | (w6, w7) @ (R14, R15)
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -729,20 +755,19 @@ TEXT ·montmul4(SB), $8-24
 	MOVQ R15, (SP)
 
 	// |
-	// |
-	// | u @ CX = w0 * inp
+	// | (u @ CX) = (w0 @ R8) * inp
 	MOVQ R8, AX
 	MULQ ·inp4+0(SB)
 	MOVQ AX, CX
 
-	// | w0
+	// | w0 @ R8
 	XORQ DI, DI
 	MOVQ ·modulus4+0(SB), AX
 	MULQ CX
 	ADDQ AX, R8
 	ADCQ DX, DI
 
-	// | w1
+	// | w1 @ R9
 	XORQ SI, SI
 	MOVQ ·modulus4+8(SB), AX
 	MULQ CX
@@ -751,7 +776,7 @@ TEXT ·montmul4(SB), $8-24
 	ADDQ DI, R9
 	ADCQ $0x00, SI
 
-	// | w2
+	// | w2 @ R10
 	XORQ DI, DI
 	MOVQ ·modulus4+16(SB), AX
 	MULQ CX
@@ -760,7 +785,7 @@ TEXT ·montmul4(SB), $8-24
 	ADDQ SI, R10
 	ADCQ $0x00, DI
 
-	// | w3
+	// | w3 @ R11
 	XORQ SI, SI
 	MOVQ ·modulus4+24(SB), AX
 	MULQ CX
@@ -769,25 +794,25 @@ TEXT ·montmul4(SB), $8-24
 	ADDQ DI, R11
 	ADCQ $0x00, SI
 
-	// | w4
+	// | w4 @ R12
 	ADDQ SI, R12
 	MOVQ $0x0000000000000000, R15
 	ADCQ $0x00, R15
 
 	// |
-	// | u @ CX = w1 * inp
+	// | (u @ CX) = (w1 @ R9) * inp
 	MOVQ R9, AX
 	MULQ ·inp4+0(SB)
 	MOVQ AX, CX
 
-	// | w1
+	// | w1 @ R9
 	XORQ DI, DI
 	MOVQ ·modulus4+0(SB), AX
 	MULQ CX
 	ADDQ AX, R9
 	ADCQ DX, DI
 
-	// | w2
+	// | w2 @ R10
 	XORQ SI, SI
 	MOVQ ·modulus4+8(SB), AX
 	MULQ CX
@@ -796,7 +821,7 @@ TEXT ·montmul4(SB), $8-24
 	ADDQ DI, R10
 	ADCQ $0x00, SI
 
-	// | w3
+	// | w3 @ R11
 	XORQ DI, DI
 	MOVQ ·modulus4+16(SB), AX
 	MULQ CX
@@ -805,7 +830,7 @@ TEXT ·montmul4(SB), $8-24
 	ADDQ SI, R11
 	ADCQ $0x00, DI
 
-	// | w4
+	// | w4 @ R12
 	XORQ SI, SI
 	MOVQ ·modulus4+24(SB), AX
 	MULQ CX
@@ -814,26 +839,26 @@ TEXT ·montmul4(SB), $8-24
 	ADDQ DI, R12
 	ADCQ $0x00, SI
 
-	// | w5
+	// | w5 @ R13
 	ADDQ SI, R15
 	ADCQ R15, R13
 	MOVQ $0x0000000000000000, R15
 	ADCQ $0x00, R15
 
 	// |
-	// | u @ CX = w2 * inp
+	// | (u @ CX) = (w2 @ R10) * inp
 	MOVQ R10, AX
 	MULQ ·inp4+0(SB)
 	MOVQ AX, CX
 
-	// | w2
+	// | w2 @ R10
 	XORQ DI, DI
 	MOVQ ·modulus4+0(SB), AX
 	MULQ CX
 	ADDQ AX, R10
 	ADCQ DX, DI
 
-	// | w3
+	// | w3 @ R11
 	XORQ SI, SI
 	MOVQ ·modulus4+8(SB), AX
 	MULQ CX
@@ -842,7 +867,7 @@ TEXT ·montmul4(SB), $8-24
 	ADDQ DI, R11
 	ADCQ $0x00, SI
 
-	// | w4
+	// | w4 @ R12
 	XORQ DI, DI
 	MOVQ ·modulus4+16(SB), AX
 	MULQ CX
@@ -851,7 +876,7 @@ TEXT ·montmul4(SB), $8-24
 	ADDQ SI, R12
 	ADCQ $0x00, DI
 
-	// | w5
+	// | w5 @ R13
 	XORQ SI, SI
 	MOVQ ·modulus4+24(SB), AX
 	MULQ CX
@@ -860,7 +885,7 @@ TEXT ·montmul4(SB), $8-24
 	ADDQ DI, R13
 	ADCQ $0x00, SI
 
-	// | w6
+	// | w6 @ R14
 	ADDQ SI, R15
 	ADCQ R15, R14
 	MOVQ $0x0000000000000000, R15
@@ -869,19 +894,19 @@ TEXT ·montmul4(SB), $8-24
 	// |
 	MOVQ (SP), R10
 
-	// | u @ CX = w3 * inp
+	// | (u @ CX) = (w3 @ R11) * inp
 	MOVQ R11, AX
 	MULQ ·inp4+0(SB)
 	MOVQ AX, CX
 
-	// | w3
+	// | w3 @ R11
 	XORQ DI, DI
 	MOVQ ·modulus4+0(SB), AX
 	MULQ CX
 	ADDQ AX, R11
 	ADCQ DX, DI
 
-	// | w4
+	// | w4 @ R12
 	XORQ SI, SI
 	MOVQ ·modulus4+8(SB), AX
 	MULQ CX
@@ -890,7 +915,7 @@ TEXT ·montmul4(SB), $8-24
 	ADDQ DI, R12
 	ADCQ $0x00, SI
 
-	// | w5
+	// | w5 @ R13
 	XORQ DI, DI
 	MOVQ ·modulus4+16(SB), AX
 	MULQ CX
@@ -899,7 +924,7 @@ TEXT ·montmul4(SB), $8-24
 	ADDQ SI, R13
 	ADCQ $0x00, DI
 
-	// | w6
+	// | w6 @ R14
 	XORQ SI, SI
 	MOVQ ·modulus4+24(SB), AX
 	MULQ CX
@@ -908,7 +933,7 @@ TEXT ·montmul4(SB), $8-24
 	ADDQ DI, R14
 	ADCQ $0x00, SI
 
-	// | w7
+	// | w7 @ R10
 	ADDQ SI, R15
 	ADCQ R15, R10
 	MOVQ $0x0000000000000000, R15
@@ -939,10 +964,433 @@ TEXT ·montmul4(SB), $8-24
 
 // func square4(c *[8]uint64, a *Fe256)
 TEXT ·square4(SB), $0-16
+	// |
+	MOVQ a+8(FP), DI
+	XORQ R11, R11
+	XORQ R12, R12
+	XORQ R13, R13
+	XORQ R14, R14
+	XORQ R15, R15
+	XORQ CX, CX
+
+	// | a0
+	// | w0 @ R9
+	MOVQ (DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	MOVQ AX, R9
+	MOVQ DX, R10
+
+	// | w1 @ R10
+	MOVQ 8(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R12
+	ADDQ AX, R10
+	ADCQ DX, R11
+
+	// | w2 @ R11
+	MOVQ 16(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R13
+	ADDQ AX, R11
+	ADCQ DX, R12
+	ADCQ $0x00, R13
+
+	// | w3 @ R12
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R14
+	ADDQ AX, R12
+	ADCQ DX, R13
+	ADCQ $0x00, R14
+
+	// | a1
+	// | w2 @ R11
+	MOVQ 8(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, R12
+	ADCQ $0x00, R13
+	ADCQ $0x00, R14
+
+	// | w3 @ R12
+	MOVQ 16(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R14
+	ADDQ AX, R12
+	ADCQ DX, R13
+	ADCQ $0x00, R14
+
+	// | w4 @ R13
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R15
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+
+	// | a2
+	// | w4 @ R13
+	MOVQ 16(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+
+	// | w5 @ R14
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, CX
+	ADDQ AX, R14
+	ADCQ DX, R15
+	ADCQ $0x00, CX
+
+	// | a3
+	// | w6 @ R15
+	MOVQ 24(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, CX
+
+	// |
+	MOVQ c+0(FP), DI
+	MOVQ R9, (DI)
+	MOVQ R10, 8(DI)
+	MOVQ R11, 16(DI)
+	MOVQ R12, 24(DI)
+	MOVQ R13, 32(DI)
+	MOVQ R14, 40(DI)
+	MOVQ R15, 48(DI)
+	MOVQ CX, 56(DI)
 	RET
 
 // func montsquare4(c *Fe256, a *Fe256)
-TEXT ·montsquare4(SB), $0-16
+TEXT ·montsquare4(SB), $8-16
+	MOVQ a+8(FP), DI
+	XORQ R11, R11
+	XORQ R12, R12
+	XORQ R13, R13
+	XORQ R14, R14
+	XORQ R15, R15
+	XORQ CX, CX
+
+	// | a0
+	// | w0 @ R9
+	MOVQ (DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	MOVQ AX, R9
+	MOVQ DX, R10
+
+	// | w1 @ R10
+	MOVQ 8(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R12
+	ADDQ AX, R10
+	ADCQ DX, R11
+
+	// | w2 @ R11
+	MOVQ 16(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R13
+	ADDQ AX, R11
+	ADCQ DX, R12
+	ADCQ $0x00, R13
+
+	// | w3 @ R12
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R14
+	ADDQ AX, R12
+	ADCQ DX, R13
+	ADCQ $0x00, R14
+
+	// | a1
+	// | w2 @ R11
+	MOVQ 8(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, R12
+	ADCQ $0x00, R13
+	ADCQ $0x00, R14
+
+	// | w3 @ R12
+	MOVQ 16(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R14
+	ADDQ AX, R12
+	ADCQ DX, R13
+	ADCQ $0x00, R14
+
+	// | w4 @ R13
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R15
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+
+	// | a2
+	// | w4 @ R13
+	MOVQ 16(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+
+	// | w5 @ R14
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, CX
+	ADDQ AX, R14
+	ADCQ DX, R15
+	ADCQ $0x00, CX
+
+	// | a3
+	// | w6 @ R15
+	MOVQ 24(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, CX
+
+	// |
+	// | Montgomerry Reduction
+	MOVQ CX, (SP)
+
+	// |
+	// | (u @ R8) = (w0 @ R9) * inp
+	MOVQ R9, AX
+	MULQ ·inp4+0(SB)
+	MOVQ AX, R8
+
+	// | w0 @ R9
+	XORQ SI, SI
+	MOVQ ·modulus4+0(SB), AX
+	MULQ R8
+	ADDQ AX, R9
+	ADCQ DX, SI
+
+	// | w1 @ R10
+	XORQ CX, CX
+	MOVQ ·modulus4+8(SB), AX
+	MULQ R8
+	ADDQ AX, R10
+	ADCQ DX, CX
+	ADDQ SI, R10
+	ADCQ $0x00, CX
+
+	// | w2 @ R11
+	XORQ SI, SI
+	MOVQ ·modulus4+16(SB), AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, SI
+	ADDQ CX, R11
+	ADCQ $0x00, SI
+
+	// | w3 @ R12
+	XORQ CX, CX
+	MOVQ ·modulus4+24(SB), AX
+	MULQ R8
+	ADDQ AX, R12
+	ADCQ DX, CX
+	ADDQ SI, R12
+	ADCQ $0x00, CX
+
+	// | w4 @ R13
+	ADDQ CX, R13
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// |
+	// | (u @ R8) = (w1 @ R10) * inp
+	MOVQ R10, AX
+	MULQ ·inp4+0(SB)
+	MOVQ AX, R8
+
+	// | w1 @ R10
+	XORQ SI, SI
+	MOVQ ·modulus4+0(SB), AX
+	MULQ R8
+	ADDQ AX, R10
+	ADCQ DX, SI
+
+	// | w2 @ R11
+	XORQ CX, CX
+	MOVQ ·modulus4+8(SB), AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, CX
+	ADDQ SI, R11
+	ADCQ $0x00, CX
+
+	// | w3 @ R12
+	XORQ SI, SI
+	MOVQ ·modulus4+16(SB), AX
+	MULQ R8
+	ADDQ AX, R12
+	ADCQ DX, SI
+	ADDQ CX, R12
+	ADCQ $0x00, SI
+
+	// | w4 @ R13
+	XORQ CX, CX
+	MOVQ ·modulus4+24(SB), AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, CX
+	ADDQ SI, R13
+	ADCQ $0x00, CX
+
+	// | w5 @ R14
+	ADDQ CX, DI
+	ADCQ DI, R14
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// |
+	// | (u @ R8) = (w2 @ R11) * inp
+	MOVQ R11, AX
+	MULQ ·inp4+0(SB)
+	MOVQ AX, R8
+
+	// | w2 @ R11
+	XORQ SI, SI
+	MOVQ ·modulus4+0(SB), AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, SI
+
+	// | w3 @ R12
+	XORQ CX, CX
+	MOVQ ·modulus4+8(SB), AX
+	MULQ R8
+	ADDQ AX, R12
+	ADCQ DX, CX
+	ADDQ SI, R12
+	ADCQ $0x00, CX
+
+	// | w4 @ R13
+	XORQ SI, SI
+	MOVQ ·modulus4+16(SB), AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, SI
+	ADDQ CX, R13
+	ADCQ $0x00, SI
+
+	// | w5 @ R14
+	XORQ CX, CX
+	MOVQ ·modulus4+24(SB), AX
+	MULQ R8
+	ADDQ AX, R14
+	ADCQ DX, CX
+	ADDQ SI, R14
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	ADDQ CX, DI
+	ADCQ DI, R15
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// |
+	MOVQ (SP), R11
+
+	// | (u @ R8) = (w3 @ R12) * inp
+	MOVQ R12, AX
+	MULQ ·inp4+0(SB)
+	MOVQ AX, R8
+
+	// | w3 @ R12
+	XORQ SI, SI
+	MOVQ ·modulus4+0(SB), AX
+	MULQ R8
+	ADDQ AX, R12
+	ADCQ DX, SI
+
+	// | w4 @ R13
+	XORQ CX, CX
+	MOVQ ·modulus4+8(SB), AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, CX
+	ADDQ SI, R13
+	ADCQ $0x00, CX
+
+	// | w5 @ R14
+	XORQ SI, SI
+	MOVQ ·modulus4+16(SB), AX
+	MULQ R8
+	ADDQ AX, R14
+	ADCQ DX, SI
+	ADDQ CX, R14
+	ADCQ $0x00, SI
+
+	// | w6 @ R15
+	XORQ CX, CX
+	MOVQ ·modulus4+24(SB), AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADDQ SI, R15
+	ADCQ $0x00, CX
+
+	// | w7 @ R11
+	ADDQ CX, DI
+	ADCQ DI, R11
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// | Compare & Return
+	MOVQ    R13, R8
+	SUBQ    ·modulus4+0(SB), R8
+	MOVQ    R14, R12
+	SBBQ    ·modulus4+8(SB), R12
+	MOVQ    R15, CX
+	SBBQ    ·modulus4+16(SB), CX
+	MOVQ    R11, AX
+	SBBQ    ·modulus4+24(SB), AX
+	SBBQ    $0x00, DI
+	MOVQ    c+0(FP), DI
+	CMOVQCC R8, R13
+	MOVQ    R13, (DI)
+	CMOVQCC R12, R14
+	MOVQ    R14, 8(DI)
+	CMOVQCC CX, R15
+	MOVQ    R15, 16(DI)
+	CMOVQCC AX, R11
+	MOVQ    R11, 24(DI)
 	RET
 
 // func add5(c *Fe320, a *Fe320, b *Fe320)
@@ -1170,9 +1618,6 @@ TEXT ·mul5(SB), $16-24
 	MOVQ b+16(FP), SI
 
 	// |
-	// |
-	XORQ R8, R8
-	XORQ R9, R9
 	XORQ R10, R10
 	XORQ R11, R11
 	XORQ R12, R12
@@ -1187,30 +1632,35 @@ TEXT ·mul5(SB), $16-24
 	MOVQ (SI), CX
 
 	// | a0 * b0
+	// | (w0, w1) @ (R8, R9)
 	MOVQ (DI), AX
 	MULQ CX
 	MOVQ AX, R8
 	MOVQ DX, R9
 
 	// | a1 * b0
+	// | (w1, w2) @ (R9, R10)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R9
 	ADCQ DX, R10
 
 	// | a2 * b0
+	// | (w2, w3) @ (R10, R11)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R10
 	ADCQ DX, R11
 
 	// | a3 * b0
+	// | (w3, w4) @ (R11, R12)
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R11
 	ADCQ DX, R12
 
 	// | a4 * b0
+	// | (w4, w5) @ (R12, R13)
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -1221,6 +1671,7 @@ TEXT ·mul5(SB), $16-24
 	MOVQ 8(SI), CX
 
 	// | a0 * b1
+	// | (w1, w2, w3, w4) @ (R9, R10, R11, R12)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R9
@@ -1229,6 +1680,7 @@ TEXT ·mul5(SB), $16-24
 	ADCQ $0x00, R12
 
 	// | a1 * b1
+	// | (w2, w3, w4, w5) @ (R10, R11, R12, R13)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R10
@@ -1237,6 +1689,7 @@ TEXT ·mul5(SB), $16-24
 	ADCQ $0x00, R13
 
 	// | a2 * b1
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -1245,6 +1698,7 @@ TEXT ·mul5(SB), $16-24
 	ADCQ $0x00, R14
 
 	// | a3 * b1
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -1253,6 +1707,7 @@ TEXT ·mul5(SB), $16-24
 	ADCQ $0x00, R15
 
 	// | a4 * b1
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -1265,6 +1720,7 @@ TEXT ·mul5(SB), $16-24
 	MOVQ 16(SI), CX
 
 	// | a0 * b2
+	// | (w2, w3, w4, w5) @ (R10, R11, R12, R13)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R10
@@ -1273,6 +1729,7 @@ TEXT ·mul5(SB), $16-24
 	ADCQ $0x00, R13
 
 	// | a1 * b2
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -1281,6 +1738,7 @@ TEXT ·mul5(SB), $16-24
 	ADCQ $0x00, R14
 
 	// | a2 * b2
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -1289,6 +1747,7 @@ TEXT ·mul5(SB), $16-24
 	ADCQ $0x00, R15
 
 	// | a3 * b2
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -1297,6 +1756,7 @@ TEXT ·mul5(SB), $16-24
 	ADCQ $0x00, (SP)
 
 	// | a4 * b2
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -1309,6 +1769,7 @@ TEXT ·mul5(SB), $16-24
 	MOVQ 24(SI), CX
 
 	// | a0 * b3
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -1317,6 +1778,7 @@ TEXT ·mul5(SB), $16-24
 	ADCQ $0x00, R14
 
 	// | a1 * b3
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -1325,6 +1787,7 @@ TEXT ·mul5(SB), $16-24
 	ADCQ $0x00, R15
 
 	// | a2 * b3
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -1333,6 +1796,7 @@ TEXT ·mul5(SB), $16-24
 	ADCQ $0x00, (SP)
 
 	// | a3 * b3
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -1341,6 +1805,7 @@ TEXT ·mul5(SB), $16-24
 	ADCQ $0x00, 8(SP)
 
 	// | a4 * b3
+	// | (w7, w8, w9) @ (R15, (SP), 8(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -1352,6 +1817,7 @@ TEXT ·mul5(SB), $16-24
 	MOVQ 32(SI), CX
 
 	// | a0 * b4
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -1360,6 +1826,7 @@ TEXT ·mul5(SB), $16-24
 	ADCQ $0x00, R15
 
 	// | a1 * b4
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -1368,6 +1835,7 @@ TEXT ·mul5(SB), $16-24
 	ADCQ $0x00, (SP)
 
 	// | a2 * b4
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -1376,6 +1844,7 @@ TEXT ·mul5(SB), $16-24
 	ADCQ $0x00, 8(SP)
 
 	// | a3 * b4
+	// | (w7, w8, w9) @ (R15, (SP), 8(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -1383,6 +1852,7 @@ TEXT ·mul5(SB), $16-24
 	ADCQ $0x00, 8(SP)
 
 	// | a4 * b4
+	// | (w8, w9) @ ((SP), 8(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -1395,13 +1865,13 @@ TEXT ·mul5(SB), $16-24
 	MOVQ R10, 16(DI)
 	MOVQ R11, 24(DI)
 	MOVQ R12, 32(DI)
-	MOVQ R13, (DI)
-	MOVQ R14, 8(DI)
-	MOVQ R15, 16(DI)
+	MOVQ R13, 40(DI)
+	MOVQ R14, 48(DI)
+	MOVQ R15, 56(DI)
 	MOVQ (SP), BX
-	MOVQ BX, 24(DI)
+	MOVQ BX, 64(DI)
 	MOVQ 8(SP), BX
-	MOVQ BX, 32(DI)
+	MOVQ BX, 72(DI)
 	RET
 
 // func mont5(c *Fe320, w *[10]uint64)
@@ -1415,20 +1885,19 @@ TEXT ·mont5(SB), $0-16
 	MOVQ 40(DI), SI
 
 	// |
-	// |
-	// | u @ CX = w0 * inp
+	// | (u @ CX) = (w0 @ R8) * inp
 	MOVQ R8, AX
 	MULQ ·inp5+0(SB)
 	MOVQ AX, CX
 
-	// | w0
+	// | w0 @ R8
 	XORQ R14, R14
 	MOVQ ·modulus5+0(SB), AX
 	MULQ CX
 	ADDQ AX, R8
 	ADCQ DX, R14
 
-	// | w1
+	// | w1 @ R9
 	XORQ R13, R13
 	MOVQ ·modulus5+8(SB), AX
 	MULQ CX
@@ -1437,7 +1906,7 @@ TEXT ·mont5(SB), $0-16
 	ADDQ R14, R9
 	ADCQ $0x00, R13
 
-	// | w2
+	// | w2 @ R10
 	XORQ R14, R14
 	MOVQ ·modulus5+16(SB), AX
 	MULQ CX
@@ -1446,7 +1915,7 @@ TEXT ·mont5(SB), $0-16
 	ADDQ R13, R10
 	ADCQ $0x00, R14
 
-	// | w3
+	// | w3 @ R11
 	XORQ R13, R13
 	MOVQ ·modulus5+24(SB), AX
 	MULQ CX
@@ -1455,7 +1924,7 @@ TEXT ·mont5(SB), $0-16
 	ADDQ R14, R11
 	ADCQ $0x00, R13
 
-	// | w4
+	// | w4 @ R12
 	XORQ R14, R14
 	MOVQ ·modulus5+32(SB), AX
 	MULQ CX
@@ -1464,7 +1933,7 @@ TEXT ·mont5(SB), $0-16
 	ADDQ R13, R12
 	ADCQ $0x00, R14
 
-	// | w5
+	// | w5 @ SI
 	ADDQ R14, SI
 	MOVQ $0x0000000000000000, R15
 	ADCQ $0x00, R15
@@ -1472,19 +1941,19 @@ TEXT ·mont5(SB), $0-16
 	// |
 	MOVQ 48(DI), R8
 
-	// | u @ CX = w1 * inp
+	// | (u @ CX) = (w1 @ R9) * inp
 	MOVQ R9, AX
 	MULQ ·inp5+0(SB)
 	MOVQ AX, CX
 
-	// | w1
+	// | w1 @ R9
 	XORQ R14, R14
 	MOVQ ·modulus5+0(SB), AX
 	MULQ CX
 	ADDQ AX, R9
 	ADCQ DX, R14
 
-	// | w2
+	// | w2 @ R10
 	XORQ R13, R13
 	MOVQ ·modulus5+8(SB), AX
 	MULQ CX
@@ -1493,7 +1962,7 @@ TEXT ·mont5(SB), $0-16
 	ADDQ R14, R10
 	ADCQ $0x00, R13
 
-	// | w3
+	// | w3 @ R11
 	XORQ R14, R14
 	MOVQ ·modulus5+16(SB), AX
 	MULQ CX
@@ -1502,7 +1971,7 @@ TEXT ·mont5(SB), $0-16
 	ADDQ R13, R11
 	ADCQ $0x00, R14
 
-	// | w4
+	// | w4 @ R12
 	XORQ R13, R13
 	MOVQ ·modulus5+24(SB), AX
 	MULQ CX
@@ -1511,7 +1980,7 @@ TEXT ·mont5(SB), $0-16
 	ADDQ R14, R12
 	ADCQ $0x00, R13
 
-	// | w5
+	// | w5 @ SI
 	XORQ R14, R14
 	MOVQ ·modulus5+32(SB), AX
 	MULQ CX
@@ -1520,7 +1989,7 @@ TEXT ·mont5(SB), $0-16
 	ADDQ R13, SI
 	ADCQ $0x00, R14
 
-	// | w6
+	// | w6 @ R8
 	ADDQ R14, R15
 	ADCQ R15, R8
 	MOVQ $0x0000000000000000, R15
@@ -1529,19 +1998,19 @@ TEXT ·mont5(SB), $0-16
 	// |
 	MOVQ 56(DI), R9
 
-	// | u @ CX = w2 * inp
+	// | (u @ CX) = (w2 @ R10) * inp
 	MOVQ R10, AX
 	MULQ ·inp5+0(SB)
 	MOVQ AX, CX
 
-	// | w2
+	// | w2 @ R10
 	XORQ R14, R14
 	MOVQ ·modulus5+0(SB), AX
 	MULQ CX
 	ADDQ AX, R10
 	ADCQ DX, R14
 
-	// | w3
+	// | w3 @ R11
 	XORQ R13, R13
 	MOVQ ·modulus5+8(SB), AX
 	MULQ CX
@@ -1550,7 +2019,7 @@ TEXT ·mont5(SB), $0-16
 	ADDQ R14, R11
 	ADCQ $0x00, R13
 
-	// | w4
+	// | w4 @ R12
 	XORQ R14, R14
 	MOVQ ·modulus5+16(SB), AX
 	MULQ CX
@@ -1559,7 +2028,7 @@ TEXT ·mont5(SB), $0-16
 	ADDQ R13, R12
 	ADCQ $0x00, R14
 
-	// | w5
+	// | w5 @ SI
 	XORQ R13, R13
 	MOVQ ·modulus5+24(SB), AX
 	MULQ CX
@@ -1568,7 +2037,7 @@ TEXT ·mont5(SB), $0-16
 	ADDQ R14, SI
 	ADCQ $0x00, R13
 
-	// | w6
+	// | w6 @ R8
 	XORQ R14, R14
 	MOVQ ·modulus5+32(SB), AX
 	MULQ CX
@@ -1577,7 +2046,7 @@ TEXT ·mont5(SB), $0-16
 	ADDQ R13, R8
 	ADCQ $0x00, R14
 
-	// | w7
+	// | w7 @ R9
 	ADDQ R14, R15
 	ADCQ R15, R9
 	MOVQ $0x0000000000000000, R15
@@ -1586,19 +2055,19 @@ TEXT ·mont5(SB), $0-16
 	// |
 	MOVQ 64(DI), R10
 
-	// | u @ CX = w3 * inp
+	// | (u @ CX) = (w3 @ R11) * inp
 	MOVQ R11, AX
 	MULQ ·inp5+0(SB)
 	MOVQ AX, CX
 
-	// | w3
+	// | w3 @ R11
 	XORQ R14, R14
 	MOVQ ·modulus5+0(SB), AX
 	MULQ CX
 	ADDQ AX, R11
 	ADCQ DX, R14
 
-	// | w4
+	// | w4 @ R12
 	XORQ R13, R13
 	MOVQ ·modulus5+8(SB), AX
 	MULQ CX
@@ -1607,7 +2076,7 @@ TEXT ·mont5(SB), $0-16
 	ADDQ R14, R12
 	ADCQ $0x00, R13
 
-	// | w5
+	// | w5 @ SI
 	XORQ R14, R14
 	MOVQ ·modulus5+16(SB), AX
 	MULQ CX
@@ -1616,7 +2085,7 @@ TEXT ·mont5(SB), $0-16
 	ADDQ R13, SI
 	ADCQ $0x00, R14
 
-	// | w6
+	// | w6 @ R8
 	XORQ R13, R13
 	MOVQ ·modulus5+24(SB), AX
 	MULQ CX
@@ -1625,7 +2094,7 @@ TEXT ·mont5(SB), $0-16
 	ADDQ R14, R8
 	ADCQ $0x00, R13
 
-	// | w7
+	// | w7 @ R9
 	XORQ R14, R14
 	MOVQ ·modulus5+32(SB), AX
 	MULQ CX
@@ -1634,7 +2103,7 @@ TEXT ·mont5(SB), $0-16
 	ADDQ R13, R9
 	ADCQ $0x00, R14
 
-	// | w8
+	// | w8 @ R10
 	ADDQ R14, R15
 	ADCQ R15, R10
 	MOVQ $0x0000000000000000, R15
@@ -1643,19 +2112,19 @@ TEXT ·mont5(SB), $0-16
 	// |
 	MOVQ 72(DI), R11
 
-	// | u @ CX = w4 * inp
+	// | (u @ CX) = (w4 @ R12) * inp
 	MOVQ R12, AX
 	MULQ ·inp5+0(SB)
 	MOVQ AX, CX
 
-	// | w4
+	// | w4 @ R12
 	XORQ R14, R14
 	MOVQ ·modulus5+0(SB), AX
 	MULQ CX
 	ADDQ AX, R12
 	ADCQ DX, R14
 
-	// | w5
+	// | w5 @ SI
 	XORQ R13, R13
 	MOVQ ·modulus5+8(SB), AX
 	MULQ CX
@@ -1664,7 +2133,7 @@ TEXT ·mont5(SB), $0-16
 	ADDQ R14, SI
 	ADCQ $0x00, R13
 
-	// | w6
+	// | w6 @ R8
 	XORQ R14, R14
 	MOVQ ·modulus5+16(SB), AX
 	MULQ CX
@@ -1673,7 +2142,7 @@ TEXT ·mont5(SB), $0-16
 	ADDQ R13, R8
 	ADCQ $0x00, R14
 
-	// | w7
+	// | w7 @ R9
 	XORQ R13, R13
 	MOVQ ·modulus5+24(SB), AX
 	MULQ CX
@@ -1682,7 +2151,7 @@ TEXT ·mont5(SB), $0-16
 	ADDQ R14, R9
 	ADCQ $0x00, R13
 
-	// | w8
+	// | w8 @ R10
 	XORQ R14, R14
 	MOVQ ·modulus5+32(SB), AX
 	MULQ CX
@@ -1691,7 +2160,7 @@ TEXT ·mont5(SB), $0-16
 	ADDQ R13, R10
 	ADCQ $0x00, R14
 
-	// | w9
+	// | w9 @ R11
 	ADDQ R14, R15
 	ADCQ R15, R11
 	MOVQ $0x0000000000000000, R15
@@ -1725,7 +2194,7 @@ TEXT ·mont5(SB), $0-16
 	RET
 
 // func montmul5(c *Fe320, a *Fe320, b *Fe320)
-TEXT ·montmul5(SB), $24-24
+TEXT ·montmul5(SB), $32-24
 	// |
 	// | Multiplication
 	MOVQ a+8(FP), DI
@@ -1733,8 +2202,6 @@ TEXT ·montmul5(SB), $24-24
 
 	// |
 	// |
-	XORQ R8, R8
-	XORQ R9, R9
 	XORQ R10, R10
 	XORQ R11, R11
 	XORQ R12, R12
@@ -1749,30 +2216,35 @@ TEXT ·montmul5(SB), $24-24
 	MOVQ (SI), CX
 
 	// | a0 * b0
+	// | (w0, w1) @ (R8, R9)
 	MOVQ (DI), AX
 	MULQ CX
 	MOVQ AX, R8
 	MOVQ DX, R9
 
 	// | a1 * b0
+	// | (w1, w2) @ (R9, R10)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R9
 	ADCQ DX, R10
 
 	// | a2 * b0
+	// | (w2, w3) @ (R10, R11)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R10
 	ADCQ DX, R11
 
 	// | a3 * b0
+	// | (w3, w4) @ (R11, R12)
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R11
 	ADCQ DX, R12
 
 	// | a4 * b0
+	// | (w4, w5) @ (R12, R13)
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -1783,6 +2255,7 @@ TEXT ·montmul5(SB), $24-24
 	MOVQ 8(SI), CX
 
 	// | a0 * b1
+	// | (w1, w2, w3, w4) @ (R9, R10, R11, R12)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R9
@@ -1791,6 +2264,7 @@ TEXT ·montmul5(SB), $24-24
 	ADCQ $0x00, R12
 
 	// | a1 * b1
+	// | (w2, w3, w4, w5) @ (R10, R11, R12, R13)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R10
@@ -1799,6 +2273,7 @@ TEXT ·montmul5(SB), $24-24
 	ADCQ $0x00, R13
 
 	// | a2 * b1
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -1807,6 +2282,7 @@ TEXT ·montmul5(SB), $24-24
 	ADCQ $0x00, R14
 
 	// | a3 * b1
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -1815,6 +2291,7 @@ TEXT ·montmul5(SB), $24-24
 	ADCQ $0x00, R15
 
 	// | a4 * b1
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -1827,6 +2304,7 @@ TEXT ·montmul5(SB), $24-24
 	MOVQ 16(SI), CX
 
 	// | a0 * b2
+	// | (w2, w3, w4, w5) @ (R10, R11, R12, R13)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R10
@@ -1835,6 +2313,7 @@ TEXT ·montmul5(SB), $24-24
 	ADCQ $0x00, R13
 
 	// | a1 * b2
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -1843,6 +2322,7 @@ TEXT ·montmul5(SB), $24-24
 	ADCQ $0x00, R14
 
 	// | a2 * b2
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -1851,6 +2331,7 @@ TEXT ·montmul5(SB), $24-24
 	ADCQ $0x00, R15
 
 	// | a3 * b2
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -1859,6 +2340,7 @@ TEXT ·montmul5(SB), $24-24
 	ADCQ $0x00, (SP)
 
 	// | a4 * b2
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -1871,6 +2353,7 @@ TEXT ·montmul5(SB), $24-24
 	MOVQ 24(SI), CX
 
 	// | a0 * b3
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -1879,6 +2362,7 @@ TEXT ·montmul5(SB), $24-24
 	ADCQ $0x00, R14
 
 	// | a1 * b3
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -1887,6 +2371,7 @@ TEXT ·montmul5(SB), $24-24
 	ADCQ $0x00, R15
 
 	// | a2 * b3
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -1895,6 +2380,7 @@ TEXT ·montmul5(SB), $24-24
 	ADCQ $0x00, (SP)
 
 	// | a3 * b3
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -1903,6 +2389,7 @@ TEXT ·montmul5(SB), $24-24
 	ADCQ $0x00, 8(SP)
 
 	// | a4 * b3
+	// | (w7, w8, w9) @ (R15, (SP), 8(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -1914,6 +2401,7 @@ TEXT ·montmul5(SB), $24-24
 	MOVQ 32(SI), CX
 
 	// | a0 * b4
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -1922,6 +2410,7 @@ TEXT ·montmul5(SB), $24-24
 	ADCQ $0x00, R15
 
 	// | a1 * b4
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -1930,6 +2419,7 @@ TEXT ·montmul5(SB), $24-24
 	ADCQ $0x00, (SP)
 
 	// | a2 * b4
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -1938,6 +2428,7 @@ TEXT ·montmul5(SB), $24-24
 	ADCQ $0x00, 8(SP)
 
 	// | a3 * b4
+	// | (w7, w8, w9) @ (R15, (SP), 8(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -1945,6 +2436,7 @@ TEXT ·montmul5(SB), $24-24
 	ADCQ $0x00, 8(SP)
 
 	// | a4 * b4
+	// | (w8, w9) @ ((SP), 8(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -1955,20 +2447,19 @@ TEXT ·montmul5(SB), $24-24
 	MOVQ R15, 16(SP)
 
 	// |
-	// |
-	// | u @ CX = w0 * inp
+	// | (u @ CX) = (w0 @ R8) * inp
 	MOVQ R8, AX
 	MULQ ·inp5+0(SB)
 	MOVQ AX, CX
 
-	// | w0
+	// | w0 @ R8
 	XORQ DI, DI
 	MOVQ ·modulus5+0(SB), AX
 	MULQ CX
 	ADDQ AX, R8
 	ADCQ DX, DI
 
-	// | w1
+	// | w1 @ R9
 	XORQ SI, SI
 	MOVQ ·modulus5+8(SB), AX
 	MULQ CX
@@ -1977,7 +2468,7 @@ TEXT ·montmul5(SB), $24-24
 	ADDQ DI, R9
 	ADCQ $0x00, SI
 
-	// | w2
+	// | w2 @ R10
 	XORQ DI, DI
 	MOVQ ·modulus5+16(SB), AX
 	MULQ CX
@@ -1986,7 +2477,7 @@ TEXT ·montmul5(SB), $24-24
 	ADDQ SI, R10
 	ADCQ $0x00, DI
 
-	// | w3
+	// | w3 @ R11
 	XORQ SI, SI
 	MOVQ ·modulus5+24(SB), AX
 	MULQ CX
@@ -1995,7 +2486,7 @@ TEXT ·montmul5(SB), $24-24
 	ADDQ DI, R11
 	ADCQ $0x00, SI
 
-	// | w4
+	// | w4 @ R12
 	XORQ DI, DI
 	MOVQ ·modulus5+32(SB), AX
 	MULQ CX
@@ -2004,25 +2495,25 @@ TEXT ·montmul5(SB), $24-24
 	ADDQ SI, R12
 	ADCQ $0x00, DI
 
-	// | w5
+	// | w5 @ R13
 	ADDQ DI, R13
 	MOVQ $0x0000000000000000, R15
 	ADCQ $0x00, R15
 
 	// |
-	// | u @ CX = w1 * inp
+	// | (u @ CX) = (w1 @ R9) * inp
 	MOVQ R9, AX
 	MULQ ·inp5+0(SB)
 	MOVQ AX, CX
 
-	// | w1
+	// | w1 @ R9
 	XORQ DI, DI
 	MOVQ ·modulus5+0(SB), AX
 	MULQ CX
 	ADDQ AX, R9
 	ADCQ DX, DI
 
-	// | w2
+	// | w2 @ R10
 	XORQ SI, SI
 	MOVQ ·modulus5+8(SB), AX
 	MULQ CX
@@ -2031,7 +2522,7 @@ TEXT ·montmul5(SB), $24-24
 	ADDQ DI, R10
 	ADCQ $0x00, SI
 
-	// | w3
+	// | w3 @ R11
 	XORQ DI, DI
 	MOVQ ·modulus5+16(SB), AX
 	MULQ CX
@@ -2040,7 +2531,7 @@ TEXT ·montmul5(SB), $24-24
 	ADDQ SI, R11
 	ADCQ $0x00, DI
 
-	// | w4
+	// | w4 @ R12
 	XORQ SI, SI
 	MOVQ ·modulus5+24(SB), AX
 	MULQ CX
@@ -2049,7 +2540,7 @@ TEXT ·montmul5(SB), $24-24
 	ADDQ DI, R12
 	ADCQ $0x00, SI
 
-	// | w5
+	// | w5 @ R13
 	XORQ DI, DI
 	MOVQ ·modulus5+32(SB), AX
 	MULQ CX
@@ -2058,7 +2549,7 @@ TEXT ·montmul5(SB), $24-24
 	ADDQ SI, R13
 	ADCQ $0x00, DI
 
-	// | w6
+	// | w6 @ R14
 	ADDQ DI, R15
 	ADCQ R15, R14
 	MOVQ $0x0000000000000000, R15
@@ -2067,19 +2558,19 @@ TEXT ·montmul5(SB), $24-24
 	// |
 	MOVQ 16(SP), R9
 
-	// | u @ CX = w2 * inp
+	// | (u @ CX) = (w2 @ R10) * inp
 	MOVQ R10, AX
 	MULQ ·inp5+0(SB)
 	MOVQ AX, CX
 
-	// | w2
+	// | w2 @ R10
 	XORQ DI, DI
 	MOVQ ·modulus5+0(SB), AX
 	MULQ CX
 	ADDQ AX, R10
 	ADCQ DX, DI
 
-	// | w3
+	// | w3 @ R11
 	XORQ SI, SI
 	MOVQ ·modulus5+8(SB), AX
 	MULQ CX
@@ -2088,7 +2579,7 @@ TEXT ·montmul5(SB), $24-24
 	ADDQ DI, R11
 	ADCQ $0x00, SI
 
-	// | w4
+	// | w4 @ R12
 	XORQ DI, DI
 	MOVQ ·modulus5+16(SB), AX
 	MULQ CX
@@ -2097,7 +2588,7 @@ TEXT ·montmul5(SB), $24-24
 	ADDQ SI, R12
 	ADCQ $0x00, DI
 
-	// | w5
+	// | w5 @ R13
 	XORQ SI, SI
 	MOVQ ·modulus5+24(SB), AX
 	MULQ CX
@@ -2106,7 +2597,7 @@ TEXT ·montmul5(SB), $24-24
 	ADDQ DI, R13
 	ADCQ $0x00, SI
 
-	// | w6
+	// | w6 @ R14
 	XORQ DI, DI
 	MOVQ ·modulus5+32(SB), AX
 	MULQ CX
@@ -2115,7 +2606,7 @@ TEXT ·montmul5(SB), $24-24
 	ADDQ SI, R14
 	ADCQ $0x00, DI
 
-	// | w7
+	// | w7 @ R9
 	ADDQ DI, R15
 	ADCQ R15, R9
 	MOVQ $0x0000000000000000, R15
@@ -2124,19 +2615,19 @@ TEXT ·montmul5(SB), $24-24
 	// |
 	MOVQ (SP), R10
 
-	// | u @ CX = w3 * inp
+	// | (u @ CX) = (w3 @ R11) * inp
 	MOVQ R11, AX
 	MULQ ·inp5+0(SB)
 	MOVQ AX, CX
 
-	// | w3
+	// | w3 @ R11
 	XORQ DI, DI
 	MOVQ ·modulus5+0(SB), AX
 	MULQ CX
 	ADDQ AX, R11
 	ADCQ DX, DI
 
-	// | w4
+	// | w4 @ R12
 	XORQ SI, SI
 	MOVQ ·modulus5+8(SB), AX
 	MULQ CX
@@ -2145,7 +2636,7 @@ TEXT ·montmul5(SB), $24-24
 	ADDQ DI, R12
 	ADCQ $0x00, SI
 
-	// | w5
+	// | w5 @ R13
 	XORQ DI, DI
 	MOVQ ·modulus5+16(SB), AX
 	MULQ CX
@@ -2154,7 +2645,7 @@ TEXT ·montmul5(SB), $24-24
 	ADDQ SI, R13
 	ADCQ $0x00, DI
 
-	// | w6
+	// | w6 @ R14
 	XORQ SI, SI
 	MOVQ ·modulus5+24(SB), AX
 	MULQ CX
@@ -2163,7 +2654,7 @@ TEXT ·montmul5(SB), $24-24
 	ADDQ DI, R14
 	ADCQ $0x00, SI
 
-	// | w7
+	// | w7 @ R9
 	XORQ DI, DI
 	MOVQ ·modulus5+32(SB), AX
 	MULQ CX
@@ -2172,7 +2663,7 @@ TEXT ·montmul5(SB), $24-24
 	ADDQ SI, R9
 	ADCQ $0x00, DI
 
-	// | w8
+	// | w8 @ R10
 	ADDQ DI, R15
 	ADCQ R15, R10
 	MOVQ $0x0000000000000000, R15
@@ -2181,19 +2672,19 @@ TEXT ·montmul5(SB), $24-24
 	// |
 	MOVQ 8(SP), R11
 
-	// | u @ CX = w4 * inp
+	// | (u @ CX) = (w4 @ R12) * inp
 	MOVQ R12, AX
 	MULQ ·inp5+0(SB)
 	MOVQ AX, CX
 
-	// | w4
+	// | w4 @ R12
 	XORQ DI, DI
 	MOVQ ·modulus5+0(SB), AX
 	MULQ CX
 	ADDQ AX, R12
 	ADCQ DX, DI
 
-	// | w5
+	// | w5 @ R13
 	XORQ SI, SI
 	MOVQ ·modulus5+8(SB), AX
 	MULQ CX
@@ -2202,7 +2693,7 @@ TEXT ·montmul5(SB), $24-24
 	ADDQ DI, R13
 	ADCQ $0x00, SI
 
-	// | w6
+	// | w6 @ R14
 	XORQ DI, DI
 	MOVQ ·modulus5+16(SB), AX
 	MULQ CX
@@ -2211,7 +2702,7 @@ TEXT ·montmul5(SB), $24-24
 	ADDQ SI, R14
 	ADCQ $0x00, DI
 
-	// | w7
+	// | w7 @ R9
 	XORQ SI, SI
 	MOVQ ·modulus5+24(SB), AX
 	MULQ CX
@@ -2220,7 +2711,7 @@ TEXT ·montmul5(SB), $24-24
 	ADDQ DI, R9
 	ADCQ $0x00, SI
 
-	// | w8
+	// | w8 @ R10
 	XORQ DI, DI
 	MOVQ ·modulus5+32(SB), AX
 	MULQ CX
@@ -2229,7 +2720,7 @@ TEXT ·montmul5(SB), $24-24
 	ADDQ SI, R10
 	ADCQ $0x00, DI
 
-	// | w9
+	// | w9 @ R11
 	ADDQ DI, R15
 	ADCQ R15, R11
 	MOVQ $0x0000000000000000, R15
@@ -2244,8 +2735,9 @@ TEXT ·montmul5(SB), $24-24
 	SBBQ ·modulus5+16(SB), AX
 	MOVQ R10, DX
 	SBBQ ·modulus5+24(SB), DX
-	MOVQ R11, SI
-	SBBQ ·modulus5+32(SB), SI
+	MOVQ R11, BX
+	SBBQ ·modulus5+32(SB), BX
+	MOVQ BX, 24(SP)
 	SBBQ $0x00, R15
 
 	// | Compare & Return
@@ -2258,16 +2750,646 @@ TEXT ·montmul5(SB), $24-24
 	MOVQ    R9, 16(DI)
 	CMOVQCC DX, R10
 	MOVQ    R10, 24(DI)
-	CMOVQCC SI, R11
+	CMOVQCC 24(SP), R11
 	MOVQ    R11, 32(DI)
 	RET
 
 // func square5(c *[10]uint64, a *Fe320)
-TEXT ·square5(SB), $0-16
+TEXT ·square5(SB), $8-16
+	// |
+	MOVQ a+8(FP), DI
+	XORQ R11, R11
+	XORQ R12, R12
+	XORQ R13, R13
+	XORQ R14, R14
+	XORQ R15, R15
+	XORQ CX, CX
+	XORQ SI, SI
+	MOVQ $0x00000000, (SP)
+
+	// | a0
+	// | w0 @ R9
+	MOVQ (DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	MOVQ AX, R9
+	MOVQ DX, R10
+
+	// | w1 @ R10
+	MOVQ 8(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R12
+	ADDQ AX, R10
+	ADCQ DX, R11
+
+	// | w2 @ R11
+	MOVQ 16(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R13
+	ADDQ AX, R11
+	ADCQ DX, R12
+	ADCQ $0x00, R13
+
+	// | w3 @ R12
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R14
+	ADDQ AX, R12
+	ADCQ DX, R13
+	ADCQ $0x00, R14
+
+	// | w4 @ R13
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R15
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+
+	// | a1
+	// | w2 @ R11
+	MOVQ 8(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, R12
+	ADCQ $0x00, R13
+	ADCQ $0x00, R14
+
+	// | w3 @ R12
+	MOVQ 16(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R14
+	ADDQ AX, R12
+	ADCQ DX, R13
+	ADCQ $0x00, R14
+
+	// | w4 @ R13
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R15
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+
+	// | w5 @ R14
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, CX
+	ADDQ AX, R14
+	ADCQ DX, R15
+	ADCQ $0x00, CX
+
+	// | a2
+	// | w4 @ R13
+	MOVQ 16(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+	ADCQ $0x00, CX
+
+	// | w5 @ R14
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, CX
+	ADDQ AX, R14
+	ADCQ DX, R15
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, SI
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADCQ $0x00, SI
+
+	// | a3
+	// | w6 @ R15
+	MOVQ 24(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADCQ $0x00, SI
+
+	// | w7 @ CX
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, (SP)
+	ADDQ AX, CX
+	ADCQ DX, SI
+	ADCQ $0x00, (SP)
+
+	// | a4
+	// | w8 @ SI
+	MOVQ 32(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, SI
+	ADCQ DX, (SP)
+
+	// |
+	MOVQ c+0(FP), DI
+	MOVQ R9, (DI)
+	MOVQ R10, 8(DI)
+	MOVQ R11, 16(DI)
+	MOVQ R12, 24(DI)
+	MOVQ R13, 32(DI)
+	MOVQ R14, 40(DI)
+	MOVQ R15, 48(DI)
+	MOVQ CX, 56(DI)
+	MOVQ SI, 64(DI)
+	MOVQ (SP), BX
+	MOVQ BX, 72(DI)
 	RET
 
 // func montsquare5(c *Fe320, a *Fe320)
-TEXT ·montsquare5(SB), $0-16
+TEXT ·montsquare5(SB), $24-16
+	MOVQ a+8(FP), DI
+	XORQ R11, R11
+	XORQ R12, R12
+	XORQ R13, R13
+	XORQ R14, R14
+	XORQ R15, R15
+	XORQ CX, CX
+	XORQ SI, SI
+	MOVQ $0x00000000, (SP)
+
+	// | a0
+	// | w0 @ R9
+	MOVQ (DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	MOVQ AX, R9
+	MOVQ DX, R10
+
+	// | w1 @ R10
+	MOVQ 8(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R12
+	ADDQ AX, R10
+	ADCQ DX, R11
+
+	// | w2 @ R11
+	MOVQ 16(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R13
+	ADDQ AX, R11
+	ADCQ DX, R12
+	ADCQ $0x00, R13
+
+	// | w3 @ R12
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R14
+	ADDQ AX, R12
+	ADCQ DX, R13
+	ADCQ $0x00, R14
+
+	// | w4 @ R13
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R15
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+
+	// | a1
+	// | w2 @ R11
+	MOVQ 8(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, R12
+	ADCQ $0x00, R13
+	ADCQ $0x00, R14
+
+	// | w3 @ R12
+	MOVQ 16(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R14
+	ADDQ AX, R12
+	ADCQ DX, R13
+	ADCQ $0x00, R14
+
+	// | w4 @ R13
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R15
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+
+	// | w5 @ R14
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, CX
+	ADDQ AX, R14
+	ADCQ DX, R15
+	ADCQ $0x00, CX
+
+	// | a2
+	// | w4 @ R13
+	MOVQ 16(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+	ADCQ $0x00, CX
+
+	// | w5 @ R14
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, CX
+	ADDQ AX, R14
+	ADCQ DX, R15
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, SI
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADCQ $0x00, SI
+
+	// | a3
+	// | w6 @ R15
+	MOVQ 24(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADCQ $0x00, SI
+
+	// | w7 @ CX
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, (SP)
+	ADDQ AX, CX
+	ADCQ DX, SI
+	ADCQ $0x00, (SP)
+
+	// | a4
+	// | w8 @ SI
+	MOVQ 32(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, SI
+	ADCQ DX, (SP)
+
+	// |
+	// | Montgomerry Reduction
+	MOVQ SI, 8(SP)
+	MOVQ CX, 16(SP)
+
+	// |
+	// | (u @ R8) = (w0 @ R9) * inp
+	MOVQ R9, AX
+	MULQ ·inp5+0(SB)
+	MOVQ AX, R8
+
+	// | w0 @ R9
+	XORQ SI, SI
+	MOVQ ·modulus5+0(SB), AX
+	MULQ R8
+	ADDQ AX, R9
+	ADCQ DX, SI
+
+	// | w1 @ R10
+	XORQ CX, CX
+	MOVQ ·modulus5+8(SB), AX
+	MULQ R8
+	ADDQ AX, R10
+	ADCQ DX, CX
+	ADDQ SI, R10
+	ADCQ $0x00, CX
+
+	// | w2 @ R11
+	XORQ SI, SI
+	MOVQ ·modulus5+16(SB), AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, SI
+	ADDQ CX, R11
+	ADCQ $0x00, SI
+
+	// | w3 @ R12
+	XORQ CX, CX
+	MOVQ ·modulus5+24(SB), AX
+	MULQ R8
+	ADDQ AX, R12
+	ADCQ DX, CX
+	ADDQ SI, R12
+	ADCQ $0x00, CX
+
+	// | w4 @ R13
+	XORQ SI, SI
+	MOVQ ·modulus5+32(SB), AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, SI
+	ADDQ CX, R13
+	ADCQ $0x00, SI
+
+	// | w5 @ R14
+	ADDQ SI, R14
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// |
+	// | (u @ R8) = (w1 @ R10) * inp
+	MOVQ R10, AX
+	MULQ ·inp5+0(SB)
+	MOVQ AX, R8
+
+	// | w1 @ R10
+	XORQ SI, SI
+	MOVQ ·modulus5+0(SB), AX
+	MULQ R8
+	ADDQ AX, R10
+	ADCQ DX, SI
+
+	// | w2 @ R11
+	XORQ CX, CX
+	MOVQ ·modulus5+8(SB), AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, CX
+	ADDQ SI, R11
+	ADCQ $0x00, CX
+
+	// | w3 @ R12
+	XORQ SI, SI
+	MOVQ ·modulus5+16(SB), AX
+	MULQ R8
+	ADDQ AX, R12
+	ADCQ DX, SI
+	ADDQ CX, R12
+	ADCQ $0x00, SI
+
+	// | w4 @ R13
+	XORQ CX, CX
+	MOVQ ·modulus5+24(SB), AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, CX
+	ADDQ SI, R13
+	ADCQ $0x00, CX
+
+	// | w5 @ R14
+	XORQ SI, SI
+	MOVQ ·modulus5+32(SB), AX
+	MULQ R8
+	ADDQ AX, R14
+	ADCQ DX, SI
+	ADDQ CX, R14
+	ADCQ $0x00, SI
+
+	// | w6 @ R15
+	ADDQ SI, DI
+	ADCQ DI, R15
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// |
+	MOVQ 16(SP), R10
+
+	// | (u @ R8) = (w2 @ R11) * inp
+	MOVQ R11, AX
+	MULQ ·inp5+0(SB)
+	MOVQ AX, R8
+
+	// | w2 @ R11
+	XORQ SI, SI
+	MOVQ ·modulus5+0(SB), AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, SI
+
+	// | w3 @ R12
+	XORQ CX, CX
+	MOVQ ·modulus5+8(SB), AX
+	MULQ R8
+	ADDQ AX, R12
+	ADCQ DX, CX
+	ADDQ SI, R12
+	ADCQ $0x00, CX
+
+	// | w4 @ R13
+	XORQ SI, SI
+	MOVQ ·modulus5+16(SB), AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, SI
+	ADDQ CX, R13
+	ADCQ $0x00, SI
+
+	// | w5 @ R14
+	XORQ CX, CX
+	MOVQ ·modulus5+24(SB), AX
+	MULQ R8
+	ADDQ AX, R14
+	ADCQ DX, CX
+	ADDQ SI, R14
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	XORQ SI, SI
+	MOVQ ·modulus5+32(SB), AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, SI
+	ADDQ CX, R15
+	ADCQ $0x00, SI
+
+	// | w7 @ R10
+	ADDQ SI, DI
+	ADCQ DI, R10
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// |
+	MOVQ 8(SP), R11
+
+	// | (u @ R8) = (w3 @ R12) * inp
+	MOVQ R12, AX
+	MULQ ·inp5+0(SB)
+	MOVQ AX, R8
+
+	// | w3 @ R12
+	XORQ SI, SI
+	MOVQ ·modulus5+0(SB), AX
+	MULQ R8
+	ADDQ AX, R12
+	ADCQ DX, SI
+
+	// | w4 @ R13
+	XORQ CX, CX
+	MOVQ ·modulus5+8(SB), AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, CX
+	ADDQ SI, R13
+	ADCQ $0x00, CX
+
+	// | w5 @ R14
+	XORQ SI, SI
+	MOVQ ·modulus5+16(SB), AX
+	MULQ R8
+	ADDQ AX, R14
+	ADCQ DX, SI
+	ADDQ CX, R14
+	ADCQ $0x00, SI
+
+	// | w6 @ R15
+	XORQ CX, CX
+	MOVQ ·modulus5+24(SB), AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADDQ SI, R15
+	ADCQ $0x00, CX
+
+	// | w7 @ R10
+	XORQ SI, SI
+	MOVQ ·modulus5+32(SB), AX
+	MULQ R8
+	ADDQ AX, R10
+	ADCQ DX, SI
+	ADDQ CX, R10
+	ADCQ $0x00, SI
+
+	// | w8 @ R11
+	ADDQ SI, DI
+	ADCQ DI, R11
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// |
+	MOVQ (SP), R12
+
+	// | (u @ R8) = (w4 @ R13) * inp
+	MOVQ R13, AX
+	MULQ ·inp5+0(SB)
+	MOVQ AX, R8
+
+	// | w4 @ R13
+	XORQ SI, SI
+	MOVQ ·modulus5+0(SB), AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, SI
+
+	// | w5 @ R14
+	XORQ CX, CX
+	MOVQ ·modulus5+8(SB), AX
+	MULQ R8
+	ADDQ AX, R14
+	ADCQ DX, CX
+	ADDQ SI, R14
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	XORQ SI, SI
+	MOVQ ·modulus5+16(SB), AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, SI
+	ADDQ CX, R15
+	ADCQ $0x00, SI
+
+	// | w7 @ R10
+	XORQ CX, CX
+	MOVQ ·modulus5+24(SB), AX
+	MULQ R8
+	ADDQ AX, R10
+	ADCQ DX, CX
+	ADDQ SI, R10
+	ADCQ $0x00, CX
+
+	// | w8 @ R11
+	XORQ SI, SI
+	MOVQ ·modulus5+32(SB), AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, SI
+	ADDQ CX, R11
+	ADCQ $0x00, SI
+
+	// | w9 @ R12
+	ADDQ SI, DI
+	ADCQ DI, R12
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// | Compare & Return
+	MOVQ    R14, R8
+	SUBQ    ·modulus5+0(SB), R8
+	MOVQ    R15, R13
+	SBBQ    ·modulus5+8(SB), R13
+	MOVQ    R10, CX
+	SBBQ    ·modulus5+16(SB), CX
+	MOVQ    R11, AX
+	SBBQ    ·modulus5+24(SB), AX
+	MOVQ    R12, DX
+	SBBQ    ·modulus5+32(SB), DX
+	SBBQ    $0x00, DI
+	MOVQ    c+0(FP), DI
+	CMOVQCC R8, R14
+	MOVQ    R14, (DI)
+	CMOVQCC R13, R15
+	MOVQ    R15, 8(DI)
+	CMOVQCC CX, R10
+	MOVQ    R10, 16(DI)
+	CMOVQCC AX, R11
+	MOVQ    R11, 24(DI)
+	CMOVQCC DX, R12
+	MOVQ    R12, 32(DI)
 	RET
 
 // func add6(c *Fe384, a *Fe384, b *Fe384)
@@ -2524,9 +3646,6 @@ TEXT ·mul6(SB), $32-24
 	MOVQ b+16(FP), SI
 
 	// |
-	// |
-	XORQ R8, R8
-	XORQ R9, R9
 	XORQ R10, R10
 	XORQ R11, R11
 	XORQ R12, R12
@@ -2543,36 +3662,42 @@ TEXT ·mul6(SB), $32-24
 	MOVQ (SI), CX
 
 	// | a0 * b0
+	// | (w0, w1) @ (R8, R9)
 	MOVQ (DI), AX
 	MULQ CX
 	MOVQ AX, R8
 	MOVQ DX, R9
 
 	// | a1 * b0
+	// | (w1, w2) @ (R9, R10)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R9
 	ADCQ DX, R10
 
 	// | a2 * b0
+	// | (w2, w3) @ (R10, R11)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R10
 	ADCQ DX, R11
 
 	// | a3 * b0
+	// | (w3, w4) @ (R11, R12)
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R11
 	ADCQ DX, R12
 
 	// | a4 * b0
+	// | (w4, w5) @ (R12, R13)
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R12
 	ADCQ DX, R13
 
 	// | a5 * b0
+	// | (w5, w6) @ (R13, R14)
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -2583,6 +3708,7 @@ TEXT ·mul6(SB), $32-24
 	MOVQ 8(SI), CX
 
 	// | a0 * b1
+	// | (w1, w2, w3, w4) @ (R9, R10, R11, R12)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R9
@@ -2591,6 +3717,7 @@ TEXT ·mul6(SB), $32-24
 	ADCQ $0x00, R12
 
 	// | a1 * b1
+	// | (w2, w3, w4, w5) @ (R10, R11, R12, R13)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R10
@@ -2599,6 +3726,7 @@ TEXT ·mul6(SB), $32-24
 	ADCQ $0x00, R13
 
 	// | a2 * b1
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -2607,6 +3735,7 @@ TEXT ·mul6(SB), $32-24
 	ADCQ $0x00, R14
 
 	// | a3 * b1
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -2615,6 +3744,7 @@ TEXT ·mul6(SB), $32-24
 	ADCQ $0x00, R15
 
 	// | a4 * b1
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -2623,6 +3753,7 @@ TEXT ·mul6(SB), $32-24
 	ADCQ $0x00, (SP)
 
 	// | a5 * b1
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -2635,6 +3766,7 @@ TEXT ·mul6(SB), $32-24
 	MOVQ 16(SI), CX
 
 	// | a0 * b2
+	// | (w2, w3, w4, w5) @ (R10, R11, R12, R13)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R10
@@ -2643,6 +3775,7 @@ TEXT ·mul6(SB), $32-24
 	ADCQ $0x00, R13
 
 	// | a1 * b2
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -2651,6 +3784,7 @@ TEXT ·mul6(SB), $32-24
 	ADCQ $0x00, R14
 
 	// | a2 * b2
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -2659,6 +3793,7 @@ TEXT ·mul6(SB), $32-24
 	ADCQ $0x00, R15
 
 	// | a3 * b2
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -2667,6 +3802,7 @@ TEXT ·mul6(SB), $32-24
 	ADCQ $0x00, (SP)
 
 	// | a4 * b2
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -2675,6 +3811,7 @@ TEXT ·mul6(SB), $32-24
 	ADCQ $0x00, 8(SP)
 
 	// | a5 * b2
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -2687,6 +3824,7 @@ TEXT ·mul6(SB), $32-24
 	MOVQ 24(SI), CX
 
 	// | a0 * b3
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -2695,6 +3833,7 @@ TEXT ·mul6(SB), $32-24
 	ADCQ $0x00, R14
 
 	// | a1 * b3
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -2703,6 +3842,7 @@ TEXT ·mul6(SB), $32-24
 	ADCQ $0x00, R15
 
 	// | a2 * b3
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -2711,6 +3851,7 @@ TEXT ·mul6(SB), $32-24
 	ADCQ $0x00, (SP)
 
 	// | a3 * b3
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -2719,6 +3860,7 @@ TEXT ·mul6(SB), $32-24
 	ADCQ $0x00, 8(SP)
 
 	// | a4 * b3
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -2727,6 +3869,7 @@ TEXT ·mul6(SB), $32-24
 	ADCQ $0x00, 16(SP)
 
 	// | a5 * b3
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -2739,6 +3882,7 @@ TEXT ·mul6(SB), $32-24
 	MOVQ 32(SI), CX
 
 	// | a0 * b4
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -2747,6 +3891,7 @@ TEXT ·mul6(SB), $32-24
 	ADCQ $0x00, R15
 
 	// | a1 * b4
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -2755,6 +3900,7 @@ TEXT ·mul6(SB), $32-24
 	ADCQ $0x00, (SP)
 
 	// | a2 * b4
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -2763,6 +3909,7 @@ TEXT ·mul6(SB), $32-24
 	ADCQ $0x00, 8(SP)
 
 	// | a3 * b4
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -2771,6 +3918,7 @@ TEXT ·mul6(SB), $32-24
 	ADCQ $0x00, 16(SP)
 
 	// | a4 * b4
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -2779,6 +3927,7 @@ TEXT ·mul6(SB), $32-24
 	ADCQ $0x00, 24(SP)
 
 	// | a5 * b4
+	// | (w9, w10, w11) @ (8(SP), 16(SP), 24(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, 8(SP)
@@ -2790,6 +3939,7 @@ TEXT ·mul6(SB), $32-24
 	MOVQ 40(SI), CX
 
 	// | a0 * b5
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -2798,6 +3948,7 @@ TEXT ·mul6(SB), $32-24
 	ADCQ $0x00, (SP)
 
 	// | a1 * b5
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -2806,6 +3957,7 @@ TEXT ·mul6(SB), $32-24
 	ADCQ $0x00, 8(SP)
 
 	// | a2 * b5
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -2814,6 +3966,7 @@ TEXT ·mul6(SB), $32-24
 	ADCQ $0x00, 16(SP)
 
 	// | a3 * b5
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -2822,6 +3975,7 @@ TEXT ·mul6(SB), $32-24
 	ADCQ $0x00, 24(SP)
 
 	// | a4 * b5
+	// | (w9, w10, w11) @ (8(SP), 16(SP), 24(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, 8(SP)
@@ -2829,6 +3983,7 @@ TEXT ·mul6(SB), $32-24
 	ADCQ $0x00, 24(SP)
 
 	// | a5 * b5
+	// | (w10, w11) @ (16(SP), 24(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, 16(SP)
@@ -2842,16 +3997,16 @@ TEXT ·mul6(SB), $32-24
 	MOVQ R11, 24(DI)
 	MOVQ R12, 32(DI)
 	MOVQ R13, 40(DI)
-	MOVQ R14, (DI)
-	MOVQ R15, 8(DI)
+	MOVQ R14, 48(DI)
+	MOVQ R15, 56(DI)
 	MOVQ (SP), BX
-	MOVQ BX, 16(DI)
+	MOVQ BX, 64(DI)
 	MOVQ 8(SP), BX
-	MOVQ BX, 24(DI)
+	MOVQ BX, 72(DI)
 	MOVQ 16(SP), BX
-	MOVQ BX, 32(DI)
+	MOVQ BX, 80(DI)
 	MOVQ 24(SP), BX
-	MOVQ BX, 40(DI)
+	MOVQ BX, 88(DI)
 	RET
 
 // func mont6(c *Fe384, w *[12]uint64)
@@ -2867,20 +4022,19 @@ TEXT ·mont6(SB), $8-16
 	MOVQ BX, (SP)
 
 	// |
-	// |
-	// | u @ CX = w0 * inp
+	// | (u @ CX) = (w0 @ R8) * inp
 	MOVQ R8, AX
 	MULQ ·inp6+0(SB)
 	MOVQ AX, CX
 
-	// | w0
+	// | w0 @ R8
 	XORQ R14, R14
 	MOVQ ·modulus6+0(SB), AX
 	MULQ CX
 	ADDQ AX, R8
 	ADCQ DX, R14
 
-	// | w1
+	// | w1 @ R9
 	XORQ R13, R13
 	MOVQ ·modulus6+8(SB), AX
 	MULQ CX
@@ -2889,7 +4043,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R14, R9
 	ADCQ $0x00, R13
 
-	// | w2
+	// | w2 @ R10
 	XORQ R14, R14
 	MOVQ ·modulus6+16(SB), AX
 	MULQ CX
@@ -2898,7 +4052,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R13, R10
 	ADCQ $0x00, R14
 
-	// | w3
+	// | w3 @ R11
 	XORQ R13, R13
 	MOVQ ·modulus6+24(SB), AX
 	MULQ CX
@@ -2907,7 +4061,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R14, R11
 	ADCQ $0x00, R13
 
-	// | w4
+	// | w4 @ R12
 	XORQ R14, R14
 	MOVQ ·modulus6+32(SB), AX
 	MULQ CX
@@ -2916,7 +4070,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R13, R12
 	ADCQ $0x00, R14
 
-	// | w5
+	// | w5 @ SI
 	XORQ R13, R13
 	MOVQ ·modulus6+40(SB), AX
 	MULQ CX
@@ -2925,7 +4079,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R14, SI
 	ADCQ $0x00, R13
 
-	// | w6
+	// | w6 @ (SP)
 	ADDQ R13, (SP)
 	MOVQ $0x0000000000000000, R15
 	ADCQ $0x00, R15
@@ -2933,19 +4087,19 @@ TEXT ·mont6(SB), $8-16
 	// |
 	MOVQ 56(DI), R8
 
-	// | u @ CX = w1 * inp
+	// | (u @ CX) = (w1 @ R9) * inp
 	MOVQ R9, AX
 	MULQ ·inp6+0(SB)
 	MOVQ AX, CX
 
-	// | w1
+	// | w1 @ R9
 	XORQ R14, R14
 	MOVQ ·modulus6+0(SB), AX
 	MULQ CX
 	ADDQ AX, R9
 	ADCQ DX, R14
 
-	// | w2
+	// | w2 @ R10
 	XORQ R13, R13
 	MOVQ ·modulus6+8(SB), AX
 	MULQ CX
@@ -2954,7 +4108,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R14, R10
 	ADCQ $0x00, R13
 
-	// | w3
+	// | w3 @ R11
 	XORQ R14, R14
 	MOVQ ·modulus6+16(SB), AX
 	MULQ CX
@@ -2963,7 +4117,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R13, R11
 	ADCQ $0x00, R14
 
-	// | w4
+	// | w4 @ R12
 	XORQ R13, R13
 	MOVQ ·modulus6+24(SB), AX
 	MULQ CX
@@ -2972,7 +4126,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R14, R12
 	ADCQ $0x00, R13
 
-	// | w5
+	// | w5 @ SI
 	XORQ R14, R14
 	MOVQ ·modulus6+32(SB), AX
 	MULQ CX
@@ -2981,7 +4135,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R13, SI
 	ADCQ $0x00, R14
 
-	// | w6
+	// | w6 @ (SP)
 	XORQ R13, R13
 	MOVQ ·modulus6+40(SB), AX
 	MULQ CX
@@ -2990,7 +4144,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R14, (SP)
 	ADCQ $0x00, R13
 
-	// | w7
+	// | w7 @ R8
 	ADDQ R13, R15
 	ADCQ R15, R8
 	MOVQ $0x0000000000000000, R15
@@ -2999,19 +4153,19 @@ TEXT ·mont6(SB), $8-16
 	// |
 	MOVQ 64(DI), R9
 
-	// | u @ CX = w2 * inp
+	// | (u @ CX) = (w2 @ R10) * inp
 	MOVQ R10, AX
 	MULQ ·inp6+0(SB)
 	MOVQ AX, CX
 
-	// | w2
+	// | w2 @ R10
 	XORQ R14, R14
 	MOVQ ·modulus6+0(SB), AX
 	MULQ CX
 	ADDQ AX, R10
 	ADCQ DX, R14
 
-	// | w3
+	// | w3 @ R11
 	XORQ R13, R13
 	MOVQ ·modulus6+8(SB), AX
 	MULQ CX
@@ -3020,7 +4174,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R14, R11
 	ADCQ $0x00, R13
 
-	// | w4
+	// | w4 @ R12
 	XORQ R14, R14
 	MOVQ ·modulus6+16(SB), AX
 	MULQ CX
@@ -3029,7 +4183,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R13, R12
 	ADCQ $0x00, R14
 
-	// | w5
+	// | w5 @ SI
 	XORQ R13, R13
 	MOVQ ·modulus6+24(SB), AX
 	MULQ CX
@@ -3038,7 +4192,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R14, SI
 	ADCQ $0x00, R13
 
-	// | w6
+	// | w6 @ (SP)
 	XORQ R14, R14
 	MOVQ ·modulus6+32(SB), AX
 	MULQ CX
@@ -3047,7 +4201,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R13, (SP)
 	ADCQ $0x00, R14
 
-	// | w7
+	// | w7 @ R8
 	XORQ R13, R13
 	MOVQ ·modulus6+40(SB), AX
 	MULQ CX
@@ -3056,7 +4210,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R14, R8
 	ADCQ $0x00, R13
 
-	// | w8
+	// | w8 @ R9
 	ADDQ R13, R15
 	ADCQ R15, R9
 	MOVQ $0x0000000000000000, R15
@@ -3065,19 +4219,19 @@ TEXT ·mont6(SB), $8-16
 	// |
 	MOVQ 72(DI), R10
 
-	// | u @ CX = w3 * inp
+	// | (u @ CX) = (w3 @ R11) * inp
 	MOVQ R11, AX
 	MULQ ·inp6+0(SB)
 	MOVQ AX, CX
 
-	// | w3
+	// | w3 @ R11
 	XORQ R14, R14
 	MOVQ ·modulus6+0(SB), AX
 	MULQ CX
 	ADDQ AX, R11
 	ADCQ DX, R14
 
-	// | w4
+	// | w4 @ R12
 	XORQ R13, R13
 	MOVQ ·modulus6+8(SB), AX
 	MULQ CX
@@ -3086,7 +4240,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R14, R12
 	ADCQ $0x00, R13
 
-	// | w5
+	// | w5 @ SI
 	XORQ R14, R14
 	MOVQ ·modulus6+16(SB), AX
 	MULQ CX
@@ -3095,7 +4249,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R13, SI
 	ADCQ $0x00, R14
 
-	// | w6
+	// | w6 @ (SP)
 	XORQ R13, R13
 	MOVQ ·modulus6+24(SB), AX
 	MULQ CX
@@ -3104,7 +4258,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R14, (SP)
 	ADCQ $0x00, R13
 
-	// | w7
+	// | w7 @ R8
 	XORQ R14, R14
 	MOVQ ·modulus6+32(SB), AX
 	MULQ CX
@@ -3113,7 +4267,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R13, R8
 	ADCQ $0x00, R14
 
-	// | w8
+	// | w8 @ R9
 	XORQ R13, R13
 	MOVQ ·modulus6+40(SB), AX
 	MULQ CX
@@ -3122,7 +4276,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R14, R9
 	ADCQ $0x00, R13
 
-	// | w9
+	// | w9 @ R10
 	ADDQ R13, R15
 	ADCQ R15, R10
 	MOVQ $0x0000000000000000, R15
@@ -3131,19 +4285,19 @@ TEXT ·mont6(SB), $8-16
 	// |
 	MOVQ 80(DI), R11
 
-	// | u @ CX = w4 * inp
+	// | (u @ CX) = (w4 @ R12) * inp
 	MOVQ R12, AX
 	MULQ ·inp6+0(SB)
 	MOVQ AX, CX
 
-	// | w4
+	// | w4 @ R12
 	XORQ R14, R14
 	MOVQ ·modulus6+0(SB), AX
 	MULQ CX
 	ADDQ AX, R12
 	ADCQ DX, R14
 
-	// | w5
+	// | w5 @ SI
 	XORQ R13, R13
 	MOVQ ·modulus6+8(SB), AX
 	MULQ CX
@@ -3152,7 +4306,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R14, SI
 	ADCQ $0x00, R13
 
-	// | w6
+	// | w6 @ (SP)
 	XORQ R14, R14
 	MOVQ ·modulus6+16(SB), AX
 	MULQ CX
@@ -3161,7 +4315,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R13, (SP)
 	ADCQ $0x00, R14
 
-	// | w7
+	// | w7 @ R8
 	XORQ R13, R13
 	MOVQ ·modulus6+24(SB), AX
 	MULQ CX
@@ -3170,7 +4324,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R14, R8
 	ADCQ $0x00, R13
 
-	// | w8
+	// | w8 @ R9
 	XORQ R14, R14
 	MOVQ ·modulus6+32(SB), AX
 	MULQ CX
@@ -3179,7 +4333,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R13, R9
 	ADCQ $0x00, R14
 
-	// | w9
+	// | w9 @ R10
 	XORQ R13, R13
 	MOVQ ·modulus6+40(SB), AX
 	MULQ CX
@@ -3188,7 +4342,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R14, R10
 	ADCQ $0x00, R13
 
-	// | w10
+	// | w10 @ R11
 	ADDQ R13, R15
 	ADCQ R15, R11
 	MOVQ $0x0000000000000000, R15
@@ -3197,19 +4351,19 @@ TEXT ·mont6(SB), $8-16
 	// |
 	MOVQ 88(DI), R12
 
-	// | u @ CX = w5 * inp
+	// | (u @ CX) = (w5 @ SI) * inp
 	MOVQ SI, AX
 	MULQ ·inp6+0(SB)
 	MOVQ AX, CX
 
-	// | w5
+	// | w5 @ SI
 	XORQ R14, R14
 	MOVQ ·modulus6+0(SB), AX
 	MULQ CX
 	ADDQ AX, SI
 	ADCQ DX, R14
 
-	// | w6
+	// | w6 @ (SP)
 	XORQ R13, R13
 	MOVQ ·modulus6+8(SB), AX
 	MULQ CX
@@ -3218,7 +4372,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R14, (SP)
 	ADCQ $0x00, R13
 
-	// | w7
+	// | w7 @ R8
 	XORQ R14, R14
 	MOVQ ·modulus6+16(SB), AX
 	MULQ CX
@@ -3227,7 +4381,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R13, R8
 	ADCQ $0x00, R14
 
-	// | w8
+	// | w8 @ R9
 	XORQ R13, R13
 	MOVQ ·modulus6+24(SB), AX
 	MULQ CX
@@ -3236,7 +4390,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R14, R9
 	ADCQ $0x00, R13
 
-	// | w9
+	// | w9 @ R10
 	XORQ R14, R14
 	MOVQ ·modulus6+32(SB), AX
 	MULQ CX
@@ -3245,7 +4399,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R13, R10
 	ADCQ $0x00, R14
 
-	// | w10
+	// | w10 @ R11
 	XORQ R13, R13
 	MOVQ ·modulus6+40(SB), AX
 	MULQ CX
@@ -3254,7 +4408,7 @@ TEXT ·mont6(SB), $8-16
 	ADDQ R14, R11
 	ADCQ $0x00, R13
 
-	// | w11
+	// | w11 @ R12
 	ADDQ R13, R15
 	ADCQ R15, R12
 	MOVQ $0x0000000000000000, R15
@@ -3277,11 +4431,8 @@ TEXT ·mont6(SB), $8-16
 
 	// | Compare & Return
 	MOVQ    c+0(FP), DI
-	MOVQ    (SP), BX
-	CMOVQCC R13, BX
-	MOVQ    BX, (SP)
-	MOVQ    (SP), BX
-	MOVQ    BX, (DI)
+	CMOVQCS (SP), R13
+	MOVQ    R13, (DI)
 	CMOVQCC R14, R8
 	MOVQ    R8, 8(DI)
 	CMOVQCC CX, R9
@@ -3295,7 +4446,7 @@ TEXT ·mont6(SB), $8-16
 	RET
 
 // func montmul6(c *Fe384, a *Fe384, b *Fe384)
-TEXT ·montmul6(SB), $48-24
+TEXT ·montmul6(SB), $56-24
 	// |
 	// | Multiplication
 	MOVQ a+8(FP), DI
@@ -3303,8 +4454,6 @@ TEXT ·montmul6(SB), $48-24
 
 	// |
 	// |
-	XORQ R8, R8
-	XORQ R9, R9
 	XORQ R10, R10
 	XORQ R11, R11
 	XORQ R12, R12
@@ -3321,36 +4470,42 @@ TEXT ·montmul6(SB), $48-24
 	MOVQ (SI), CX
 
 	// | a0 * b0
+	// | (w0, w1) @ (R8, R9)
 	MOVQ (DI), AX
 	MULQ CX
 	MOVQ AX, R8
 	MOVQ DX, R9
 
 	// | a1 * b0
+	// | (w1, w2) @ (R9, R10)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R9
 	ADCQ DX, R10
 
 	// | a2 * b0
+	// | (w2, w3) @ (R10, R11)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R10
 	ADCQ DX, R11
 
 	// | a3 * b0
+	// | (w3, w4) @ (R11, R12)
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R11
 	ADCQ DX, R12
 
 	// | a4 * b0
+	// | (w4, w5) @ (R12, R13)
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R12
 	ADCQ DX, R13
 
 	// | a5 * b0
+	// | (w5, w6) @ (R13, R14)
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -3361,6 +4516,7 @@ TEXT ·montmul6(SB), $48-24
 	MOVQ 8(SI), CX
 
 	// | a0 * b1
+	// | (w1, w2, w3, w4) @ (R9, R10, R11, R12)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R9
@@ -3369,6 +4525,7 @@ TEXT ·montmul6(SB), $48-24
 	ADCQ $0x00, R12
 
 	// | a1 * b1
+	// | (w2, w3, w4, w5) @ (R10, R11, R12, R13)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R10
@@ -3377,6 +4534,7 @@ TEXT ·montmul6(SB), $48-24
 	ADCQ $0x00, R13
 
 	// | a2 * b1
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -3385,6 +4543,7 @@ TEXT ·montmul6(SB), $48-24
 	ADCQ $0x00, R14
 
 	// | a3 * b1
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -3393,6 +4552,7 @@ TEXT ·montmul6(SB), $48-24
 	ADCQ $0x00, R15
 
 	// | a4 * b1
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -3401,6 +4561,7 @@ TEXT ·montmul6(SB), $48-24
 	ADCQ $0x00, (SP)
 
 	// | a5 * b1
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -3413,6 +4574,7 @@ TEXT ·montmul6(SB), $48-24
 	MOVQ 16(SI), CX
 
 	// | a0 * b2
+	// | (w2, w3, w4, w5) @ (R10, R11, R12, R13)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R10
@@ -3421,6 +4583,7 @@ TEXT ·montmul6(SB), $48-24
 	ADCQ $0x00, R13
 
 	// | a1 * b2
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -3429,6 +4592,7 @@ TEXT ·montmul6(SB), $48-24
 	ADCQ $0x00, R14
 
 	// | a2 * b2
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -3437,6 +4601,7 @@ TEXT ·montmul6(SB), $48-24
 	ADCQ $0x00, R15
 
 	// | a3 * b2
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -3445,6 +4610,7 @@ TEXT ·montmul6(SB), $48-24
 	ADCQ $0x00, (SP)
 
 	// | a4 * b2
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -3453,6 +4619,7 @@ TEXT ·montmul6(SB), $48-24
 	ADCQ $0x00, 8(SP)
 
 	// | a5 * b2
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -3465,6 +4632,7 @@ TEXT ·montmul6(SB), $48-24
 	MOVQ 24(SI), CX
 
 	// | a0 * b3
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -3473,6 +4641,7 @@ TEXT ·montmul6(SB), $48-24
 	ADCQ $0x00, R14
 
 	// | a1 * b3
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -3481,6 +4650,7 @@ TEXT ·montmul6(SB), $48-24
 	ADCQ $0x00, R15
 
 	// | a2 * b3
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -3489,6 +4659,7 @@ TEXT ·montmul6(SB), $48-24
 	ADCQ $0x00, (SP)
 
 	// | a3 * b3
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -3497,6 +4668,7 @@ TEXT ·montmul6(SB), $48-24
 	ADCQ $0x00, 8(SP)
 
 	// | a4 * b3
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -3505,6 +4677,7 @@ TEXT ·montmul6(SB), $48-24
 	ADCQ $0x00, 16(SP)
 
 	// | a5 * b3
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -3517,6 +4690,7 @@ TEXT ·montmul6(SB), $48-24
 	MOVQ 32(SI), CX
 
 	// | a0 * b4
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -3525,6 +4699,7 @@ TEXT ·montmul6(SB), $48-24
 	ADCQ $0x00, R15
 
 	// | a1 * b4
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -3533,6 +4708,7 @@ TEXT ·montmul6(SB), $48-24
 	ADCQ $0x00, (SP)
 
 	// | a2 * b4
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -3541,6 +4717,7 @@ TEXT ·montmul6(SB), $48-24
 	ADCQ $0x00, 8(SP)
 
 	// | a3 * b4
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -3549,6 +4726,7 @@ TEXT ·montmul6(SB), $48-24
 	ADCQ $0x00, 16(SP)
 
 	// | a4 * b4
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -3557,6 +4735,7 @@ TEXT ·montmul6(SB), $48-24
 	ADCQ $0x00, 24(SP)
 
 	// | a5 * b4
+	// | (w9, w10, w11) @ (8(SP), 16(SP), 24(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, 8(SP)
@@ -3568,6 +4747,7 @@ TEXT ·montmul6(SB), $48-24
 	MOVQ 40(SI), CX
 
 	// | a0 * b5
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -3576,6 +4756,7 @@ TEXT ·montmul6(SB), $48-24
 	ADCQ $0x00, (SP)
 
 	// | a1 * b5
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -3584,6 +4765,7 @@ TEXT ·montmul6(SB), $48-24
 	ADCQ $0x00, 8(SP)
 
 	// | a2 * b5
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -3592,6 +4774,7 @@ TEXT ·montmul6(SB), $48-24
 	ADCQ $0x00, 16(SP)
 
 	// | a3 * b5
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -3600,6 +4783,7 @@ TEXT ·montmul6(SB), $48-24
 	ADCQ $0x00, 24(SP)
 
 	// | a4 * b5
+	// | (w9, w10, w11) @ (8(SP), 16(SP), 24(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, 8(SP)
@@ -3607,6 +4791,7 @@ TEXT ·montmul6(SB), $48-24
 	ADCQ $0x00, 24(SP)
 
 	// | a5 * b5
+	// | (w10, w11) @ (16(SP), 24(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, 16(SP)
@@ -3617,20 +4802,19 @@ TEXT ·montmul6(SB), $48-24
 	MOVQ R15, 32(SP)
 
 	// |
-	// |
-	// | u @ CX = w0 * inp
+	// | (u @ CX) = (w0 @ R8) * inp
 	MOVQ R8, AX
 	MULQ ·inp6+0(SB)
 	MOVQ AX, CX
 
-	// | w0
+	// | w0 @ R8
 	XORQ DI, DI
 	MOVQ ·modulus6+0(SB), AX
 	MULQ CX
 	ADDQ AX, R8
 	ADCQ DX, DI
 
-	// | w1
+	// | w1 @ R9
 	XORQ SI, SI
 	MOVQ ·modulus6+8(SB), AX
 	MULQ CX
@@ -3639,7 +4823,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ DI, R9
 	ADCQ $0x00, SI
 
-	// | w2
+	// | w2 @ R10
 	XORQ DI, DI
 	MOVQ ·modulus6+16(SB), AX
 	MULQ CX
@@ -3648,7 +4832,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ SI, R10
 	ADCQ $0x00, DI
 
-	// | w3
+	// | w3 @ R11
 	XORQ SI, SI
 	MOVQ ·modulus6+24(SB), AX
 	MULQ CX
@@ -3657,7 +4841,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ DI, R11
 	ADCQ $0x00, SI
 
-	// | w4
+	// | w4 @ R12
 	XORQ DI, DI
 	MOVQ ·modulus6+32(SB), AX
 	MULQ CX
@@ -3666,7 +4850,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ SI, R12
 	ADCQ $0x00, DI
 
-	// | w5
+	// | w5 @ R13
 	XORQ SI, SI
 	MOVQ ·modulus6+40(SB), AX
 	MULQ CX
@@ -3675,7 +4859,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ DI, R13
 	ADCQ $0x00, SI
 
-	// | w6
+	// | w6 @ R14
 	ADDQ SI, R14
 	MOVQ $0x0000000000000000, R15
 	ADCQ $0x00, R15
@@ -3683,19 +4867,19 @@ TEXT ·montmul6(SB), $48-24
 	// |
 	MOVQ 32(SP), R8
 
-	// | u @ CX = w1 * inp
+	// | (u @ CX) = (w1 @ R9) * inp
 	MOVQ R9, AX
 	MULQ ·inp6+0(SB)
 	MOVQ AX, CX
 
-	// | w1
+	// | w1 @ R9
 	XORQ DI, DI
 	MOVQ ·modulus6+0(SB), AX
 	MULQ CX
 	ADDQ AX, R9
 	ADCQ DX, DI
 
-	// | w2
+	// | w2 @ R10
 	XORQ SI, SI
 	MOVQ ·modulus6+8(SB), AX
 	MULQ CX
@@ -3704,7 +4888,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ DI, R10
 	ADCQ $0x00, SI
 
-	// | w3
+	// | w3 @ R11
 	XORQ DI, DI
 	MOVQ ·modulus6+16(SB), AX
 	MULQ CX
@@ -3713,7 +4897,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ SI, R11
 	ADCQ $0x00, DI
 
-	// | w4
+	// | w4 @ R12
 	XORQ SI, SI
 	MOVQ ·modulus6+24(SB), AX
 	MULQ CX
@@ -3722,7 +4906,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ DI, R12
 	ADCQ $0x00, SI
 
-	// | w5
+	// | w5 @ R13
 	XORQ DI, DI
 	MOVQ ·modulus6+32(SB), AX
 	MULQ CX
@@ -3731,7 +4915,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ SI, R13
 	ADCQ $0x00, DI
 
-	// | w6
+	// | w6 @ R14
 	XORQ SI, SI
 	MOVQ ·modulus6+40(SB), AX
 	MULQ CX
@@ -3740,7 +4924,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ DI, R14
 	ADCQ $0x00, SI
 
-	// | w7
+	// | w7 @ R8
 	ADDQ SI, R15
 	ADCQ R15, R8
 	MOVQ $0x0000000000000000, R15
@@ -3749,19 +4933,19 @@ TEXT ·montmul6(SB), $48-24
 	// |
 	MOVQ (SP), R9
 
-	// | u @ CX = w2 * inp
+	// | (u @ CX) = (w2 @ R10) * inp
 	MOVQ R10, AX
 	MULQ ·inp6+0(SB)
 	MOVQ AX, CX
 
-	// | w2
+	// | w2 @ R10
 	XORQ DI, DI
 	MOVQ ·modulus6+0(SB), AX
 	MULQ CX
 	ADDQ AX, R10
 	ADCQ DX, DI
 
-	// | w3
+	// | w3 @ R11
 	XORQ SI, SI
 	MOVQ ·modulus6+8(SB), AX
 	MULQ CX
@@ -3770,7 +4954,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ DI, R11
 	ADCQ $0x00, SI
 
-	// | w4
+	// | w4 @ R12
 	XORQ DI, DI
 	MOVQ ·modulus6+16(SB), AX
 	MULQ CX
@@ -3779,7 +4963,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ SI, R12
 	ADCQ $0x00, DI
 
-	// | w5
+	// | w5 @ R13
 	XORQ SI, SI
 	MOVQ ·modulus6+24(SB), AX
 	MULQ CX
@@ -3788,7 +4972,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ DI, R13
 	ADCQ $0x00, SI
 
-	// | w6
+	// | w6 @ R14
 	XORQ DI, DI
 	MOVQ ·modulus6+32(SB), AX
 	MULQ CX
@@ -3797,7 +4981,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ SI, R14
 	ADCQ $0x00, DI
 
-	// | w7
+	// | w7 @ R8
 	XORQ SI, SI
 	MOVQ ·modulus6+40(SB), AX
 	MULQ CX
@@ -3806,7 +4990,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ DI, R8
 	ADCQ $0x00, SI
 
-	// | w8
+	// | w8 @ R9
 	ADDQ SI, R15
 	ADCQ R15, R9
 	MOVQ $0x0000000000000000, R15
@@ -3815,19 +4999,19 @@ TEXT ·montmul6(SB), $48-24
 	// |
 	MOVQ 8(SP), R10
 
-	// | u @ CX = w3 * inp
+	// | (u @ CX) = (w3 @ R11) * inp
 	MOVQ R11, AX
 	MULQ ·inp6+0(SB)
 	MOVQ AX, CX
 
-	// | w3
+	// | w3 @ R11
 	XORQ DI, DI
 	MOVQ ·modulus6+0(SB), AX
 	MULQ CX
 	ADDQ AX, R11
 	ADCQ DX, DI
 
-	// | w4
+	// | w4 @ R12
 	XORQ SI, SI
 	MOVQ ·modulus6+8(SB), AX
 	MULQ CX
@@ -3836,7 +5020,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ DI, R12
 	ADCQ $0x00, SI
 
-	// | w5
+	// | w5 @ R13
 	XORQ DI, DI
 	MOVQ ·modulus6+16(SB), AX
 	MULQ CX
@@ -3845,7 +5029,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ SI, R13
 	ADCQ $0x00, DI
 
-	// | w6
+	// | w6 @ R14
 	XORQ SI, SI
 	MOVQ ·modulus6+24(SB), AX
 	MULQ CX
@@ -3854,7 +5038,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ DI, R14
 	ADCQ $0x00, SI
 
-	// | w7
+	// | w7 @ R8
 	XORQ DI, DI
 	MOVQ ·modulus6+32(SB), AX
 	MULQ CX
@@ -3863,7 +5047,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ SI, R8
 	ADCQ $0x00, DI
 
-	// | w8
+	// | w8 @ R9
 	XORQ SI, SI
 	MOVQ ·modulus6+40(SB), AX
 	MULQ CX
@@ -3872,7 +5056,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ DI, R9
 	ADCQ $0x00, SI
 
-	// | w9
+	// | w9 @ R10
 	ADDQ SI, R15
 	ADCQ R15, R10
 	MOVQ $0x0000000000000000, R15
@@ -3881,19 +5065,19 @@ TEXT ·montmul6(SB), $48-24
 	// |
 	MOVQ 16(SP), R11
 
-	// | u @ CX = w4 * inp
+	// | (u @ CX) = (w4 @ R12) * inp
 	MOVQ R12, AX
 	MULQ ·inp6+0(SB)
 	MOVQ AX, CX
 
-	// | w4
+	// | w4 @ R12
 	XORQ DI, DI
 	MOVQ ·modulus6+0(SB), AX
 	MULQ CX
 	ADDQ AX, R12
 	ADCQ DX, DI
 
-	// | w5
+	// | w5 @ R13
 	XORQ SI, SI
 	MOVQ ·modulus6+8(SB), AX
 	MULQ CX
@@ -3902,7 +5086,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ DI, R13
 	ADCQ $0x00, SI
 
-	// | w6
+	// | w6 @ R14
 	XORQ DI, DI
 	MOVQ ·modulus6+16(SB), AX
 	MULQ CX
@@ -3911,7 +5095,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ SI, R14
 	ADCQ $0x00, DI
 
-	// | w7
+	// | w7 @ R8
 	XORQ SI, SI
 	MOVQ ·modulus6+24(SB), AX
 	MULQ CX
@@ -3920,7 +5104,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ DI, R8
 	ADCQ $0x00, SI
 
-	// | w8
+	// | w8 @ R9
 	XORQ DI, DI
 	MOVQ ·modulus6+32(SB), AX
 	MULQ CX
@@ -3929,7 +5113,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ SI, R9
 	ADCQ $0x00, DI
 
-	// | w9
+	// | w9 @ R10
 	XORQ SI, SI
 	MOVQ ·modulus6+40(SB), AX
 	MULQ CX
@@ -3938,7 +5122,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ DI, R10
 	ADCQ $0x00, SI
 
-	// | w10
+	// | w10 @ R11
 	ADDQ SI, R15
 	ADCQ R15, R11
 	MOVQ $0x0000000000000000, R15
@@ -3947,19 +5131,19 @@ TEXT ·montmul6(SB), $48-24
 	// |
 	MOVQ 24(SP), R12
 
-	// | u @ CX = w5 * inp
+	// | (u @ CX) = (w5 @ R13) * inp
 	MOVQ R13, AX
 	MULQ ·inp6+0(SB)
 	MOVQ AX, CX
 
-	// | w5
+	// | w5 @ R13
 	XORQ DI, DI
 	MOVQ ·modulus6+0(SB), AX
 	MULQ CX
 	ADDQ AX, R13
 	ADCQ DX, DI
 
-	// | w6
+	// | w6 @ R14
 	XORQ SI, SI
 	MOVQ ·modulus6+8(SB), AX
 	MULQ CX
@@ -3968,7 +5152,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ DI, R14
 	ADCQ $0x00, SI
 
-	// | w7
+	// | w7 @ R8
 	XORQ DI, DI
 	MOVQ ·modulus6+16(SB), AX
 	MULQ CX
@@ -3977,7 +5161,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ SI, R8
 	ADCQ $0x00, DI
 
-	// | w8
+	// | w8 @ R9
 	XORQ SI, SI
 	MOVQ ·modulus6+24(SB), AX
 	MULQ CX
@@ -3986,7 +5170,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ DI, R9
 	ADCQ $0x00, SI
 
-	// | w9
+	// | w9 @ R10
 	XORQ DI, DI
 	MOVQ ·modulus6+32(SB), AX
 	MULQ CX
@@ -3995,7 +5179,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ SI, R10
 	ADCQ $0x00, DI
 
-	// | w10
+	// | w10 @ R11
 	XORQ SI, SI
 	MOVQ ·modulus6+40(SB), AX
 	MULQ CX
@@ -4004,7 +5188,7 @@ TEXT ·montmul6(SB), $48-24
 	ADDQ DI, R11
 	ADCQ $0x00, SI
 
-	// | w11
+	// | w11 @ R12
 	ADDQ SI, R15
 	ADCQ R15, R12
 	MOVQ $0x0000000000000000, R15
@@ -4019,11 +5203,12 @@ TEXT ·montmul6(SB), $48-24
 	SBBQ ·modulus6+16(SB), AX
 	MOVQ R10, DX
 	SBBQ ·modulus6+24(SB), DX
-	MOVQ R11, SI
-	SBBQ ·modulus6+32(SB), SI
+	MOVQ R11, BX
+	SBBQ ·modulus6+32(SB), BX
+	MOVQ BX, 40(SP)
 	MOVQ R12, BX
 	SBBQ ·modulus6+40(SB), BX
-	MOVQ BX, 40(SP)
+	MOVQ BX, 48(SP)
 	SBBQ $0x00, R15
 
 	// | Compare & Return
@@ -4036,18 +5221,893 @@ TEXT ·montmul6(SB), $48-24
 	MOVQ    R9, 16(DI)
 	CMOVQCC DX, R10
 	MOVQ    R10, 24(DI)
-	CMOVQCC SI, R11
+	CMOVQCC 40(SP), R11
 	MOVQ    R11, 32(DI)
-	CMOVQCC 40(SP), R12
+	CMOVQCC 48(SP), R12
 	MOVQ    R12, 40(DI)
 	RET
 
 // func square6(c *[12]uint64, a *Fe384)
-TEXT ·square6(SB), $0-16
+TEXT ·square6(SB), $24-16
+	// |
+	MOVQ a+8(FP), DI
+	XORQ R11, R11
+	XORQ R12, R12
+	XORQ R13, R13
+	XORQ R14, R14
+	XORQ R15, R15
+	XORQ CX, CX
+	XORQ SI, SI
+	MOVQ $0x00000000, (SP)
+	MOVQ $0x00000000, 8(SP)
+	MOVQ $0x00000000, 16(SP)
+
+	// | a0
+	// | w0 @ R9
+	MOVQ (DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	MOVQ AX, R9
+	MOVQ DX, R10
+
+	// | w1 @ R10
+	MOVQ 8(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R12
+	ADDQ AX, R10
+	ADCQ DX, R11
+
+	// | w2 @ R11
+	MOVQ 16(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R13
+	ADDQ AX, R11
+	ADCQ DX, R12
+	ADCQ $0x00, R13
+
+	// | w3 @ R12
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R14
+	ADDQ AX, R12
+	ADCQ DX, R13
+	ADCQ $0x00, R14
+
+	// | w4 @ R13
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R15
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+
+	// | w5 @ R14
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, CX
+	ADDQ AX, R14
+	ADCQ DX, R15
+	ADCQ $0x00, CX
+
+	// | a1
+	// | w2 @ R11
+	MOVQ 8(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, R12
+	ADCQ $0x00, R13
+	ADCQ $0x00, R14
+
+	// | w3 @ R12
+	MOVQ 16(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R14
+	ADDQ AX, R12
+	ADCQ DX, R13
+	ADCQ $0x00, R14
+
+	// | w4 @ R13
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R15
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+
+	// | w5 @ R14
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, CX
+	ADDQ AX, R14
+	ADCQ DX, R15
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, SI
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADCQ $0x00, SI
+
+	// | a2
+	// | w4 @ R13
+	MOVQ 16(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+	ADCQ $0x00, CX
+
+	// | w5 @ R14
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, CX
+	ADDQ AX, R14
+	ADCQ DX, R15
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, SI
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADCQ $0x00, SI
+
+	// | w7 @ CX
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, (SP)
+	ADDQ AX, CX
+	ADCQ DX, SI
+	ADCQ $0x00, (SP)
+
+	// | a3
+	// | w6 @ R15
+	MOVQ 24(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADCQ $0x00, SI
+	ADCQ $0x00, (SP)
+
+	// | w7 @ CX
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, (SP)
+	ADDQ AX, CX
+	ADCQ DX, SI
+	ADCQ $0x00, (SP)
+
+	// | w8 @ SI
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 8(SP)
+	ADDQ AX, SI
+	ADCQ DX, (SP)
+	ADCQ $0x00, 8(SP)
+
+	// | a4
+	// | w8 @ SI
+	MOVQ 32(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, SI
+	ADCQ DX, (SP)
+	ADCQ $0x00, 8(SP)
+
+	// | w9 @ (SP)
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 16(SP)
+	ADDQ AX, (SP)
+	ADCQ DX, 8(SP)
+	ADCQ $0x00, 16(SP)
+
+	// | a5
+	// | w10 @ 8(SP)
+	MOVQ 40(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, 8(SP)
+	ADCQ DX, 16(SP)
+
+	// |
+	MOVQ c+0(FP), DI
+	MOVQ R9, (DI)
+	MOVQ R10, 8(DI)
+	MOVQ R11, 16(DI)
+	MOVQ R12, 24(DI)
+	MOVQ R13, 32(DI)
+	MOVQ R14, 40(DI)
+	MOVQ R15, 48(DI)
+	MOVQ CX, 56(DI)
+	MOVQ SI, 64(DI)
+	MOVQ (SP), BX
+	MOVQ BX, 72(DI)
+	MOVQ 8(SP), BX
+	MOVQ BX, 80(DI)
+	MOVQ 16(SP), BX
+	MOVQ BX, 88(DI)
 	RET
 
 // func montsquare6(c *Fe384, a *Fe384)
-TEXT ·montsquare6(SB), $0-16
+TEXT ·montsquare6(SB), $40-16
+	MOVQ a+8(FP), DI
+	XORQ R11, R11
+	XORQ R12, R12
+	XORQ R13, R13
+	XORQ R14, R14
+	XORQ R15, R15
+	XORQ CX, CX
+	XORQ SI, SI
+	MOVQ $0x00000000, (SP)
+	MOVQ $0x00000000, 8(SP)
+	MOVQ $0x00000000, 16(SP)
+
+	// | a0
+	// | w0 @ R9
+	MOVQ (DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	MOVQ AX, R9
+	MOVQ DX, R10
+
+	// | w1 @ R10
+	MOVQ 8(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R12
+	ADDQ AX, R10
+	ADCQ DX, R11
+
+	// | w2 @ R11
+	MOVQ 16(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R13
+	ADDQ AX, R11
+	ADCQ DX, R12
+	ADCQ $0x00, R13
+
+	// | w3 @ R12
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R14
+	ADDQ AX, R12
+	ADCQ DX, R13
+	ADCQ $0x00, R14
+
+	// | w4 @ R13
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R15
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+
+	// | w5 @ R14
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, CX
+	ADDQ AX, R14
+	ADCQ DX, R15
+	ADCQ $0x00, CX
+
+	// | a1
+	// | w2 @ R11
+	MOVQ 8(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, R12
+	ADCQ $0x00, R13
+	ADCQ $0x00, R14
+
+	// | w3 @ R12
+	MOVQ 16(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R14
+	ADDQ AX, R12
+	ADCQ DX, R13
+	ADCQ $0x00, R14
+
+	// | w4 @ R13
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R15
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+
+	// | w5 @ R14
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, CX
+	ADDQ AX, R14
+	ADCQ DX, R15
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, SI
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADCQ $0x00, SI
+
+	// | a2
+	// | w4 @ R13
+	MOVQ 16(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+	ADCQ $0x00, CX
+
+	// | w5 @ R14
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, CX
+	ADDQ AX, R14
+	ADCQ DX, R15
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, SI
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADCQ $0x00, SI
+
+	// | w7 @ CX
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, (SP)
+	ADDQ AX, CX
+	ADCQ DX, SI
+	ADCQ $0x00, (SP)
+
+	// | a3
+	// | w6 @ R15
+	MOVQ 24(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADCQ $0x00, SI
+	ADCQ $0x00, (SP)
+
+	// | w7 @ CX
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, (SP)
+	ADDQ AX, CX
+	ADCQ DX, SI
+	ADCQ $0x00, (SP)
+
+	// | w8 @ SI
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 8(SP)
+	ADDQ AX, SI
+	ADCQ DX, (SP)
+	ADCQ $0x00, 8(SP)
+
+	// | a4
+	// | w8 @ SI
+	MOVQ 32(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, SI
+	ADCQ DX, (SP)
+	ADCQ $0x00, 8(SP)
+
+	// | w9 @ (SP)
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 16(SP)
+	ADDQ AX, (SP)
+	ADCQ DX, 8(SP)
+	ADCQ $0x00, 16(SP)
+
+	// | a5
+	// | w10 @ 8(SP)
+	MOVQ 40(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, 8(SP)
+	ADCQ DX, 16(SP)
+
+	// |
+	// | Montgomerry Reduction
+	MOVQ SI, 24(SP)
+	MOVQ CX, 32(SP)
+
+	// |
+	// | (u @ R8) = (w0 @ R9) * inp
+	MOVQ R9, AX
+	MULQ ·inp6+0(SB)
+	MOVQ AX, R8
+
+	// | w0 @ R9
+	XORQ SI, SI
+	MOVQ ·modulus6+0(SB), AX
+	MULQ R8
+	ADDQ AX, R9
+	ADCQ DX, SI
+
+	// | w1 @ R10
+	XORQ CX, CX
+	MOVQ ·modulus6+8(SB), AX
+	MULQ R8
+	ADDQ AX, R10
+	ADCQ DX, CX
+	ADDQ SI, R10
+	ADCQ $0x00, CX
+
+	// | w2 @ R11
+	XORQ SI, SI
+	MOVQ ·modulus6+16(SB), AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, SI
+	ADDQ CX, R11
+	ADCQ $0x00, SI
+
+	// | w3 @ R12
+	XORQ CX, CX
+	MOVQ ·modulus6+24(SB), AX
+	MULQ R8
+	ADDQ AX, R12
+	ADCQ DX, CX
+	ADDQ SI, R12
+	ADCQ $0x00, CX
+
+	// | w4 @ R13
+	XORQ SI, SI
+	MOVQ ·modulus6+32(SB), AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, SI
+	ADDQ CX, R13
+	ADCQ $0x00, SI
+
+	// | w5 @ R14
+	XORQ CX, CX
+	MOVQ ·modulus6+40(SB), AX
+	MULQ R8
+	ADDQ AX, R14
+	ADCQ DX, CX
+	ADDQ SI, R14
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	ADDQ CX, R15
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// |
+	MOVQ 32(SP), R9
+
+	// | (u @ R8) = (w1 @ R10) * inp
+	MOVQ R10, AX
+	MULQ ·inp6+0(SB)
+	MOVQ AX, R8
+
+	// | w1 @ R10
+	XORQ SI, SI
+	MOVQ ·modulus6+0(SB), AX
+	MULQ R8
+	ADDQ AX, R10
+	ADCQ DX, SI
+
+	// | w2 @ R11
+	XORQ CX, CX
+	MOVQ ·modulus6+8(SB), AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, CX
+	ADDQ SI, R11
+	ADCQ $0x00, CX
+
+	// | w3 @ R12
+	XORQ SI, SI
+	MOVQ ·modulus6+16(SB), AX
+	MULQ R8
+	ADDQ AX, R12
+	ADCQ DX, SI
+	ADDQ CX, R12
+	ADCQ $0x00, SI
+
+	// | w4 @ R13
+	XORQ CX, CX
+	MOVQ ·modulus6+24(SB), AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, CX
+	ADDQ SI, R13
+	ADCQ $0x00, CX
+
+	// | w5 @ R14
+	XORQ SI, SI
+	MOVQ ·modulus6+32(SB), AX
+	MULQ R8
+	ADDQ AX, R14
+	ADCQ DX, SI
+	ADDQ CX, R14
+	ADCQ $0x00, SI
+
+	// | w6 @ R15
+	XORQ CX, CX
+	MOVQ ·modulus6+40(SB), AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADDQ SI, R15
+	ADCQ $0x00, CX
+
+	// | w7 @ R9
+	ADDQ CX, DI
+	ADCQ DI, R9
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// |
+	MOVQ 24(SP), R10
+
+	// | (u @ R8) = (w2 @ R11) * inp
+	MOVQ R11, AX
+	MULQ ·inp6+0(SB)
+	MOVQ AX, R8
+
+	// | w2 @ R11
+	XORQ SI, SI
+	MOVQ ·modulus6+0(SB), AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, SI
+
+	// | w3 @ R12
+	XORQ CX, CX
+	MOVQ ·modulus6+8(SB), AX
+	MULQ R8
+	ADDQ AX, R12
+	ADCQ DX, CX
+	ADDQ SI, R12
+	ADCQ $0x00, CX
+
+	// | w4 @ R13
+	XORQ SI, SI
+	MOVQ ·modulus6+16(SB), AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, SI
+	ADDQ CX, R13
+	ADCQ $0x00, SI
+
+	// | w5 @ R14
+	XORQ CX, CX
+	MOVQ ·modulus6+24(SB), AX
+	MULQ R8
+	ADDQ AX, R14
+	ADCQ DX, CX
+	ADDQ SI, R14
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	XORQ SI, SI
+	MOVQ ·modulus6+32(SB), AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, SI
+	ADDQ CX, R15
+	ADCQ $0x00, SI
+
+	// | w7 @ R9
+	XORQ CX, CX
+	MOVQ ·modulus6+40(SB), AX
+	MULQ R8
+	ADDQ AX, R9
+	ADCQ DX, CX
+	ADDQ SI, R9
+	ADCQ $0x00, CX
+
+	// | w8 @ R10
+	ADDQ CX, DI
+	ADCQ DI, R10
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// |
+	MOVQ (SP), R11
+
+	// | (u @ R8) = (w3 @ R12) * inp
+	MOVQ R12, AX
+	MULQ ·inp6+0(SB)
+	MOVQ AX, R8
+
+	// | w3 @ R12
+	XORQ SI, SI
+	MOVQ ·modulus6+0(SB), AX
+	MULQ R8
+	ADDQ AX, R12
+	ADCQ DX, SI
+
+	// | w4 @ R13
+	XORQ CX, CX
+	MOVQ ·modulus6+8(SB), AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, CX
+	ADDQ SI, R13
+	ADCQ $0x00, CX
+
+	// | w5 @ R14
+	XORQ SI, SI
+	MOVQ ·modulus6+16(SB), AX
+	MULQ R8
+	ADDQ AX, R14
+	ADCQ DX, SI
+	ADDQ CX, R14
+	ADCQ $0x00, SI
+
+	// | w6 @ R15
+	XORQ CX, CX
+	MOVQ ·modulus6+24(SB), AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADDQ SI, R15
+	ADCQ $0x00, CX
+
+	// | w7 @ R9
+	XORQ SI, SI
+	MOVQ ·modulus6+32(SB), AX
+	MULQ R8
+	ADDQ AX, R9
+	ADCQ DX, SI
+	ADDQ CX, R9
+	ADCQ $0x00, SI
+
+	// | w8 @ R10
+	XORQ CX, CX
+	MOVQ ·modulus6+40(SB), AX
+	MULQ R8
+	ADDQ AX, R10
+	ADCQ DX, CX
+	ADDQ SI, R10
+	ADCQ $0x00, CX
+
+	// | w9 @ R11
+	ADDQ CX, DI
+	ADCQ DI, R11
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// |
+	MOVQ 8(SP), R12
+
+	// | (u @ R8) = (w4 @ R13) * inp
+	MOVQ R13, AX
+	MULQ ·inp6+0(SB)
+	MOVQ AX, R8
+
+	// | w4 @ R13
+	XORQ SI, SI
+	MOVQ ·modulus6+0(SB), AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, SI
+
+	// | w5 @ R14
+	XORQ CX, CX
+	MOVQ ·modulus6+8(SB), AX
+	MULQ R8
+	ADDQ AX, R14
+	ADCQ DX, CX
+	ADDQ SI, R14
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	XORQ SI, SI
+	MOVQ ·modulus6+16(SB), AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, SI
+	ADDQ CX, R15
+	ADCQ $0x00, SI
+
+	// | w7 @ R9
+	XORQ CX, CX
+	MOVQ ·modulus6+24(SB), AX
+	MULQ R8
+	ADDQ AX, R9
+	ADCQ DX, CX
+	ADDQ SI, R9
+	ADCQ $0x00, CX
+
+	// | w8 @ R10
+	XORQ SI, SI
+	MOVQ ·modulus6+32(SB), AX
+	MULQ R8
+	ADDQ AX, R10
+	ADCQ DX, SI
+	ADDQ CX, R10
+	ADCQ $0x00, SI
+
+	// | w9 @ R11
+	XORQ CX, CX
+	MOVQ ·modulus6+40(SB), AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, CX
+	ADDQ SI, R11
+	ADCQ $0x00, CX
+
+	// | w10 @ R12
+	ADDQ CX, DI
+	ADCQ DI, R12
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// |
+	MOVQ 16(SP), R13
+
+	// | (u @ R8) = (w5 @ R14) * inp
+	MOVQ R14, AX
+	MULQ ·inp6+0(SB)
+	MOVQ AX, R8
+
+	// | w5 @ R14
+	XORQ SI, SI
+	MOVQ ·modulus6+0(SB), AX
+	MULQ R8
+	ADDQ AX, R14
+	ADCQ DX, SI
+
+	// | w6 @ R15
+	XORQ CX, CX
+	MOVQ ·modulus6+8(SB), AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADDQ SI, R15
+	ADCQ $0x00, CX
+
+	// | w7 @ R9
+	XORQ SI, SI
+	MOVQ ·modulus6+16(SB), AX
+	MULQ R8
+	ADDQ AX, R9
+	ADCQ DX, SI
+	ADDQ CX, R9
+	ADCQ $0x00, SI
+
+	// | w8 @ R10
+	XORQ CX, CX
+	MOVQ ·modulus6+24(SB), AX
+	MULQ R8
+	ADDQ AX, R10
+	ADCQ DX, CX
+	ADDQ SI, R10
+	ADCQ $0x00, CX
+
+	// | w9 @ R11
+	XORQ SI, SI
+	MOVQ ·modulus6+32(SB), AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, SI
+	ADDQ CX, R11
+	ADCQ $0x00, SI
+
+	// | w10 @ R12
+	XORQ CX, CX
+	MOVQ ·modulus6+40(SB), AX
+	MULQ R8
+	ADDQ AX, R12
+	ADCQ DX, CX
+	ADDQ SI, R12
+	ADCQ $0x00, CX
+
+	// | w11 @ R13
+	ADDQ CX, DI
+	ADCQ DI, R13
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// | Compare & Return
+	MOVQ    R15, R8
+	SUBQ    ·modulus6+0(SB), R8
+	MOVQ    R9, R14
+	SBBQ    ·modulus6+8(SB), R14
+	MOVQ    R10, CX
+	SBBQ    ·modulus6+16(SB), CX
+	MOVQ    R11, AX
+	SBBQ    ·modulus6+24(SB), AX
+	MOVQ    R12, DX
+	SBBQ    ·modulus6+32(SB), DX
+	MOVQ    R13, SI
+	SBBQ    ·modulus6+40(SB), SI
+	SBBQ    $0x00, DI
+	MOVQ    c+0(FP), DI
+	CMOVQCC R8, R15
+	MOVQ    R15, (DI)
+	CMOVQCC R14, R9
+	MOVQ    R9, 8(DI)
+	CMOVQCC CX, R10
+	MOVQ    R10, 16(DI)
+	CMOVQCC AX, R11
+	MOVQ    R11, 24(DI)
+	CMOVQCC DX, R12
+	MOVQ    R12, 32(DI)
+	CMOVQCC SI, R13
+	MOVQ    R13, 40(DI)
 	RET
 
 // func add7(c *Fe448, a *Fe448, b *Fe448)
@@ -4335,9 +6395,6 @@ TEXT ·mul7(SB), $48-24
 	MOVQ b+16(FP), SI
 
 	// |
-	// |
-	XORQ R8, R8
-	XORQ R9, R9
 	XORQ R10, R10
 	XORQ R11, R11
 	XORQ R12, R12
@@ -4356,42 +6413,49 @@ TEXT ·mul7(SB), $48-24
 	MOVQ (SI), CX
 
 	// | a0 * b0
+	// | (w0, w1) @ (R8, R9)
 	MOVQ (DI), AX
 	MULQ CX
 	MOVQ AX, R8
 	MOVQ DX, R9
 
 	// | a1 * b0
+	// | (w1, w2) @ (R9, R10)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R9
 	ADCQ DX, R10
 
 	// | a2 * b0
+	// | (w2, w3) @ (R10, R11)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R10
 	ADCQ DX, R11
 
 	// | a3 * b0
+	// | (w3, w4) @ (R11, R12)
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R11
 	ADCQ DX, R12
 
 	// | a4 * b0
+	// | (w4, w5) @ (R12, R13)
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R12
 	ADCQ DX, R13
 
 	// | a5 * b0
+	// | (w5, w6) @ (R13, R14)
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, R13
 	ADCQ DX, R14
 
 	// | a6 * b0
+	// | (w6, w7) @ (R14, R15)
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -4402,6 +6466,7 @@ TEXT ·mul7(SB), $48-24
 	MOVQ 8(SI), CX
 
 	// | a0 * b1
+	// | (w1, w2, w3, w4) @ (R9, R10, R11, R12)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R9
@@ -4410,6 +6475,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, R12
 
 	// | a1 * b1
+	// | (w2, w3, w4, w5) @ (R10, R11, R12, R13)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R10
@@ -4418,6 +6484,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, R13
 
 	// | a2 * b1
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -4426,6 +6493,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, R14
 
 	// | a3 * b1
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -4434,6 +6502,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, R15
 
 	// | a4 * b1
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -4442,6 +6511,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, (SP)
 
 	// | a5 * b1
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -4450,6 +6520,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, 8(SP)
 
 	// | a6 * b1
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -4462,6 +6533,7 @@ TEXT ·mul7(SB), $48-24
 	MOVQ 16(SI), CX
 
 	// | a0 * b2
+	// | (w2, w3, w4, w5) @ (R10, R11, R12, R13)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R10
@@ -4470,6 +6542,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, R13
 
 	// | a1 * b2
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -4478,6 +6551,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, R14
 
 	// | a2 * b2
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -4486,6 +6560,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, R15
 
 	// | a3 * b2
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -4494,6 +6569,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, (SP)
 
 	// | a4 * b2
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -4502,6 +6578,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, 8(SP)
 
 	// | a5 * b2
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -4510,6 +6587,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, 16(SP)
 
 	// | a6 * b2
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -4522,6 +6600,7 @@ TEXT ·mul7(SB), $48-24
 	MOVQ 24(SI), CX
 
 	// | a0 * b3
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -4530,6 +6609,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, R14
 
 	// | a1 * b3
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -4538,6 +6618,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, R15
 
 	// | a2 * b3
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -4546,6 +6627,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, (SP)
 
 	// | a3 * b3
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -4554,6 +6636,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, 8(SP)
 
 	// | a4 * b3
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -4562,6 +6645,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, 16(SP)
 
 	// | a5 * b3
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -4570,6 +6654,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, 24(SP)
 
 	// | a6 * b3
+	// | (w9, w10, w11, w12) @ (8(SP), 16(SP), 24(SP), 32(SP))
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, 8(SP)
@@ -4582,6 +6667,7 @@ TEXT ·mul7(SB), $48-24
 	MOVQ 32(SI), CX
 
 	// | a0 * b4
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -4590,6 +6676,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, R15
 
 	// | a1 * b4
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -4598,6 +6685,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, (SP)
 
 	// | a2 * b4
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -4606,6 +6694,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, 8(SP)
 
 	// | a3 * b4
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -4614,6 +6703,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, 16(SP)
 
 	// | a4 * b4
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -4622,6 +6712,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, 24(SP)
 
 	// | a5 * b4
+	// | (w9, w10, w11, w12) @ (8(SP), 16(SP), 24(SP), 32(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, 8(SP)
@@ -4630,6 +6721,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, 32(SP)
 
 	// | a6 * b4
+	// | (w10, w11, w12, w13) @ (16(SP), 24(SP), 32(SP), 40(SP))
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, 16(SP)
@@ -4642,6 +6734,7 @@ TEXT ·mul7(SB), $48-24
 	MOVQ 40(SI), CX
 
 	// | a0 * b5
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -4650,6 +6743,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, (SP)
 
 	// | a1 * b5
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -4658,6 +6752,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, 8(SP)
 
 	// | a2 * b5
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -4666,6 +6761,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, 16(SP)
 
 	// | a3 * b5
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -4674,6 +6770,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, 24(SP)
 
 	// | a4 * b5
+	// | (w9, w10, w11, w12) @ (8(SP), 16(SP), 24(SP), 32(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, 8(SP)
@@ -4682,6 +6779,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, 32(SP)
 
 	// | a5 * b5
+	// | (w10, w11, w12, w13) @ (16(SP), 24(SP), 32(SP), 40(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, 16(SP)
@@ -4690,6 +6788,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, 40(SP)
 
 	// | a6 * b5
+	// | (w11, w12, w13) @ (24(SP), 32(SP), 40(SP))
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, 24(SP)
@@ -4701,6 +6800,7 @@ TEXT ·mul7(SB), $48-24
 	MOVQ 48(SI), CX
 
 	// | a0 * b6
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -4709,6 +6809,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, 8(SP)
 
 	// | a1 * b6
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -4717,6 +6818,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, 16(SP)
 
 	// | a2 * b6
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -4725,6 +6827,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, 24(SP)
 
 	// | a3 * b6
+	// | (w9, w10, w11, w12) @ (8(SP), 16(SP), 24(SP), 32(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, 8(SP)
@@ -4733,6 +6836,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, 32(SP)
 
 	// | a4 * b6
+	// | (w10, w11, w12, w13) @ (16(SP), 24(SP), 32(SP), 40(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, 16(SP)
@@ -4741,6 +6845,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, 40(SP)
 
 	// | a5 * b6
+	// | (w11, w12, w13) @ (24(SP), 32(SP), 40(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, 24(SP)
@@ -4748,6 +6853,7 @@ TEXT ·mul7(SB), $48-24
 	ADCQ $0x00, 40(SP)
 
 	// | a6 * b6
+	// | (w12, w13) @ (32(SP), 40(SP))
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, 32(SP)
@@ -4762,19 +6868,19 @@ TEXT ·mul7(SB), $48-24
 	MOVQ R12, 32(DI)
 	MOVQ R13, 40(DI)
 	MOVQ R14, 48(DI)
-	MOVQ R15, (DI)
+	MOVQ R15, 56(DI)
 	MOVQ (SP), BX
-	MOVQ BX, 8(DI)
+	MOVQ BX, 64(DI)
 	MOVQ 8(SP), BX
-	MOVQ BX, 16(DI)
+	MOVQ BX, 72(DI)
 	MOVQ 16(SP), BX
-	MOVQ BX, 24(DI)
+	MOVQ BX, 80(DI)
 	MOVQ 24(SP), BX
-	MOVQ BX, 32(DI)
+	MOVQ BX, 88(DI)
 	MOVQ 32(SP), BX
-	MOVQ BX, 40(DI)
+	MOVQ BX, 96(DI)
 	MOVQ 40(SP), BX
-	MOVQ BX, 48(DI)
+	MOVQ BX, 104(DI)
 	RET
 
 // func mont7(c *Fe448, w *[14]uint64)
@@ -4792,20 +6898,19 @@ TEXT ·mont7(SB), $24-16
 	MOVQ BX, 8(SP)
 
 	// |
-	// |
-	// | u @ CX = w0 * inp
+	// | (u @ CX) = (w0 @ R8) * inp
 	MOVQ R8, AX
 	MULQ ·inp7+0(SB)
 	MOVQ AX, CX
 
-	// | w0
+	// | w0 @ R8
 	XORQ R14, R14
 	MOVQ ·modulus7+0(SB), AX
 	MULQ CX
 	ADDQ AX, R8
 	ADCQ DX, R14
 
-	// | w1
+	// | w1 @ R9
 	XORQ R13, R13
 	MOVQ ·modulus7+8(SB), AX
 	MULQ CX
@@ -4814,7 +6919,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R14, R9
 	ADCQ $0x00, R13
 
-	// | w2
+	// | w2 @ R10
 	XORQ R14, R14
 	MOVQ ·modulus7+16(SB), AX
 	MULQ CX
@@ -4823,7 +6928,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R13, R10
 	ADCQ $0x00, R14
 
-	// | w3
+	// | w3 @ R11
 	XORQ R13, R13
 	MOVQ ·modulus7+24(SB), AX
 	MULQ CX
@@ -4832,7 +6937,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R14, R11
 	ADCQ $0x00, R13
 
-	// | w4
+	// | w4 @ R12
 	XORQ R14, R14
 	MOVQ ·modulus7+32(SB), AX
 	MULQ CX
@@ -4841,7 +6946,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R13, R12
 	ADCQ $0x00, R14
 
-	// | w5
+	// | w5 @ SI
 	XORQ R13, R13
 	MOVQ ·modulus7+40(SB), AX
 	MULQ CX
@@ -4850,7 +6955,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R14, SI
 	ADCQ $0x00, R13
 
-	// | w6
+	// | w6 @ (SP)
 	XORQ R14, R14
 	MOVQ ·modulus7+48(SB), AX
 	MULQ CX
@@ -4859,7 +6964,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R13, (SP)
 	ADCQ $0x00, R14
 
-	// | w7
+	// | w7 @ 8(SP)
 	ADDQ R14, 8(SP)
 	MOVQ $0x0000000000000000, R15
 	ADCQ $0x00, R15
@@ -4867,19 +6972,19 @@ TEXT ·mont7(SB), $24-16
 	// |
 	MOVQ 64(DI), R8
 
-	// | u @ CX = w1 * inp
+	// | (u @ CX) = (w1 @ R9) * inp
 	MOVQ R9, AX
 	MULQ ·inp7+0(SB)
 	MOVQ AX, CX
 
-	// | w1
+	// | w1 @ R9
 	XORQ R14, R14
 	MOVQ ·modulus7+0(SB), AX
 	MULQ CX
 	ADDQ AX, R9
 	ADCQ DX, R14
 
-	// | w2
+	// | w2 @ R10
 	XORQ R13, R13
 	MOVQ ·modulus7+8(SB), AX
 	MULQ CX
@@ -4888,7 +6993,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R14, R10
 	ADCQ $0x00, R13
 
-	// | w3
+	// | w3 @ R11
 	XORQ R14, R14
 	MOVQ ·modulus7+16(SB), AX
 	MULQ CX
@@ -4897,7 +7002,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R13, R11
 	ADCQ $0x00, R14
 
-	// | w4
+	// | w4 @ R12
 	XORQ R13, R13
 	MOVQ ·modulus7+24(SB), AX
 	MULQ CX
@@ -4906,7 +7011,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R14, R12
 	ADCQ $0x00, R13
 
-	// | w5
+	// | w5 @ SI
 	XORQ R14, R14
 	MOVQ ·modulus7+32(SB), AX
 	MULQ CX
@@ -4915,7 +7020,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R13, SI
 	ADCQ $0x00, R14
 
-	// | w6
+	// | w6 @ (SP)
 	XORQ R13, R13
 	MOVQ ·modulus7+40(SB), AX
 	MULQ CX
@@ -4924,7 +7029,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R14, (SP)
 	ADCQ $0x00, R13
 
-	// | w7
+	// | w7 @ 8(SP)
 	XORQ R14, R14
 	MOVQ ·modulus7+48(SB), AX
 	MULQ CX
@@ -4933,7 +7038,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R13, 8(SP)
 	ADCQ $0x00, R14
 
-	// | w8
+	// | w8 @ R8
 	ADDQ R14, R15
 	ADCQ R15, R8
 	MOVQ $0x0000000000000000, R15
@@ -4942,19 +7047,19 @@ TEXT ·mont7(SB), $24-16
 	// |
 	MOVQ 72(DI), R9
 
-	// | u @ CX = w2 * inp
+	// | (u @ CX) = (w2 @ R10) * inp
 	MOVQ R10, AX
 	MULQ ·inp7+0(SB)
 	MOVQ AX, CX
 
-	// | w2
+	// | w2 @ R10
 	XORQ R14, R14
 	MOVQ ·modulus7+0(SB), AX
 	MULQ CX
 	ADDQ AX, R10
 	ADCQ DX, R14
 
-	// | w3
+	// | w3 @ R11
 	XORQ R13, R13
 	MOVQ ·modulus7+8(SB), AX
 	MULQ CX
@@ -4963,7 +7068,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R14, R11
 	ADCQ $0x00, R13
 
-	// | w4
+	// | w4 @ R12
 	XORQ R14, R14
 	MOVQ ·modulus7+16(SB), AX
 	MULQ CX
@@ -4972,7 +7077,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R13, R12
 	ADCQ $0x00, R14
 
-	// | w5
+	// | w5 @ SI
 	XORQ R13, R13
 	MOVQ ·modulus7+24(SB), AX
 	MULQ CX
@@ -4981,7 +7086,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R14, SI
 	ADCQ $0x00, R13
 
-	// | w6
+	// | w6 @ (SP)
 	XORQ R14, R14
 	MOVQ ·modulus7+32(SB), AX
 	MULQ CX
@@ -4990,7 +7095,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R13, (SP)
 	ADCQ $0x00, R14
 
-	// | w7
+	// | w7 @ 8(SP)
 	XORQ R13, R13
 	MOVQ ·modulus7+40(SB), AX
 	MULQ CX
@@ -4999,7 +7104,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R14, 8(SP)
 	ADCQ $0x00, R13
 
-	// | w8
+	// | w8 @ R8
 	XORQ R14, R14
 	MOVQ ·modulus7+48(SB), AX
 	MULQ CX
@@ -5008,7 +7113,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R13, R8
 	ADCQ $0x00, R14
 
-	// | w9
+	// | w9 @ R9
 	ADDQ R14, R15
 	ADCQ R15, R9
 	MOVQ $0x0000000000000000, R15
@@ -5017,19 +7122,19 @@ TEXT ·mont7(SB), $24-16
 	// |
 	MOVQ 80(DI), R10
 
-	// | u @ CX = w3 * inp
+	// | (u @ CX) = (w3 @ R11) * inp
 	MOVQ R11, AX
 	MULQ ·inp7+0(SB)
 	MOVQ AX, CX
 
-	// | w3
+	// | w3 @ R11
 	XORQ R14, R14
 	MOVQ ·modulus7+0(SB), AX
 	MULQ CX
 	ADDQ AX, R11
 	ADCQ DX, R14
 
-	// | w4
+	// | w4 @ R12
 	XORQ R13, R13
 	MOVQ ·modulus7+8(SB), AX
 	MULQ CX
@@ -5038,7 +7143,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R14, R12
 	ADCQ $0x00, R13
 
-	// | w5
+	// | w5 @ SI
 	XORQ R14, R14
 	MOVQ ·modulus7+16(SB), AX
 	MULQ CX
@@ -5047,7 +7152,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R13, SI
 	ADCQ $0x00, R14
 
-	// | w6
+	// | w6 @ (SP)
 	XORQ R13, R13
 	MOVQ ·modulus7+24(SB), AX
 	MULQ CX
@@ -5056,7 +7161,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R14, (SP)
 	ADCQ $0x00, R13
 
-	// | w7
+	// | w7 @ 8(SP)
 	XORQ R14, R14
 	MOVQ ·modulus7+32(SB), AX
 	MULQ CX
@@ -5065,7 +7170,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R13, 8(SP)
 	ADCQ $0x00, R14
 
-	// | w8
+	// | w8 @ R8
 	XORQ R13, R13
 	MOVQ ·modulus7+40(SB), AX
 	MULQ CX
@@ -5074,7 +7179,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R14, R8
 	ADCQ $0x00, R13
 
-	// | w9
+	// | w9 @ R9
 	XORQ R14, R14
 	MOVQ ·modulus7+48(SB), AX
 	MULQ CX
@@ -5083,7 +7188,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R13, R9
 	ADCQ $0x00, R14
 
-	// | w10
+	// | w10 @ R10
 	ADDQ R14, R15
 	ADCQ R15, R10
 	MOVQ $0x0000000000000000, R15
@@ -5092,19 +7197,19 @@ TEXT ·mont7(SB), $24-16
 	// |
 	MOVQ 88(DI), R11
 
-	// | u @ CX = w4 * inp
+	// | (u @ CX) = (w4 @ R12) * inp
 	MOVQ R12, AX
 	MULQ ·inp7+0(SB)
 	MOVQ AX, CX
 
-	// | w4
+	// | w4 @ R12
 	XORQ R14, R14
 	MOVQ ·modulus7+0(SB), AX
 	MULQ CX
 	ADDQ AX, R12
 	ADCQ DX, R14
 
-	// | w5
+	// | w5 @ SI
 	XORQ R13, R13
 	MOVQ ·modulus7+8(SB), AX
 	MULQ CX
@@ -5113,7 +7218,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R14, SI
 	ADCQ $0x00, R13
 
-	// | w6
+	// | w6 @ (SP)
 	XORQ R14, R14
 	MOVQ ·modulus7+16(SB), AX
 	MULQ CX
@@ -5122,7 +7227,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R13, (SP)
 	ADCQ $0x00, R14
 
-	// | w7
+	// | w7 @ 8(SP)
 	XORQ R13, R13
 	MOVQ ·modulus7+24(SB), AX
 	MULQ CX
@@ -5131,7 +7236,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R14, 8(SP)
 	ADCQ $0x00, R13
 
-	// | w8
+	// | w8 @ R8
 	XORQ R14, R14
 	MOVQ ·modulus7+32(SB), AX
 	MULQ CX
@@ -5140,7 +7245,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R13, R8
 	ADCQ $0x00, R14
 
-	// | w9
+	// | w9 @ R9
 	XORQ R13, R13
 	MOVQ ·modulus7+40(SB), AX
 	MULQ CX
@@ -5149,7 +7254,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R14, R9
 	ADCQ $0x00, R13
 
-	// | w10
+	// | w10 @ R10
 	XORQ R14, R14
 	MOVQ ·modulus7+48(SB), AX
 	MULQ CX
@@ -5158,7 +7263,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R13, R10
 	ADCQ $0x00, R14
 
-	// | w11
+	// | w11 @ R11
 	ADDQ R14, R15
 	ADCQ R15, R11
 	MOVQ $0x0000000000000000, R15
@@ -5167,19 +7272,19 @@ TEXT ·mont7(SB), $24-16
 	// |
 	MOVQ 96(DI), R12
 
-	// | u @ CX = w5 * inp
+	// | (u @ CX) = (w5 @ SI) * inp
 	MOVQ SI, AX
 	MULQ ·inp7+0(SB)
 	MOVQ AX, CX
 
-	// | w5
+	// | w5 @ SI
 	XORQ R14, R14
 	MOVQ ·modulus7+0(SB), AX
 	MULQ CX
 	ADDQ AX, SI
 	ADCQ DX, R14
 
-	// | w6
+	// | w6 @ (SP)
 	XORQ R13, R13
 	MOVQ ·modulus7+8(SB), AX
 	MULQ CX
@@ -5188,7 +7293,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R14, (SP)
 	ADCQ $0x00, R13
 
-	// | w7
+	// | w7 @ 8(SP)
 	XORQ R14, R14
 	MOVQ ·modulus7+16(SB), AX
 	MULQ CX
@@ -5197,7 +7302,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R13, 8(SP)
 	ADCQ $0x00, R14
 
-	// | w8
+	// | w8 @ R8
 	XORQ R13, R13
 	MOVQ ·modulus7+24(SB), AX
 	MULQ CX
@@ -5206,7 +7311,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R14, R8
 	ADCQ $0x00, R13
 
-	// | w9
+	// | w9 @ R9
 	XORQ R14, R14
 	MOVQ ·modulus7+32(SB), AX
 	MULQ CX
@@ -5215,7 +7320,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R13, R9
 	ADCQ $0x00, R14
 
-	// | w10
+	// | w10 @ R10
 	XORQ R13, R13
 	MOVQ ·modulus7+40(SB), AX
 	MULQ CX
@@ -5224,7 +7329,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R14, R10
 	ADCQ $0x00, R13
 
-	// | w11
+	// | w11 @ R11
 	XORQ R14, R14
 	MOVQ ·modulus7+48(SB), AX
 	MULQ CX
@@ -5233,7 +7338,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R13, R11
 	ADCQ $0x00, R14
 
-	// | w12
+	// | w12 @ R12
 	ADDQ R14, R15
 	ADCQ R15, R12
 	MOVQ $0x0000000000000000, R15
@@ -5242,19 +7347,19 @@ TEXT ·mont7(SB), $24-16
 	// |
 	MOVQ 104(DI), SI
 
-	// | u @ CX = w6 * inp
+	// | (u @ CX) = (w6 @ (SP)) * inp
 	MOVQ (SP), AX
 	MULQ ·inp7+0(SB)
 	MOVQ AX, CX
 
-	// | w6
+	// | w6 @ (SP)
 	XORQ R14, R14
 	MOVQ ·modulus7+0(SB), AX
 	MULQ CX
 	ADDQ AX, (SP)
 	ADCQ DX, R14
 
-	// | w7
+	// | w7 @ 8(SP)
 	XORQ R13, R13
 	MOVQ ·modulus7+8(SB), AX
 	MULQ CX
@@ -5263,7 +7368,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R14, 8(SP)
 	ADCQ $0x00, R13
 
-	// | w8
+	// | w8 @ R8
 	XORQ R14, R14
 	MOVQ ·modulus7+16(SB), AX
 	MULQ CX
@@ -5272,7 +7377,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R13, R8
 	ADCQ $0x00, R14
 
-	// | w9
+	// | w9 @ R9
 	XORQ R13, R13
 	MOVQ ·modulus7+24(SB), AX
 	MULQ CX
@@ -5281,7 +7386,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R14, R9
 	ADCQ $0x00, R13
 
-	// | w10
+	// | w10 @ R10
 	XORQ R14, R14
 	MOVQ ·modulus7+32(SB), AX
 	MULQ CX
@@ -5290,7 +7395,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R13, R10
 	ADCQ $0x00, R14
 
-	// | w11
+	// | w11 @ R11
 	XORQ R13, R13
 	MOVQ ·modulus7+40(SB), AX
 	MULQ CX
@@ -5299,7 +7404,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R14, R11
 	ADCQ $0x00, R13
 
-	// | w12
+	// | w12 @ R12
 	XORQ R14, R14
 	MOVQ ·modulus7+48(SB), AX
 	MULQ CX
@@ -5308,7 +7413,7 @@ TEXT ·mont7(SB), $24-16
 	ADDQ R13, R12
 	ADCQ $0x00, R14
 
-	// | w13
+	// | w13 @ SI
 	ADDQ R14, R15
 	ADCQ R15, SI
 	MOVQ $0x0000000000000000, R15
@@ -5335,11 +7440,8 @@ TEXT ·mont7(SB), $24-16
 
 	// | Compare & Return
 	MOVQ    c+0(FP), DI
-	MOVQ    8(SP), BX
-	CMOVQCC R13, BX
-	MOVQ    BX, 8(SP)
-	MOVQ    8(SP), BX
-	MOVQ    BX, (DI)
+	CMOVQCS 8(SP), R13
+	MOVQ    R13, (DI)
 	CMOVQCC R14, R8
 	MOVQ    R8, 8(DI)
 	CMOVQCC CX, R9
@@ -5355,7 +7457,7 @@ TEXT ·mont7(SB), $24-16
 	RET
 
 // func montmul7(c *Fe448, a *Fe448, b *Fe448)
-TEXT ·montmul7(SB), $72-24
+TEXT ·montmul7(SB), $80-24
 	// |
 	// | Multiplication
 	MOVQ a+8(FP), DI
@@ -5363,8 +7465,6 @@ TEXT ·montmul7(SB), $72-24
 
 	// |
 	// |
-	XORQ R8, R8
-	XORQ R9, R9
 	XORQ R10, R10
 	XORQ R11, R11
 	XORQ R12, R12
@@ -5383,42 +7483,49 @@ TEXT ·montmul7(SB), $72-24
 	MOVQ (SI), CX
 
 	// | a0 * b0
+	// | (w0, w1) @ (R8, R9)
 	MOVQ (DI), AX
 	MULQ CX
 	MOVQ AX, R8
 	MOVQ DX, R9
 
 	// | a1 * b0
+	// | (w1, w2) @ (R9, R10)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R9
 	ADCQ DX, R10
 
 	// | a2 * b0
+	// | (w2, w3) @ (R10, R11)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R10
 	ADCQ DX, R11
 
 	// | a3 * b0
+	// | (w3, w4) @ (R11, R12)
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R11
 	ADCQ DX, R12
 
 	// | a4 * b0
+	// | (w4, w5) @ (R12, R13)
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R12
 	ADCQ DX, R13
 
 	// | a5 * b0
+	// | (w5, w6) @ (R13, R14)
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, R13
 	ADCQ DX, R14
 
 	// | a6 * b0
+	// | (w6, w7) @ (R14, R15)
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -5429,6 +7536,7 @@ TEXT ·montmul7(SB), $72-24
 	MOVQ 8(SI), CX
 
 	// | a0 * b1
+	// | (w1, w2, w3, w4) @ (R9, R10, R11, R12)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R9
@@ -5437,6 +7545,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, R12
 
 	// | a1 * b1
+	// | (w2, w3, w4, w5) @ (R10, R11, R12, R13)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R10
@@ -5445,6 +7554,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, R13
 
 	// | a2 * b1
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -5453,6 +7563,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, R14
 
 	// | a3 * b1
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -5461,6 +7572,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, R15
 
 	// | a4 * b1
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -5469,6 +7581,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, (SP)
 
 	// | a5 * b1
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -5477,6 +7590,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, 8(SP)
 
 	// | a6 * b1
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -5489,6 +7603,7 @@ TEXT ·montmul7(SB), $72-24
 	MOVQ 16(SI), CX
 
 	// | a0 * b2
+	// | (w2, w3, w4, w5) @ (R10, R11, R12, R13)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R10
@@ -5497,6 +7612,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, R13
 
 	// | a1 * b2
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -5505,6 +7621,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, R14
 
 	// | a2 * b2
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -5513,6 +7630,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, R15
 
 	// | a3 * b2
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -5521,6 +7639,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, (SP)
 
 	// | a4 * b2
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -5529,6 +7648,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, 8(SP)
 
 	// | a5 * b2
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -5537,6 +7657,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, 16(SP)
 
 	// | a6 * b2
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -5549,6 +7670,7 @@ TEXT ·montmul7(SB), $72-24
 	MOVQ 24(SI), CX
 
 	// | a0 * b3
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -5557,6 +7679,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, R14
 
 	// | a1 * b3
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -5565,6 +7688,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, R15
 
 	// | a2 * b3
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -5573,6 +7697,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, (SP)
 
 	// | a3 * b3
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -5581,6 +7706,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, 8(SP)
 
 	// | a4 * b3
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -5589,6 +7715,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, 16(SP)
 
 	// | a5 * b3
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -5597,6 +7724,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, 24(SP)
 
 	// | a6 * b3
+	// | (w9, w10, w11, w12) @ (8(SP), 16(SP), 24(SP), 32(SP))
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, 8(SP)
@@ -5609,6 +7737,7 @@ TEXT ·montmul7(SB), $72-24
 	MOVQ 32(SI), CX
 
 	// | a0 * b4
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -5617,6 +7746,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, R15
 
 	// | a1 * b4
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -5625,6 +7755,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, (SP)
 
 	// | a2 * b4
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -5633,6 +7764,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, 8(SP)
 
 	// | a3 * b4
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -5641,6 +7773,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, 16(SP)
 
 	// | a4 * b4
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -5649,6 +7782,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, 24(SP)
 
 	// | a5 * b4
+	// | (w9, w10, w11, w12) @ (8(SP), 16(SP), 24(SP), 32(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, 8(SP)
@@ -5657,6 +7791,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, 32(SP)
 
 	// | a6 * b4
+	// | (w10, w11, w12, w13) @ (16(SP), 24(SP), 32(SP), 40(SP))
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, 16(SP)
@@ -5669,6 +7804,7 @@ TEXT ·montmul7(SB), $72-24
 	MOVQ 40(SI), CX
 
 	// | a0 * b5
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -5677,6 +7813,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, (SP)
 
 	// | a1 * b5
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -5685,6 +7822,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, 8(SP)
 
 	// | a2 * b5
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -5693,6 +7831,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, 16(SP)
 
 	// | a3 * b5
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -5701,6 +7840,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, 24(SP)
 
 	// | a4 * b5
+	// | (w9, w10, w11, w12) @ (8(SP), 16(SP), 24(SP), 32(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, 8(SP)
@@ -5709,6 +7849,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, 32(SP)
 
 	// | a5 * b5
+	// | (w10, w11, w12, w13) @ (16(SP), 24(SP), 32(SP), 40(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, 16(SP)
@@ -5717,6 +7858,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, 40(SP)
 
 	// | a6 * b5
+	// | (w11, w12, w13) @ (24(SP), 32(SP), 40(SP))
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, 24(SP)
@@ -5728,6 +7870,7 @@ TEXT ·montmul7(SB), $72-24
 	MOVQ 48(SI), CX
 
 	// | a0 * b6
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -5736,6 +7879,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, 8(SP)
 
 	// | a1 * b6
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -5744,6 +7888,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, 16(SP)
 
 	// | a2 * b6
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -5752,6 +7897,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, 24(SP)
 
 	// | a3 * b6
+	// | (w9, w10, w11, w12) @ (8(SP), 16(SP), 24(SP), 32(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, 8(SP)
@@ -5760,6 +7906,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, 32(SP)
 
 	// | a4 * b6
+	// | (w10, w11, w12, w13) @ (16(SP), 24(SP), 32(SP), 40(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, 16(SP)
@@ -5768,6 +7915,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, 40(SP)
 
 	// | a5 * b6
+	// | (w11, w12, w13) @ (24(SP), 32(SP), 40(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, 24(SP)
@@ -5775,6 +7923,7 @@ TEXT ·montmul7(SB), $72-24
 	ADCQ $0x00, 40(SP)
 
 	// | a6 * b6
+	// | (w12, w13) @ (32(SP), 40(SP))
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, 32(SP)
@@ -5785,20 +7934,19 @@ TEXT ·montmul7(SB), $72-24
 	MOVQ R15, 48(SP)
 
 	// |
-	// |
-	// | u @ CX = w0 * inp
+	// | (u @ CX) = (w0 @ R8) * inp
 	MOVQ R8, AX
 	MULQ ·inp7+0(SB)
 	MOVQ AX, CX
 
-	// | w0
+	// | w0 @ R8
 	XORQ DI, DI
 	MOVQ ·modulus7+0(SB), AX
 	MULQ CX
 	ADDQ AX, R8
 	ADCQ DX, DI
 
-	// | w1
+	// | w1 @ R9
 	XORQ SI, SI
 	MOVQ ·modulus7+8(SB), AX
 	MULQ CX
@@ -5807,7 +7955,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ DI, R9
 	ADCQ $0x00, SI
 
-	// | w2
+	// | w2 @ R10
 	XORQ DI, DI
 	MOVQ ·modulus7+16(SB), AX
 	MULQ CX
@@ -5816,7 +7964,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ SI, R10
 	ADCQ $0x00, DI
 
-	// | w3
+	// | w3 @ R11
 	XORQ SI, SI
 	MOVQ ·modulus7+24(SB), AX
 	MULQ CX
@@ -5825,7 +7973,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ DI, R11
 	ADCQ $0x00, SI
 
-	// | w4
+	// | w4 @ R12
 	XORQ DI, DI
 	MOVQ ·modulus7+32(SB), AX
 	MULQ CX
@@ -5834,7 +7982,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ SI, R12
 	ADCQ $0x00, DI
 
-	// | w5
+	// | w5 @ R13
 	XORQ SI, SI
 	MOVQ ·modulus7+40(SB), AX
 	MULQ CX
@@ -5843,7 +7991,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ DI, R13
 	ADCQ $0x00, SI
 
-	// | w6
+	// | w6 @ R14
 	XORQ DI, DI
 	MOVQ ·modulus7+48(SB), AX
 	MULQ CX
@@ -5852,7 +8000,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ SI, R14
 	ADCQ $0x00, DI
 
-	// | w7
+	// | w7 @ 48(SP)
 	ADDQ DI, 48(SP)
 	MOVQ $0x0000000000000000, R15
 	ADCQ $0x00, R15
@@ -5860,19 +8008,19 @@ TEXT ·montmul7(SB), $72-24
 	// |
 	MOVQ (SP), R8
 
-	// | u @ CX = w1 * inp
+	// | (u @ CX) = (w1 @ R9) * inp
 	MOVQ R9, AX
 	MULQ ·inp7+0(SB)
 	MOVQ AX, CX
 
-	// | w1
+	// | w1 @ R9
 	XORQ DI, DI
 	MOVQ ·modulus7+0(SB), AX
 	MULQ CX
 	ADDQ AX, R9
 	ADCQ DX, DI
 
-	// | w2
+	// | w2 @ R10
 	XORQ SI, SI
 	MOVQ ·modulus7+8(SB), AX
 	MULQ CX
@@ -5881,7 +8029,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ DI, R10
 	ADCQ $0x00, SI
 
-	// | w3
+	// | w3 @ R11
 	XORQ DI, DI
 	MOVQ ·modulus7+16(SB), AX
 	MULQ CX
@@ -5890,7 +8038,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ SI, R11
 	ADCQ $0x00, DI
 
-	// | w4
+	// | w4 @ R12
 	XORQ SI, SI
 	MOVQ ·modulus7+24(SB), AX
 	MULQ CX
@@ -5899,7 +8047,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ DI, R12
 	ADCQ $0x00, SI
 
-	// | w5
+	// | w5 @ R13
 	XORQ DI, DI
 	MOVQ ·modulus7+32(SB), AX
 	MULQ CX
@@ -5908,7 +8056,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ SI, R13
 	ADCQ $0x00, DI
 
-	// | w6
+	// | w6 @ R14
 	XORQ SI, SI
 	MOVQ ·modulus7+40(SB), AX
 	MULQ CX
@@ -5917,7 +8065,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ DI, R14
 	ADCQ $0x00, SI
 
-	// | w7
+	// | w7 @ 48(SP)
 	XORQ DI, DI
 	MOVQ ·modulus7+48(SB), AX
 	MULQ CX
@@ -5926,7 +8074,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ SI, 48(SP)
 	ADCQ $0x00, DI
 
-	// | w8
+	// | w8 @ R8
 	ADDQ DI, R15
 	ADCQ R15, R8
 	MOVQ $0x0000000000000000, R15
@@ -5935,19 +8083,19 @@ TEXT ·montmul7(SB), $72-24
 	// |
 	MOVQ 8(SP), R9
 
-	// | u @ CX = w2 * inp
+	// | (u @ CX) = (w2 @ R10) * inp
 	MOVQ R10, AX
 	MULQ ·inp7+0(SB)
 	MOVQ AX, CX
 
-	// | w2
+	// | w2 @ R10
 	XORQ DI, DI
 	MOVQ ·modulus7+0(SB), AX
 	MULQ CX
 	ADDQ AX, R10
 	ADCQ DX, DI
 
-	// | w3
+	// | w3 @ R11
 	XORQ SI, SI
 	MOVQ ·modulus7+8(SB), AX
 	MULQ CX
@@ -5956,7 +8104,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ DI, R11
 	ADCQ $0x00, SI
 
-	// | w4
+	// | w4 @ R12
 	XORQ DI, DI
 	MOVQ ·modulus7+16(SB), AX
 	MULQ CX
@@ -5965,7 +8113,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ SI, R12
 	ADCQ $0x00, DI
 
-	// | w5
+	// | w5 @ R13
 	XORQ SI, SI
 	MOVQ ·modulus7+24(SB), AX
 	MULQ CX
@@ -5974,7 +8122,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ DI, R13
 	ADCQ $0x00, SI
 
-	// | w6
+	// | w6 @ R14
 	XORQ DI, DI
 	MOVQ ·modulus7+32(SB), AX
 	MULQ CX
@@ -5983,7 +8131,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ SI, R14
 	ADCQ $0x00, DI
 
-	// | w7
+	// | w7 @ 48(SP)
 	XORQ SI, SI
 	MOVQ ·modulus7+40(SB), AX
 	MULQ CX
@@ -5992,7 +8140,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ DI, 48(SP)
 	ADCQ $0x00, SI
 
-	// | w8
+	// | w8 @ R8
 	XORQ DI, DI
 	MOVQ ·modulus7+48(SB), AX
 	MULQ CX
@@ -6001,7 +8149,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ SI, R8
 	ADCQ $0x00, DI
 
-	// | w9
+	// | w9 @ R9
 	ADDQ DI, R15
 	ADCQ R15, R9
 	MOVQ $0x0000000000000000, R15
@@ -6010,19 +8158,19 @@ TEXT ·montmul7(SB), $72-24
 	// |
 	MOVQ 16(SP), R10
 
-	// | u @ CX = w3 * inp
+	// | (u @ CX) = (w3 @ R11) * inp
 	MOVQ R11, AX
 	MULQ ·inp7+0(SB)
 	MOVQ AX, CX
 
-	// | w3
+	// | w3 @ R11
 	XORQ DI, DI
 	MOVQ ·modulus7+0(SB), AX
 	MULQ CX
 	ADDQ AX, R11
 	ADCQ DX, DI
 
-	// | w4
+	// | w4 @ R12
 	XORQ SI, SI
 	MOVQ ·modulus7+8(SB), AX
 	MULQ CX
@@ -6031,7 +8179,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ DI, R12
 	ADCQ $0x00, SI
 
-	// | w5
+	// | w5 @ R13
 	XORQ DI, DI
 	MOVQ ·modulus7+16(SB), AX
 	MULQ CX
@@ -6040,7 +8188,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ SI, R13
 	ADCQ $0x00, DI
 
-	// | w6
+	// | w6 @ R14
 	XORQ SI, SI
 	MOVQ ·modulus7+24(SB), AX
 	MULQ CX
@@ -6049,7 +8197,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ DI, R14
 	ADCQ $0x00, SI
 
-	// | w7
+	// | w7 @ 48(SP)
 	XORQ DI, DI
 	MOVQ ·modulus7+32(SB), AX
 	MULQ CX
@@ -6058,7 +8206,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ SI, 48(SP)
 	ADCQ $0x00, DI
 
-	// | w8
+	// | w8 @ R8
 	XORQ SI, SI
 	MOVQ ·modulus7+40(SB), AX
 	MULQ CX
@@ -6067,7 +8215,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ DI, R8
 	ADCQ $0x00, SI
 
-	// | w9
+	// | w9 @ R9
 	XORQ DI, DI
 	MOVQ ·modulus7+48(SB), AX
 	MULQ CX
@@ -6076,7 +8224,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ SI, R9
 	ADCQ $0x00, DI
 
-	// | w10
+	// | w10 @ R10
 	ADDQ DI, R15
 	ADCQ R15, R10
 	MOVQ $0x0000000000000000, R15
@@ -6085,19 +8233,19 @@ TEXT ·montmul7(SB), $72-24
 	// |
 	MOVQ 24(SP), R11
 
-	// | u @ CX = w4 * inp
+	// | (u @ CX) = (w4 @ R12) * inp
 	MOVQ R12, AX
 	MULQ ·inp7+0(SB)
 	MOVQ AX, CX
 
-	// | w4
+	// | w4 @ R12
 	XORQ DI, DI
 	MOVQ ·modulus7+0(SB), AX
 	MULQ CX
 	ADDQ AX, R12
 	ADCQ DX, DI
 
-	// | w5
+	// | w5 @ R13
 	XORQ SI, SI
 	MOVQ ·modulus7+8(SB), AX
 	MULQ CX
@@ -6106,7 +8254,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ DI, R13
 	ADCQ $0x00, SI
 
-	// | w6
+	// | w6 @ R14
 	XORQ DI, DI
 	MOVQ ·modulus7+16(SB), AX
 	MULQ CX
@@ -6115,7 +8263,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ SI, R14
 	ADCQ $0x00, DI
 
-	// | w7
+	// | w7 @ 48(SP)
 	XORQ SI, SI
 	MOVQ ·modulus7+24(SB), AX
 	MULQ CX
@@ -6124,7 +8272,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ DI, 48(SP)
 	ADCQ $0x00, SI
 
-	// | w8
+	// | w8 @ R8
 	XORQ DI, DI
 	MOVQ ·modulus7+32(SB), AX
 	MULQ CX
@@ -6133,7 +8281,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ SI, R8
 	ADCQ $0x00, DI
 
-	// | w9
+	// | w9 @ R9
 	XORQ SI, SI
 	MOVQ ·modulus7+40(SB), AX
 	MULQ CX
@@ -6142,7 +8290,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ DI, R9
 	ADCQ $0x00, SI
 
-	// | w10
+	// | w10 @ R10
 	XORQ DI, DI
 	MOVQ ·modulus7+48(SB), AX
 	MULQ CX
@@ -6151,7 +8299,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ SI, R10
 	ADCQ $0x00, DI
 
-	// | w11
+	// | w11 @ R11
 	ADDQ DI, R15
 	ADCQ R15, R11
 	MOVQ $0x0000000000000000, R15
@@ -6160,19 +8308,19 @@ TEXT ·montmul7(SB), $72-24
 	// |
 	MOVQ 32(SP), R12
 
-	// | u @ CX = w5 * inp
+	// | (u @ CX) = (w5 @ R13) * inp
 	MOVQ R13, AX
 	MULQ ·inp7+0(SB)
 	MOVQ AX, CX
 
-	// | w5
+	// | w5 @ R13
 	XORQ DI, DI
 	MOVQ ·modulus7+0(SB), AX
 	MULQ CX
 	ADDQ AX, R13
 	ADCQ DX, DI
 
-	// | w6
+	// | w6 @ R14
 	XORQ SI, SI
 	MOVQ ·modulus7+8(SB), AX
 	MULQ CX
@@ -6181,7 +8329,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ DI, R14
 	ADCQ $0x00, SI
 
-	// | w7
+	// | w7 @ 48(SP)
 	XORQ DI, DI
 	MOVQ ·modulus7+16(SB), AX
 	MULQ CX
@@ -6190,7 +8338,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ SI, 48(SP)
 	ADCQ $0x00, DI
 
-	// | w8
+	// | w8 @ R8
 	XORQ SI, SI
 	MOVQ ·modulus7+24(SB), AX
 	MULQ CX
@@ -6199,7 +8347,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ DI, R8
 	ADCQ $0x00, SI
 
-	// | w9
+	// | w9 @ R9
 	XORQ DI, DI
 	MOVQ ·modulus7+32(SB), AX
 	MULQ CX
@@ -6208,7 +8356,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ SI, R9
 	ADCQ $0x00, DI
 
-	// | w10
+	// | w10 @ R10
 	XORQ SI, SI
 	MOVQ ·modulus7+40(SB), AX
 	MULQ CX
@@ -6217,7 +8365,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ DI, R10
 	ADCQ $0x00, SI
 
-	// | w11
+	// | w11 @ R11
 	XORQ DI, DI
 	MOVQ ·modulus7+48(SB), AX
 	MULQ CX
@@ -6226,7 +8374,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ SI, R11
 	ADCQ $0x00, DI
 
-	// | w12
+	// | w12 @ R12
 	ADDQ DI, R15
 	ADCQ R15, R12
 	MOVQ $0x0000000000000000, R15
@@ -6235,19 +8383,19 @@ TEXT ·montmul7(SB), $72-24
 	// |
 	MOVQ 40(SP), R13
 
-	// | u @ CX = w6 * inp
+	// | (u @ CX) = (w6 @ R14) * inp
 	MOVQ R14, AX
 	MULQ ·inp7+0(SB)
 	MOVQ AX, CX
 
-	// | w6
+	// | w6 @ R14
 	XORQ DI, DI
 	MOVQ ·modulus7+0(SB), AX
 	MULQ CX
 	ADDQ AX, R14
 	ADCQ DX, DI
 
-	// | w7
+	// | w7 @ 48(SP)
 	XORQ SI, SI
 	MOVQ ·modulus7+8(SB), AX
 	MULQ CX
@@ -6256,7 +8404,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ DI, 48(SP)
 	ADCQ $0x00, SI
 
-	// | w8
+	// | w8 @ R8
 	XORQ DI, DI
 	MOVQ ·modulus7+16(SB), AX
 	MULQ CX
@@ -6265,7 +8413,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ SI, R8
 	ADCQ $0x00, DI
 
-	// | w9
+	// | w9 @ R9
 	XORQ SI, SI
 	MOVQ ·modulus7+24(SB), AX
 	MULQ CX
@@ -6274,7 +8422,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ DI, R9
 	ADCQ $0x00, SI
 
-	// | w10
+	// | w10 @ R10
 	XORQ DI, DI
 	MOVQ ·modulus7+32(SB), AX
 	MULQ CX
@@ -6283,7 +8431,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ SI, R10
 	ADCQ $0x00, DI
 
-	// | w11
+	// | w11 @ R11
 	XORQ SI, SI
 	MOVQ ·modulus7+40(SB), AX
 	MULQ CX
@@ -6292,7 +8440,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ DI, R11
 	ADCQ $0x00, SI
 
-	// | w12
+	// | w12 @ R12
 	XORQ DI, DI
 	MOVQ ·modulus7+48(SB), AX
 	MULQ CX
@@ -6301,7 +8449,7 @@ TEXT ·montmul7(SB), $72-24
 	ADDQ SI, R12
 	ADCQ $0x00, DI
 
-	// | w13
+	// | w13 @ R13
 	ADDQ DI, R15
 	ADCQ R15, R13
 	MOVQ $0x0000000000000000, R15
@@ -6316,43 +8464,1198 @@ TEXT ·montmul7(SB), $72-24
 	SBBQ ·modulus7+16(SB), AX
 	MOVQ R10, DX
 	SBBQ ·modulus7+24(SB), DX
-	MOVQ R11, SI
-	SBBQ ·modulus7+32(SB), SI
+	MOVQ R11, BX
+	SBBQ ·modulus7+32(SB), BX
+	MOVQ BX, 56(SP)
 	MOVQ R12, BX
 	SBBQ ·modulus7+40(SB), BX
-	MOVQ BX, 56(SP)
+	MOVQ BX, 64(SP)
 	MOVQ R13, BX
 	SBBQ ·modulus7+48(SB), BX
-	MOVQ BX, 64(SP)
+	MOVQ BX, 72(SP)
 	SBBQ $0x00, R15
 
 	// | Compare & Return
 	MOVQ    c+0(FP), DI
-	MOVQ    48(SP), BX
-	CMOVQCC R14, BX
-	MOVQ    BX, 48(SP)
-	MOVQ    48(SP), BX
-	MOVQ    BX, (DI)
+	CMOVQCS 48(SP), R14
+	MOVQ    R14, (DI)
 	CMOVQCC CX, R8
 	MOVQ    R8, 8(DI)
 	CMOVQCC AX, R9
 	MOVQ    R9, 16(DI)
 	CMOVQCC DX, R10
 	MOVQ    R10, 24(DI)
-	CMOVQCC SI, R11
+	CMOVQCC 56(SP), R11
 	MOVQ    R11, 32(DI)
-	CMOVQCC 56(SP), R12
+	CMOVQCC 64(SP), R12
 	MOVQ    R12, 40(DI)
-	CMOVQCC 64(SP), R13
+	CMOVQCC 72(SP), R13
 	MOVQ    R13, 48(DI)
 	RET
 
 // func square7(c *[14]uint64, a *Fe448)
-TEXT ·square7(SB), $0-16
+TEXT ·square7(SB), $40-16
+	// |
+	MOVQ a+8(FP), DI
+	XORQ R11, R11
+	XORQ R12, R12
+	XORQ R13, R13
+	XORQ R14, R14
+	XORQ R15, R15
+	XORQ CX, CX
+	XORQ SI, SI
+	MOVQ $0x00000000, (SP)
+	MOVQ $0x00000000, 8(SP)
+	MOVQ $0x00000000, 16(SP)
+	MOVQ $0x00000000, 24(SP)
+	MOVQ $0x00000000, 32(SP)
+
+	// | a0
+	// | w0 @ R9
+	MOVQ (DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	MOVQ AX, R9
+	MOVQ DX, R10
+
+	// | w1 @ R10
+	MOVQ 8(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R12
+	ADDQ AX, R10
+	ADCQ DX, R11
+
+	// | w2 @ R11
+	MOVQ 16(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R13
+	ADDQ AX, R11
+	ADCQ DX, R12
+	ADCQ $0x00, R13
+
+	// | w3 @ R12
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R14
+	ADDQ AX, R12
+	ADCQ DX, R13
+	ADCQ $0x00, R14
+
+	// | w4 @ R13
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R15
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+
+	// | w5 @ R14
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, CX
+	ADDQ AX, R14
+	ADCQ DX, R15
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	MOVQ 48(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, SI
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADCQ $0x00, SI
+
+	// | a1
+	// | w2 @ R11
+	MOVQ 8(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, R12
+	ADCQ $0x00, R13
+	ADCQ $0x00, R14
+
+	// | w3 @ R12
+	MOVQ 16(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R14
+	ADDQ AX, R12
+	ADCQ DX, R13
+	ADCQ $0x00, R14
+
+	// | w4 @ R13
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R15
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+
+	// | w5 @ R14
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, CX
+	ADDQ AX, R14
+	ADCQ DX, R15
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, SI
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADCQ $0x00, SI
+
+	// | w7 @ CX
+	MOVQ 48(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, (SP)
+	ADDQ AX, CX
+	ADCQ DX, SI
+	ADCQ $0x00, (SP)
+
+	// | a2
+	// | w4 @ R13
+	MOVQ 16(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+	ADCQ $0x00, CX
+
+	// | w5 @ R14
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, CX
+	ADDQ AX, R14
+	ADCQ DX, R15
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, SI
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADCQ $0x00, SI
+
+	// | w7 @ CX
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, (SP)
+	ADDQ AX, CX
+	ADCQ DX, SI
+	ADCQ $0x00, (SP)
+
+	// | w8 @ SI
+	MOVQ 48(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 8(SP)
+	ADDQ AX, SI
+	ADCQ DX, (SP)
+	ADCQ $0x00, 8(SP)
+
+	// | a3
+	// | w6 @ R15
+	MOVQ 24(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADCQ $0x00, SI
+	ADCQ $0x00, (SP)
+
+	// | w7 @ CX
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, (SP)
+	ADDQ AX, CX
+	ADCQ DX, SI
+	ADCQ $0x00, (SP)
+
+	// | w8 @ SI
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 8(SP)
+	ADDQ AX, SI
+	ADCQ DX, (SP)
+	ADCQ $0x00, 8(SP)
+
+	// | w9 @ (SP)
+	MOVQ 48(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 16(SP)
+	ADDQ AX, (SP)
+	ADCQ DX, 8(SP)
+	ADCQ $0x00, 16(SP)
+
+	// | a4
+	// | w8 @ SI
+	MOVQ 32(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, SI
+	ADCQ DX, (SP)
+	ADCQ $0x00, 8(SP)
+	ADCQ $0x00, 16(SP)
+
+	// | w9 @ (SP)
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 16(SP)
+	ADDQ AX, (SP)
+	ADCQ DX, 8(SP)
+	ADCQ $0x00, 16(SP)
+
+	// | w10 @ 8(SP)
+	MOVQ 48(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 24(SP)
+	ADDQ AX, 8(SP)
+	ADCQ DX, 16(SP)
+	ADCQ $0x00, 24(SP)
+
+	// | a5
+	// | w10 @ 8(SP)
+	MOVQ 40(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, 8(SP)
+	ADCQ DX, 16(SP)
+	ADCQ $0x00, 24(SP)
+
+	// | w11 @ 16(SP)
+	MOVQ 48(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 32(SP)
+	ADDQ AX, 16(SP)
+	ADCQ DX, 24(SP)
+	ADCQ $0x00, 32(SP)
+
+	// | a6
+	// | w12 @ 24(SP)
+	MOVQ 48(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, 24(SP)
+	ADCQ DX, 32(SP)
+
+	// |
+	MOVQ c+0(FP), DI
+	MOVQ R9, (DI)
+	MOVQ R10, 8(DI)
+	MOVQ R11, 16(DI)
+	MOVQ R12, 24(DI)
+	MOVQ R13, 32(DI)
+	MOVQ R14, 40(DI)
+	MOVQ R15, 48(DI)
+	MOVQ CX, 56(DI)
+	MOVQ SI, 64(DI)
+	MOVQ (SP), BX
+	MOVQ BX, 72(DI)
+	MOVQ 8(SP), BX
+	MOVQ BX, 80(DI)
+	MOVQ 16(SP), BX
+	MOVQ BX, 88(DI)
+	MOVQ 24(SP), BX
+	MOVQ BX, 96(DI)
+	MOVQ 32(SP), BX
+	MOVQ BX, 104(DI)
 	RET
 
 // func montsquare7(c *Fe448, a *Fe448)
-TEXT ·montsquare7(SB), $0-16
+TEXT ·montsquare7(SB), $64-16
+	MOVQ a+8(FP), DI
+	XORQ R11, R11
+	XORQ R12, R12
+	XORQ R13, R13
+	XORQ R14, R14
+	XORQ R15, R15
+	XORQ CX, CX
+	XORQ SI, SI
+	MOVQ $0x00000000, (SP)
+	MOVQ $0x00000000, 8(SP)
+	MOVQ $0x00000000, 16(SP)
+	MOVQ $0x00000000, 24(SP)
+	MOVQ $0x00000000, 32(SP)
+
+	// | a0
+	// | w0 @ R9
+	MOVQ (DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	MOVQ AX, R9
+	MOVQ DX, R10
+
+	// | w1 @ R10
+	MOVQ 8(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R12
+	ADDQ AX, R10
+	ADCQ DX, R11
+
+	// | w2 @ R11
+	MOVQ 16(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R13
+	ADDQ AX, R11
+	ADCQ DX, R12
+	ADCQ $0x00, R13
+
+	// | w3 @ R12
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R14
+	ADDQ AX, R12
+	ADCQ DX, R13
+	ADCQ $0x00, R14
+
+	// | w4 @ R13
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R15
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+
+	// | w5 @ R14
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, CX
+	ADDQ AX, R14
+	ADCQ DX, R15
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	MOVQ 48(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, SI
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADCQ $0x00, SI
+
+	// | a1
+	// | w2 @ R11
+	MOVQ 8(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, R12
+	ADCQ $0x00, R13
+	ADCQ $0x00, R14
+
+	// | w3 @ R12
+	MOVQ 16(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R14
+	ADDQ AX, R12
+	ADCQ DX, R13
+	ADCQ $0x00, R14
+
+	// | w4 @ R13
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R15
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+
+	// | w5 @ R14
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, CX
+	ADDQ AX, R14
+	ADCQ DX, R15
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, SI
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADCQ $0x00, SI
+
+	// | w7 @ CX
+	MOVQ 48(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, (SP)
+	ADDQ AX, CX
+	ADCQ DX, SI
+	ADCQ $0x00, (SP)
+
+	// | a2
+	// | w4 @ R13
+	MOVQ 16(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+	ADCQ $0x00, CX
+
+	// | w5 @ R14
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, CX
+	ADDQ AX, R14
+	ADCQ DX, R15
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, SI
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADCQ $0x00, SI
+
+	// | w7 @ CX
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, (SP)
+	ADDQ AX, CX
+	ADCQ DX, SI
+	ADCQ $0x00, (SP)
+
+	// | w8 @ SI
+	MOVQ 48(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 8(SP)
+	ADDQ AX, SI
+	ADCQ DX, (SP)
+	ADCQ $0x00, 8(SP)
+
+	// | a3
+	// | w6 @ R15
+	MOVQ 24(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADCQ $0x00, SI
+	ADCQ $0x00, (SP)
+
+	// | w7 @ CX
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, (SP)
+	ADDQ AX, CX
+	ADCQ DX, SI
+	ADCQ $0x00, (SP)
+
+	// | w8 @ SI
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 8(SP)
+	ADDQ AX, SI
+	ADCQ DX, (SP)
+	ADCQ $0x00, 8(SP)
+
+	// | w9 @ (SP)
+	MOVQ 48(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 16(SP)
+	ADDQ AX, (SP)
+	ADCQ DX, 8(SP)
+	ADCQ $0x00, 16(SP)
+
+	// | a4
+	// | w8 @ SI
+	MOVQ 32(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, SI
+	ADCQ DX, (SP)
+	ADCQ $0x00, 8(SP)
+	ADCQ $0x00, 16(SP)
+
+	// | w9 @ (SP)
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 16(SP)
+	ADDQ AX, (SP)
+	ADCQ DX, 8(SP)
+	ADCQ $0x00, 16(SP)
+
+	// | w10 @ 8(SP)
+	MOVQ 48(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 24(SP)
+	ADDQ AX, 8(SP)
+	ADCQ DX, 16(SP)
+	ADCQ $0x00, 24(SP)
+
+	// | a5
+	// | w10 @ 8(SP)
+	MOVQ 40(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, 8(SP)
+	ADCQ DX, 16(SP)
+	ADCQ $0x00, 24(SP)
+
+	// | w11 @ 16(SP)
+	MOVQ 48(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 32(SP)
+	ADDQ AX, 16(SP)
+	ADCQ DX, 24(SP)
+	ADCQ $0x00, 32(SP)
+
+	// | a6
+	// | w12 @ 24(SP)
+	MOVQ 48(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, 24(SP)
+	ADCQ DX, 32(SP)
+
+	// |
+	// | Montgomerry Reduction
+	MOVQ SI, 40(SP)
+	MOVQ CX, 48(SP)
+
+	// |
+	// | (u @ R8) = (w0 @ R9) * inp
+	MOVQ R9, AX
+	MULQ ·inp7+0(SB)
+	MOVQ AX, R8
+
+	// | w0 @ R9
+	XORQ SI, SI
+	MOVQ ·modulus7+0(SB), AX
+	MULQ R8
+	ADDQ AX, R9
+	ADCQ DX, SI
+
+	// | w1 @ R10
+	XORQ CX, CX
+	MOVQ ·modulus7+8(SB), AX
+	MULQ R8
+	ADDQ AX, R10
+	ADCQ DX, CX
+	ADDQ SI, R10
+	ADCQ $0x00, CX
+
+	// | w2 @ R11
+	XORQ SI, SI
+	MOVQ ·modulus7+16(SB), AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, SI
+	ADDQ CX, R11
+	ADCQ $0x00, SI
+
+	// | w3 @ R12
+	XORQ CX, CX
+	MOVQ ·modulus7+24(SB), AX
+	MULQ R8
+	ADDQ AX, R12
+	ADCQ DX, CX
+	ADDQ SI, R12
+	ADCQ $0x00, CX
+
+	// | w4 @ R13
+	XORQ SI, SI
+	MOVQ ·modulus7+32(SB), AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, SI
+	ADDQ CX, R13
+	ADCQ $0x00, SI
+
+	// | w5 @ R14
+	XORQ CX, CX
+	MOVQ ·modulus7+40(SB), AX
+	MULQ R8
+	ADDQ AX, R14
+	ADCQ DX, CX
+	ADDQ SI, R14
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	XORQ SI, SI
+	MOVQ ·modulus7+48(SB), AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, SI
+	ADDQ CX, R15
+	ADCQ $0x00, SI
+
+	// | w7 @ 48(SP)
+	ADDQ SI, 48(SP)
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// |
+	MOVQ 40(SP), R9
+
+	// | (u @ R8) = (w1 @ R10) * inp
+	MOVQ R10, AX
+	MULQ ·inp7+0(SB)
+	MOVQ AX, R8
+
+	// | w1 @ R10
+	XORQ SI, SI
+	MOVQ ·modulus7+0(SB), AX
+	MULQ R8
+	ADDQ AX, R10
+	ADCQ DX, SI
+
+	// | w2 @ R11
+	XORQ CX, CX
+	MOVQ ·modulus7+8(SB), AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, CX
+	ADDQ SI, R11
+	ADCQ $0x00, CX
+
+	// | w3 @ R12
+	XORQ SI, SI
+	MOVQ ·modulus7+16(SB), AX
+	MULQ R8
+	ADDQ AX, R12
+	ADCQ DX, SI
+	ADDQ CX, R12
+	ADCQ $0x00, SI
+
+	// | w4 @ R13
+	XORQ CX, CX
+	MOVQ ·modulus7+24(SB), AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, CX
+	ADDQ SI, R13
+	ADCQ $0x00, CX
+
+	// | w5 @ R14
+	XORQ SI, SI
+	MOVQ ·modulus7+32(SB), AX
+	MULQ R8
+	ADDQ AX, R14
+	ADCQ DX, SI
+	ADDQ CX, R14
+	ADCQ $0x00, SI
+
+	// | w6 @ R15
+	XORQ CX, CX
+	MOVQ ·modulus7+40(SB), AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADDQ SI, R15
+	ADCQ $0x00, CX
+
+	// | w7 @ 48(SP)
+	XORQ SI, SI
+	MOVQ ·modulus7+48(SB), AX
+	MULQ R8
+	ADDQ AX, 48(SP)
+	ADCQ DX, SI
+	ADDQ CX, 48(SP)
+	ADCQ $0x00, SI
+
+	// | w8 @ R9
+	ADDQ SI, DI
+	ADCQ DI, R9
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// |
+	MOVQ (SP), R10
+
+	// | (u @ R8) = (w2 @ R11) * inp
+	MOVQ R11, AX
+	MULQ ·inp7+0(SB)
+	MOVQ AX, R8
+
+	// | w2 @ R11
+	XORQ SI, SI
+	MOVQ ·modulus7+0(SB), AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, SI
+
+	// | w3 @ R12
+	XORQ CX, CX
+	MOVQ ·modulus7+8(SB), AX
+	MULQ R8
+	ADDQ AX, R12
+	ADCQ DX, CX
+	ADDQ SI, R12
+	ADCQ $0x00, CX
+
+	// | w4 @ R13
+	XORQ SI, SI
+	MOVQ ·modulus7+16(SB), AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, SI
+	ADDQ CX, R13
+	ADCQ $0x00, SI
+
+	// | w5 @ R14
+	XORQ CX, CX
+	MOVQ ·modulus7+24(SB), AX
+	MULQ R8
+	ADDQ AX, R14
+	ADCQ DX, CX
+	ADDQ SI, R14
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	XORQ SI, SI
+	MOVQ ·modulus7+32(SB), AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, SI
+	ADDQ CX, R15
+	ADCQ $0x00, SI
+
+	// | w7 @ 48(SP)
+	XORQ CX, CX
+	MOVQ ·modulus7+40(SB), AX
+	MULQ R8
+	ADDQ AX, 48(SP)
+	ADCQ DX, CX
+	ADDQ SI, 48(SP)
+	ADCQ $0x00, CX
+
+	// | w8 @ R9
+	XORQ SI, SI
+	MOVQ ·modulus7+48(SB), AX
+	MULQ R8
+	ADDQ AX, R9
+	ADCQ DX, SI
+	ADDQ CX, R9
+	ADCQ $0x00, SI
+
+	// | w9 @ R10
+	ADDQ SI, DI
+	ADCQ DI, R10
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// |
+	MOVQ 8(SP), R11
+
+	// | (u @ R8) = (w3 @ R12) * inp
+	MOVQ R12, AX
+	MULQ ·inp7+0(SB)
+	MOVQ AX, R8
+
+	// | w3 @ R12
+	XORQ SI, SI
+	MOVQ ·modulus7+0(SB), AX
+	MULQ R8
+	ADDQ AX, R12
+	ADCQ DX, SI
+
+	// | w4 @ R13
+	XORQ CX, CX
+	MOVQ ·modulus7+8(SB), AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, CX
+	ADDQ SI, R13
+	ADCQ $0x00, CX
+
+	// | w5 @ R14
+	XORQ SI, SI
+	MOVQ ·modulus7+16(SB), AX
+	MULQ R8
+	ADDQ AX, R14
+	ADCQ DX, SI
+	ADDQ CX, R14
+	ADCQ $0x00, SI
+
+	// | w6 @ R15
+	XORQ CX, CX
+	MOVQ ·modulus7+24(SB), AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADDQ SI, R15
+	ADCQ $0x00, CX
+
+	// | w7 @ 48(SP)
+	XORQ SI, SI
+	MOVQ ·modulus7+32(SB), AX
+	MULQ R8
+	ADDQ AX, 48(SP)
+	ADCQ DX, SI
+	ADDQ CX, 48(SP)
+	ADCQ $0x00, SI
+
+	// | w8 @ R9
+	XORQ CX, CX
+	MOVQ ·modulus7+40(SB), AX
+	MULQ R8
+	ADDQ AX, R9
+	ADCQ DX, CX
+	ADDQ SI, R9
+	ADCQ $0x00, CX
+
+	// | w9 @ R10
+	XORQ SI, SI
+	MOVQ ·modulus7+48(SB), AX
+	MULQ R8
+	ADDQ AX, R10
+	ADCQ DX, SI
+	ADDQ CX, R10
+	ADCQ $0x00, SI
+
+	// | w10 @ R11
+	ADDQ SI, DI
+	ADCQ DI, R11
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// |
+	MOVQ 16(SP), R12
+
+	// | (u @ R8) = (w4 @ R13) * inp
+	MOVQ R13, AX
+	MULQ ·inp7+0(SB)
+	MOVQ AX, R8
+
+	// | w4 @ R13
+	XORQ SI, SI
+	MOVQ ·modulus7+0(SB), AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, SI
+
+	// | w5 @ R14
+	XORQ CX, CX
+	MOVQ ·modulus7+8(SB), AX
+	MULQ R8
+	ADDQ AX, R14
+	ADCQ DX, CX
+	ADDQ SI, R14
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	XORQ SI, SI
+	MOVQ ·modulus7+16(SB), AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, SI
+	ADDQ CX, R15
+	ADCQ $0x00, SI
+
+	// | w7 @ 48(SP)
+	XORQ CX, CX
+	MOVQ ·modulus7+24(SB), AX
+	MULQ R8
+	ADDQ AX, 48(SP)
+	ADCQ DX, CX
+	ADDQ SI, 48(SP)
+	ADCQ $0x00, CX
+
+	// | w8 @ R9
+	XORQ SI, SI
+	MOVQ ·modulus7+32(SB), AX
+	MULQ R8
+	ADDQ AX, R9
+	ADCQ DX, SI
+	ADDQ CX, R9
+	ADCQ $0x00, SI
+
+	// | w9 @ R10
+	XORQ CX, CX
+	MOVQ ·modulus7+40(SB), AX
+	MULQ R8
+	ADDQ AX, R10
+	ADCQ DX, CX
+	ADDQ SI, R10
+	ADCQ $0x00, CX
+
+	// | w10 @ R11
+	XORQ SI, SI
+	MOVQ ·modulus7+48(SB), AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, SI
+	ADDQ CX, R11
+	ADCQ $0x00, SI
+
+	// | w11 @ R12
+	ADDQ SI, DI
+	ADCQ DI, R12
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// |
+	MOVQ 24(SP), R13
+
+	// | (u @ R8) = (w5 @ R14) * inp
+	MOVQ R14, AX
+	MULQ ·inp7+0(SB)
+	MOVQ AX, R8
+
+	// | w5 @ R14
+	XORQ SI, SI
+	MOVQ ·modulus7+0(SB), AX
+	MULQ R8
+	ADDQ AX, R14
+	ADCQ DX, SI
+
+	// | w6 @ R15
+	XORQ CX, CX
+	MOVQ ·modulus7+8(SB), AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADDQ SI, R15
+	ADCQ $0x00, CX
+
+	// | w7 @ 48(SP)
+	XORQ SI, SI
+	MOVQ ·modulus7+16(SB), AX
+	MULQ R8
+	ADDQ AX, 48(SP)
+	ADCQ DX, SI
+	ADDQ CX, 48(SP)
+	ADCQ $0x00, SI
+
+	// | w8 @ R9
+	XORQ CX, CX
+	MOVQ ·modulus7+24(SB), AX
+	MULQ R8
+	ADDQ AX, R9
+	ADCQ DX, CX
+	ADDQ SI, R9
+	ADCQ $0x00, CX
+
+	// | w9 @ R10
+	XORQ SI, SI
+	MOVQ ·modulus7+32(SB), AX
+	MULQ R8
+	ADDQ AX, R10
+	ADCQ DX, SI
+	ADDQ CX, R10
+	ADCQ $0x00, SI
+
+	// | w10 @ R11
+	XORQ CX, CX
+	MOVQ ·modulus7+40(SB), AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, CX
+	ADDQ SI, R11
+	ADCQ $0x00, CX
+
+	// | w11 @ R12
+	XORQ SI, SI
+	MOVQ ·modulus7+48(SB), AX
+	MULQ R8
+	ADDQ AX, R12
+	ADCQ DX, SI
+	ADDQ CX, R12
+	ADCQ $0x00, SI
+
+	// | w12 @ R13
+	ADDQ SI, DI
+	ADCQ DI, R13
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// |
+	MOVQ 32(SP), R14
+
+	// | (u @ R8) = (w6 @ R15) * inp
+	MOVQ R15, AX
+	MULQ ·inp7+0(SB)
+	MOVQ AX, R8
+
+	// | w6 @ R15
+	XORQ SI, SI
+	MOVQ ·modulus7+0(SB), AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, SI
+
+	// | w7 @ 48(SP)
+	XORQ CX, CX
+	MOVQ ·modulus7+8(SB), AX
+	MULQ R8
+	ADDQ AX, 48(SP)
+	ADCQ DX, CX
+	ADDQ SI, 48(SP)
+	ADCQ $0x00, CX
+
+	// | w8 @ R9
+	XORQ SI, SI
+	MOVQ ·modulus7+16(SB), AX
+	MULQ R8
+	ADDQ AX, R9
+	ADCQ DX, SI
+	ADDQ CX, R9
+	ADCQ $0x00, SI
+
+	// | w9 @ R10
+	XORQ CX, CX
+	MOVQ ·modulus7+24(SB), AX
+	MULQ R8
+	ADDQ AX, R10
+	ADCQ DX, CX
+	ADDQ SI, R10
+	ADCQ $0x00, CX
+
+	// | w10 @ R11
+	XORQ SI, SI
+	MOVQ ·modulus7+32(SB), AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, SI
+	ADDQ CX, R11
+	ADCQ $0x00, SI
+
+	// | w11 @ R12
+	XORQ CX, CX
+	MOVQ ·modulus7+40(SB), AX
+	MULQ R8
+	ADDQ AX, R12
+	ADCQ DX, CX
+	ADDQ SI, R12
+	ADCQ $0x00, CX
+
+	// | w12 @ R13
+	XORQ SI, SI
+	MOVQ ·modulus7+48(SB), AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, SI
+	ADDQ CX, R13
+	ADCQ $0x00, SI
+
+	// | w13 @ R14
+	ADDQ SI, DI
+	ADCQ DI, R14
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// | Compare & Return
+	MOVQ    48(SP), R8
+	SUBQ    ·modulus7+0(SB), R8
+	MOVQ    R9, R15
+	SBBQ    ·modulus7+8(SB), R15
+	MOVQ    R10, CX
+	SBBQ    ·modulus7+16(SB), CX
+	MOVQ    R11, AX
+	SBBQ    ·modulus7+24(SB), AX
+	MOVQ    R12, DX
+	SBBQ    ·modulus7+32(SB), DX
+	MOVQ    R13, SI
+	SBBQ    ·modulus7+40(SB), SI
+	MOVQ    R14, BX
+	SBBQ    ·modulus7+48(SB), BX
+	MOVQ    BX, 56(SP)
+	SBBQ    $0x00, DI
+	MOVQ    c+0(FP), DI
+	CMOVQCS 48(SP), R8
+	MOVQ    R8, (DI)
+	CMOVQCC R15, R9
+	MOVQ    R9, 8(DI)
+	CMOVQCC CX, R10
+	MOVQ    R10, 16(DI)
+	CMOVQCC AX, R11
+	MOVQ    R11, 24(DI)
+	CMOVQCC DX, R12
+	MOVQ    R12, 32(DI)
+	CMOVQCC SI, R13
+	MOVQ    R13, 40(DI)
+	CMOVQCC 56(SP), R14
+	MOVQ    R14, 48(DI)
 	RET
 
 // func add8(c *Fe512, a *Fe512, b *Fe512)
@@ -6671,9 +9974,6 @@ TEXT ·mul8(SB), $64-24
 	MOVQ b+16(FP), SI
 
 	// |
-	// |
-	XORQ R8, R8
-	XORQ R9, R9
 	XORQ R10, R10
 	XORQ R11, R11
 	XORQ R12, R12
@@ -6694,48 +9994,56 @@ TEXT ·mul8(SB), $64-24
 	MOVQ (SI), CX
 
 	// | a0 * b0
+	// | (w0, w1) @ (R8, R9)
 	MOVQ (DI), AX
 	MULQ CX
 	MOVQ AX, R8
 	MOVQ DX, R9
 
 	// | a1 * b0
+	// | (w1, w2) @ (R9, R10)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R9
 	ADCQ DX, R10
 
 	// | a2 * b0
+	// | (w2, w3) @ (R10, R11)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R10
 	ADCQ DX, R11
 
 	// | a3 * b0
+	// | (w3, w4) @ (R11, R12)
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R11
 	ADCQ DX, R12
 
 	// | a4 * b0
+	// | (w4, w5) @ (R12, R13)
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R12
 	ADCQ DX, R13
 
 	// | a5 * b0
+	// | (w5, w6) @ (R13, R14)
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, R13
 	ADCQ DX, R14
 
 	// | a6 * b0
+	// | (w6, w7) @ (R14, R15)
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, R14
 	ADCQ DX, R15
 
 	// | a7 * b0
+	// | (w7, w8) @ (R15, (SP))
 	MOVQ 56(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -6746,6 +10054,7 @@ TEXT ·mul8(SB), $64-24
 	MOVQ 8(SI), CX
 
 	// | a0 * b1
+	// | (w1, w2, w3, w4) @ (R9, R10, R11, R12)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R9
@@ -6754,6 +10063,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, R12
 
 	// | a1 * b1
+	// | (w2, w3, w4, w5) @ (R10, R11, R12, R13)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R10
@@ -6762,6 +10072,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, R13
 
 	// | a2 * b1
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -6770,6 +10081,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, R14
 
 	// | a3 * b1
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -6778,6 +10090,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, R15
 
 	// | a4 * b1
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -6786,6 +10099,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, (SP)
 
 	// | a5 * b1
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -6794,6 +10108,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 8(SP)
 
 	// | a6 * b1
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -6802,6 +10117,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 16(SP)
 
 	// | a7 * b1
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 56(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -6814,6 +10130,7 @@ TEXT ·mul8(SB), $64-24
 	MOVQ 16(SI), CX
 
 	// | a0 * b2
+	// | (w2, w3, w4, w5) @ (R10, R11, R12, R13)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R10
@@ -6822,6 +10139,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, R13
 
 	// | a1 * b2
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -6830,6 +10148,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, R14
 
 	// | a2 * b2
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -6838,6 +10157,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, R15
 
 	// | a3 * b2
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -6846,6 +10166,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, (SP)
 
 	// | a4 * b2
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -6854,6 +10175,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 8(SP)
 
 	// | a5 * b2
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -6862,6 +10184,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 16(SP)
 
 	// | a6 * b2
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -6870,6 +10193,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 24(SP)
 
 	// | a7 * b2
+	// | (w9, w10, w11, w12) @ (8(SP), 16(SP), 24(SP), 32(SP))
 	MOVQ 56(DI), AX
 	MULQ CX
 	ADDQ AX, 8(SP)
@@ -6882,6 +10206,7 @@ TEXT ·mul8(SB), $64-24
 	MOVQ 24(SI), CX
 
 	// | a0 * b3
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -6890,6 +10215,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, R14
 
 	// | a1 * b3
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -6898,6 +10224,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, R15
 
 	// | a2 * b3
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -6906,6 +10233,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, (SP)
 
 	// | a3 * b3
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -6914,6 +10242,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 8(SP)
 
 	// | a4 * b3
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -6922,6 +10251,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 16(SP)
 
 	// | a5 * b3
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -6930,6 +10260,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 24(SP)
 
 	// | a6 * b3
+	// | (w9, w10, w11, w12) @ (8(SP), 16(SP), 24(SP), 32(SP))
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, 8(SP)
@@ -6938,6 +10269,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 32(SP)
 
 	// | a7 * b3
+	// | (w10, w11, w12, w13) @ (16(SP), 24(SP), 32(SP), 40(SP))
 	MOVQ 56(DI), AX
 	MULQ CX
 	ADDQ AX, 16(SP)
@@ -6950,6 +10282,7 @@ TEXT ·mul8(SB), $64-24
 	MOVQ 32(SI), CX
 
 	// | a0 * b4
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -6958,6 +10291,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, R15
 
 	// | a1 * b4
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -6966,6 +10300,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, (SP)
 
 	// | a2 * b4
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -6974,6 +10309,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 8(SP)
 
 	// | a3 * b4
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -6982,6 +10318,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 16(SP)
 
 	// | a4 * b4
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -6990,6 +10327,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 24(SP)
 
 	// | a5 * b4
+	// | (w9, w10, w11, w12) @ (8(SP), 16(SP), 24(SP), 32(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, 8(SP)
@@ -6998,6 +10336,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 32(SP)
 
 	// | a6 * b4
+	// | (w10, w11, w12, w13) @ (16(SP), 24(SP), 32(SP), 40(SP))
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, 16(SP)
@@ -7006,6 +10345,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 40(SP)
 
 	// | a7 * b4
+	// | (w11, w12, w13, w14) @ (24(SP), 32(SP), 40(SP), 48(SP))
 	MOVQ 56(DI), AX
 	MULQ CX
 	ADDQ AX, 24(SP)
@@ -7018,6 +10358,7 @@ TEXT ·mul8(SB), $64-24
 	MOVQ 40(SI), CX
 
 	// | a0 * b5
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -7026,6 +10367,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, (SP)
 
 	// | a1 * b5
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -7034,6 +10376,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 8(SP)
 
 	// | a2 * b5
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -7042,6 +10385,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 16(SP)
 
 	// | a3 * b5
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -7050,6 +10394,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 24(SP)
 
 	// | a4 * b5
+	// | (w9, w10, w11, w12) @ (8(SP), 16(SP), 24(SP), 32(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, 8(SP)
@@ -7058,6 +10403,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 32(SP)
 
 	// | a5 * b5
+	// | (w10, w11, w12, w13) @ (16(SP), 24(SP), 32(SP), 40(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, 16(SP)
@@ -7066,6 +10412,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 40(SP)
 
 	// | a6 * b5
+	// | (w11, w12, w13, w14) @ (24(SP), 32(SP), 40(SP), 48(SP))
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, 24(SP)
@@ -7074,6 +10421,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 48(SP)
 
 	// | a7 * b5
+	// | (w12, w13, w14, w15) @ (32(SP), 40(SP), 48(SP), 56(SP))
 	MOVQ 56(DI), AX
 	MULQ CX
 	ADDQ AX, 32(SP)
@@ -7086,6 +10434,7 @@ TEXT ·mul8(SB), $64-24
 	MOVQ 48(SI), CX
 
 	// | a0 * b6
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -7094,6 +10443,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 8(SP)
 
 	// | a1 * b6
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -7102,6 +10452,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 16(SP)
 
 	// | a2 * b6
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -7110,6 +10461,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 24(SP)
 
 	// | a3 * b6
+	// | (w9, w10, w11, w12) @ (8(SP), 16(SP), 24(SP), 32(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, 8(SP)
@@ -7118,6 +10470,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 32(SP)
 
 	// | a4 * b6
+	// | (w10, w11, w12, w13) @ (16(SP), 24(SP), 32(SP), 40(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, 16(SP)
@@ -7126,6 +10479,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 40(SP)
 
 	// | a5 * b6
+	// | (w11, w12, w13, w14) @ (24(SP), 32(SP), 40(SP), 48(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, 24(SP)
@@ -7134,6 +10488,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 48(SP)
 
 	// | a6 * b6
+	// | (w12, w13, w14, w15) @ (32(SP), 40(SP), 48(SP), 56(SP))
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, 32(SP)
@@ -7142,6 +10497,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 56(SP)
 
 	// | a7 * b6
+	// | (w13, w14, w15) @ (40(SP), 48(SP), 56(SP))
 	MOVQ 56(DI), AX
 	MULQ CX
 	ADDQ AX, 40(SP)
@@ -7153,6 +10509,7 @@ TEXT ·mul8(SB), $64-24
 	MOVQ 56(SI), CX
 
 	// | a0 * b7
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -7161,6 +10518,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 16(SP)
 
 	// | a1 * b7
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -7169,6 +10527,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 24(SP)
 
 	// | a2 * b7
+	// | (w9, w10, w11, w12) @ (8(SP), 16(SP), 24(SP), 32(SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, 8(SP)
@@ -7177,6 +10536,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 32(SP)
 
 	// | a3 * b7
+	// | (w10, w11, w12, w13) @ (16(SP), 24(SP), 32(SP), 40(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, 16(SP)
@@ -7185,6 +10545,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 40(SP)
 
 	// | a4 * b7
+	// | (w11, w12, w13, w14) @ (24(SP), 32(SP), 40(SP), 48(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, 24(SP)
@@ -7193,6 +10554,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 48(SP)
 
 	// | a5 * b7
+	// | (w12, w13, w14, w15) @ (32(SP), 40(SP), 48(SP), 56(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, 32(SP)
@@ -7201,6 +10563,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 56(SP)
 
 	// | a6 * b7
+	// | (w13, w14, w15) @ (40(SP), 48(SP), 56(SP))
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, 40(SP)
@@ -7208,6 +10571,7 @@ TEXT ·mul8(SB), $64-24
 	ADCQ $0x00, 56(SP)
 
 	// | a7 * b7
+	// | (w14, w15) @ (48(SP), 56(SP))
 	MOVQ 56(DI), AX
 	MULQ CX
 	ADDQ AX, 48(SP)
@@ -7224,21 +10588,21 @@ TEXT ·mul8(SB), $64-24
 	MOVQ R14, 48(DI)
 	MOVQ R15, 56(DI)
 	MOVQ (SP), BX
-	MOVQ BX, (DI)
+	MOVQ BX, 64(DI)
 	MOVQ 8(SP), BX
-	MOVQ BX, 8(DI)
+	MOVQ BX, 72(DI)
 	MOVQ 16(SP), BX
-	MOVQ BX, 16(DI)
+	MOVQ BX, 80(DI)
 	MOVQ 24(SP), BX
-	MOVQ BX, 24(DI)
+	MOVQ BX, 88(DI)
 	MOVQ 32(SP), BX
-	MOVQ BX, 32(DI)
+	MOVQ BX, 96(DI)
 	MOVQ 40(SP), BX
-	MOVQ BX, 40(DI)
+	MOVQ BX, 104(DI)
 	MOVQ 48(SP), BX
-	MOVQ BX, 48(DI)
+	MOVQ BX, 112(DI)
 	MOVQ 56(SP), BX
-	MOVQ BX, 56(DI)
+	MOVQ BX, 120(DI)
 	RET
 
 // func mont8(c *Fe512, w *[16]uint64)
@@ -7258,20 +10622,19 @@ TEXT ·mont8(SB), $40-16
 	MOVQ BX, 16(SP)
 
 	// |
-	// |
-	// | u @ CX = w0 * inp
+	// | (u @ CX) = (w0 @ R8) * inp
 	MOVQ R8, AX
 	MULQ ·inp8+0(SB)
 	MOVQ AX, CX
 
-	// | w0
+	// | w0 @ R8
 	XORQ R14, R14
 	MOVQ ·modulus8+0(SB), AX
 	MULQ CX
 	ADDQ AX, R8
 	ADCQ DX, R14
 
-	// | w1
+	// | w1 @ R9
 	XORQ R13, R13
 	MOVQ ·modulus8+8(SB), AX
 	MULQ CX
@@ -7280,7 +10643,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, R9
 	ADCQ $0x00, R13
 
-	// | w2
+	// | w2 @ R10
 	XORQ R14, R14
 	MOVQ ·modulus8+16(SB), AX
 	MULQ CX
@@ -7289,7 +10652,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R13, R10
 	ADCQ $0x00, R14
 
-	// | w3
+	// | w3 @ R11
 	XORQ R13, R13
 	MOVQ ·modulus8+24(SB), AX
 	MULQ CX
@@ -7298,7 +10661,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, R11
 	ADCQ $0x00, R13
 
-	// | w4
+	// | w4 @ R12
 	XORQ R14, R14
 	MOVQ ·modulus8+32(SB), AX
 	MULQ CX
@@ -7307,7 +10670,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R13, R12
 	ADCQ $0x00, R14
 
-	// | w5
+	// | w5 @ SI
 	XORQ R13, R13
 	MOVQ ·modulus8+40(SB), AX
 	MULQ CX
@@ -7316,7 +10679,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, SI
 	ADCQ $0x00, R13
 
-	// | w6
+	// | w6 @ (SP)
 	XORQ R14, R14
 	MOVQ ·modulus8+48(SB), AX
 	MULQ CX
@@ -7325,7 +10688,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R13, (SP)
 	ADCQ $0x00, R14
 
-	// | w7
+	// | w7 @ 8(SP)
 	XORQ R13, R13
 	MOVQ ·modulus8+56(SB), AX
 	MULQ CX
@@ -7334,7 +10697,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, 8(SP)
 	ADCQ $0x00, R13
 
-	// | w8
+	// | w8 @ 16(SP)
 	ADDQ R13, 16(SP)
 	MOVQ $0x0000000000000000, R15
 	ADCQ $0x00, R15
@@ -7342,19 +10705,19 @@ TEXT ·mont8(SB), $40-16
 	// |
 	MOVQ 72(DI), R8
 
-	// | u @ CX = w1 * inp
+	// | (u @ CX) = (w1 @ R9) * inp
 	MOVQ R9, AX
 	MULQ ·inp8+0(SB)
 	MOVQ AX, CX
 
-	// | w1
+	// | w1 @ R9
 	XORQ R14, R14
 	MOVQ ·modulus8+0(SB), AX
 	MULQ CX
 	ADDQ AX, R9
 	ADCQ DX, R14
 
-	// | w2
+	// | w2 @ R10
 	XORQ R13, R13
 	MOVQ ·modulus8+8(SB), AX
 	MULQ CX
@@ -7363,7 +10726,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, R10
 	ADCQ $0x00, R13
 
-	// | w3
+	// | w3 @ R11
 	XORQ R14, R14
 	MOVQ ·modulus8+16(SB), AX
 	MULQ CX
@@ -7372,7 +10735,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R13, R11
 	ADCQ $0x00, R14
 
-	// | w4
+	// | w4 @ R12
 	XORQ R13, R13
 	MOVQ ·modulus8+24(SB), AX
 	MULQ CX
@@ -7381,7 +10744,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, R12
 	ADCQ $0x00, R13
 
-	// | w5
+	// | w5 @ SI
 	XORQ R14, R14
 	MOVQ ·modulus8+32(SB), AX
 	MULQ CX
@@ -7390,7 +10753,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R13, SI
 	ADCQ $0x00, R14
 
-	// | w6
+	// | w6 @ (SP)
 	XORQ R13, R13
 	MOVQ ·modulus8+40(SB), AX
 	MULQ CX
@@ -7399,7 +10762,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, (SP)
 	ADCQ $0x00, R13
 
-	// | w7
+	// | w7 @ 8(SP)
 	XORQ R14, R14
 	MOVQ ·modulus8+48(SB), AX
 	MULQ CX
@@ -7408,7 +10771,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R13, 8(SP)
 	ADCQ $0x00, R14
 
-	// | w8
+	// | w8 @ 16(SP)
 	XORQ R13, R13
 	MOVQ ·modulus8+56(SB), AX
 	MULQ CX
@@ -7417,7 +10780,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, 16(SP)
 	ADCQ $0x00, R13
 
-	// | w9
+	// | w9 @ R8
 	ADDQ R13, R15
 	ADCQ R15, R8
 	MOVQ $0x0000000000000000, R15
@@ -7426,19 +10789,19 @@ TEXT ·mont8(SB), $40-16
 	// |
 	MOVQ 80(DI), R9
 
-	// | u @ CX = w2 * inp
+	// | (u @ CX) = (w2 @ R10) * inp
 	MOVQ R10, AX
 	MULQ ·inp8+0(SB)
 	MOVQ AX, CX
 
-	// | w2
+	// | w2 @ R10
 	XORQ R14, R14
 	MOVQ ·modulus8+0(SB), AX
 	MULQ CX
 	ADDQ AX, R10
 	ADCQ DX, R14
 
-	// | w3
+	// | w3 @ R11
 	XORQ R13, R13
 	MOVQ ·modulus8+8(SB), AX
 	MULQ CX
@@ -7447,7 +10810,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, R11
 	ADCQ $0x00, R13
 
-	// | w4
+	// | w4 @ R12
 	XORQ R14, R14
 	MOVQ ·modulus8+16(SB), AX
 	MULQ CX
@@ -7456,7 +10819,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R13, R12
 	ADCQ $0x00, R14
 
-	// | w5
+	// | w5 @ SI
 	XORQ R13, R13
 	MOVQ ·modulus8+24(SB), AX
 	MULQ CX
@@ -7465,7 +10828,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, SI
 	ADCQ $0x00, R13
 
-	// | w6
+	// | w6 @ (SP)
 	XORQ R14, R14
 	MOVQ ·modulus8+32(SB), AX
 	MULQ CX
@@ -7474,7 +10837,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R13, (SP)
 	ADCQ $0x00, R14
 
-	// | w7
+	// | w7 @ 8(SP)
 	XORQ R13, R13
 	MOVQ ·modulus8+40(SB), AX
 	MULQ CX
@@ -7483,7 +10846,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, 8(SP)
 	ADCQ $0x00, R13
 
-	// | w8
+	// | w8 @ 16(SP)
 	XORQ R14, R14
 	MOVQ ·modulus8+48(SB), AX
 	MULQ CX
@@ -7492,7 +10855,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R13, 16(SP)
 	ADCQ $0x00, R14
 
-	// | w9
+	// | w9 @ R8
 	XORQ R13, R13
 	MOVQ ·modulus8+56(SB), AX
 	MULQ CX
@@ -7501,7 +10864,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, R8
 	ADCQ $0x00, R13
 
-	// | w10
+	// | w10 @ R9
 	ADDQ R13, R15
 	ADCQ R15, R9
 	MOVQ $0x0000000000000000, R15
@@ -7510,19 +10873,19 @@ TEXT ·mont8(SB), $40-16
 	// |
 	MOVQ 88(DI), R10
 
-	// | u @ CX = w3 * inp
+	// | (u @ CX) = (w3 @ R11) * inp
 	MOVQ R11, AX
 	MULQ ·inp8+0(SB)
 	MOVQ AX, CX
 
-	// | w3
+	// | w3 @ R11
 	XORQ R14, R14
 	MOVQ ·modulus8+0(SB), AX
 	MULQ CX
 	ADDQ AX, R11
 	ADCQ DX, R14
 
-	// | w4
+	// | w4 @ R12
 	XORQ R13, R13
 	MOVQ ·modulus8+8(SB), AX
 	MULQ CX
@@ -7531,7 +10894,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, R12
 	ADCQ $0x00, R13
 
-	// | w5
+	// | w5 @ SI
 	XORQ R14, R14
 	MOVQ ·modulus8+16(SB), AX
 	MULQ CX
@@ -7540,7 +10903,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R13, SI
 	ADCQ $0x00, R14
 
-	// | w6
+	// | w6 @ (SP)
 	XORQ R13, R13
 	MOVQ ·modulus8+24(SB), AX
 	MULQ CX
@@ -7549,7 +10912,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, (SP)
 	ADCQ $0x00, R13
 
-	// | w7
+	// | w7 @ 8(SP)
 	XORQ R14, R14
 	MOVQ ·modulus8+32(SB), AX
 	MULQ CX
@@ -7558,7 +10921,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R13, 8(SP)
 	ADCQ $0x00, R14
 
-	// | w8
+	// | w8 @ 16(SP)
 	XORQ R13, R13
 	MOVQ ·modulus8+40(SB), AX
 	MULQ CX
@@ -7567,7 +10930,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, 16(SP)
 	ADCQ $0x00, R13
 
-	// | w9
+	// | w9 @ R8
 	XORQ R14, R14
 	MOVQ ·modulus8+48(SB), AX
 	MULQ CX
@@ -7576,7 +10939,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R13, R8
 	ADCQ $0x00, R14
 
-	// | w10
+	// | w10 @ R9
 	XORQ R13, R13
 	MOVQ ·modulus8+56(SB), AX
 	MULQ CX
@@ -7585,7 +10948,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, R9
 	ADCQ $0x00, R13
 
-	// | w11
+	// | w11 @ R10
 	ADDQ R13, R15
 	ADCQ R15, R10
 	MOVQ $0x0000000000000000, R15
@@ -7594,19 +10957,19 @@ TEXT ·mont8(SB), $40-16
 	// |
 	MOVQ 96(DI), R11
 
-	// | u @ CX = w4 * inp
+	// | (u @ CX) = (w4 @ R12) * inp
 	MOVQ R12, AX
 	MULQ ·inp8+0(SB)
 	MOVQ AX, CX
 
-	// | w4
+	// | w4 @ R12
 	XORQ R14, R14
 	MOVQ ·modulus8+0(SB), AX
 	MULQ CX
 	ADDQ AX, R12
 	ADCQ DX, R14
 
-	// | w5
+	// | w5 @ SI
 	XORQ R13, R13
 	MOVQ ·modulus8+8(SB), AX
 	MULQ CX
@@ -7615,7 +10978,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, SI
 	ADCQ $0x00, R13
 
-	// | w6
+	// | w6 @ (SP)
 	XORQ R14, R14
 	MOVQ ·modulus8+16(SB), AX
 	MULQ CX
@@ -7624,7 +10987,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R13, (SP)
 	ADCQ $0x00, R14
 
-	// | w7
+	// | w7 @ 8(SP)
 	XORQ R13, R13
 	MOVQ ·modulus8+24(SB), AX
 	MULQ CX
@@ -7633,7 +10996,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, 8(SP)
 	ADCQ $0x00, R13
 
-	// | w8
+	// | w8 @ 16(SP)
 	XORQ R14, R14
 	MOVQ ·modulus8+32(SB), AX
 	MULQ CX
@@ -7642,7 +11005,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R13, 16(SP)
 	ADCQ $0x00, R14
 
-	// | w9
+	// | w9 @ R8
 	XORQ R13, R13
 	MOVQ ·modulus8+40(SB), AX
 	MULQ CX
@@ -7651,7 +11014,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, R8
 	ADCQ $0x00, R13
 
-	// | w10
+	// | w10 @ R9
 	XORQ R14, R14
 	MOVQ ·modulus8+48(SB), AX
 	MULQ CX
@@ -7660,7 +11023,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R13, R9
 	ADCQ $0x00, R14
 
-	// | w11
+	// | w11 @ R10
 	XORQ R13, R13
 	MOVQ ·modulus8+56(SB), AX
 	MULQ CX
@@ -7669,7 +11032,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, R10
 	ADCQ $0x00, R13
 
-	// | w12
+	// | w12 @ R11
 	ADDQ R13, R15
 	ADCQ R15, R11
 	MOVQ $0x0000000000000000, R15
@@ -7678,19 +11041,19 @@ TEXT ·mont8(SB), $40-16
 	// |
 	MOVQ 104(DI), R12
 
-	// | u @ CX = w5 * inp
+	// | (u @ CX) = (w5 @ SI) * inp
 	MOVQ SI, AX
 	MULQ ·inp8+0(SB)
 	MOVQ AX, CX
 
-	// | w5
+	// | w5 @ SI
 	XORQ R14, R14
 	MOVQ ·modulus8+0(SB), AX
 	MULQ CX
 	ADDQ AX, SI
 	ADCQ DX, R14
 
-	// | w6
+	// | w6 @ (SP)
 	XORQ R13, R13
 	MOVQ ·modulus8+8(SB), AX
 	MULQ CX
@@ -7699,7 +11062,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, (SP)
 	ADCQ $0x00, R13
 
-	// | w7
+	// | w7 @ 8(SP)
 	XORQ R14, R14
 	MOVQ ·modulus8+16(SB), AX
 	MULQ CX
@@ -7708,7 +11071,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R13, 8(SP)
 	ADCQ $0x00, R14
 
-	// | w8
+	// | w8 @ 16(SP)
 	XORQ R13, R13
 	MOVQ ·modulus8+24(SB), AX
 	MULQ CX
@@ -7717,7 +11080,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, 16(SP)
 	ADCQ $0x00, R13
 
-	// | w9
+	// | w9 @ R8
 	XORQ R14, R14
 	MOVQ ·modulus8+32(SB), AX
 	MULQ CX
@@ -7726,7 +11089,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R13, R8
 	ADCQ $0x00, R14
 
-	// | w10
+	// | w10 @ R9
 	XORQ R13, R13
 	MOVQ ·modulus8+40(SB), AX
 	MULQ CX
@@ -7735,7 +11098,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, R9
 	ADCQ $0x00, R13
 
-	// | w11
+	// | w11 @ R10
 	XORQ R14, R14
 	MOVQ ·modulus8+48(SB), AX
 	MULQ CX
@@ -7744,7 +11107,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R13, R10
 	ADCQ $0x00, R14
 
-	// | w12
+	// | w12 @ R11
 	XORQ R13, R13
 	MOVQ ·modulus8+56(SB), AX
 	MULQ CX
@@ -7753,7 +11116,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, R11
 	ADCQ $0x00, R13
 
-	// | w13
+	// | w13 @ R12
 	ADDQ R13, R15
 	ADCQ R15, R12
 	MOVQ $0x0000000000000000, R15
@@ -7762,19 +11125,19 @@ TEXT ·mont8(SB), $40-16
 	// |
 	MOVQ 112(DI), SI
 
-	// | u @ CX = w6 * inp
+	// | (u @ CX) = (w6 @ (SP)) * inp
 	MOVQ (SP), AX
 	MULQ ·inp8+0(SB)
 	MOVQ AX, CX
 
-	// | w6
+	// | w6 @ (SP)
 	XORQ R14, R14
 	MOVQ ·modulus8+0(SB), AX
 	MULQ CX
 	ADDQ AX, (SP)
 	ADCQ DX, R14
 
-	// | w7
+	// | w7 @ 8(SP)
 	XORQ R13, R13
 	MOVQ ·modulus8+8(SB), AX
 	MULQ CX
@@ -7783,7 +11146,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, 8(SP)
 	ADCQ $0x00, R13
 
-	// | w8
+	// | w8 @ 16(SP)
 	XORQ R14, R14
 	MOVQ ·modulus8+16(SB), AX
 	MULQ CX
@@ -7792,7 +11155,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R13, 16(SP)
 	ADCQ $0x00, R14
 
-	// | w9
+	// | w9 @ R8
 	XORQ R13, R13
 	MOVQ ·modulus8+24(SB), AX
 	MULQ CX
@@ -7801,7 +11164,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, R8
 	ADCQ $0x00, R13
 
-	// | w10
+	// | w10 @ R9
 	XORQ R14, R14
 	MOVQ ·modulus8+32(SB), AX
 	MULQ CX
@@ -7810,7 +11173,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R13, R9
 	ADCQ $0x00, R14
 
-	// | w11
+	// | w11 @ R10
 	XORQ R13, R13
 	MOVQ ·modulus8+40(SB), AX
 	MULQ CX
@@ -7819,7 +11182,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, R10
 	ADCQ $0x00, R13
 
-	// | w12
+	// | w12 @ R11
 	XORQ R14, R14
 	MOVQ ·modulus8+48(SB), AX
 	MULQ CX
@@ -7828,7 +11191,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R13, R11
 	ADCQ $0x00, R14
 
-	// | w13
+	// | w13 @ R12
 	XORQ R13, R13
 	MOVQ ·modulus8+56(SB), AX
 	MULQ CX
@@ -7837,7 +11200,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, R12
 	ADCQ $0x00, R13
 
-	// | w14
+	// | w14 @ SI
 	ADDQ R13, R15
 	ADCQ R15, SI
 	MOVQ $0x0000000000000000, R15
@@ -7847,19 +11210,19 @@ TEXT ·mont8(SB), $40-16
 	MOVQ 120(DI), BX
 	MOVQ BX, (SP)
 
-	// | u @ CX = w7 * inp
+	// | (u @ CX) = (w7 @ 8(SP)) * inp
 	MOVQ 8(SP), AX
 	MULQ ·inp8+0(SB)
 	MOVQ AX, CX
 
-	// | w7
+	// | w7 @ 8(SP)
 	XORQ R14, R14
 	MOVQ ·modulus8+0(SB), AX
 	MULQ CX
 	ADDQ AX, 8(SP)
 	ADCQ DX, R14
 
-	// | w8
+	// | w8 @ 16(SP)
 	XORQ R13, R13
 	MOVQ ·modulus8+8(SB), AX
 	MULQ CX
@@ -7868,7 +11231,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, 16(SP)
 	ADCQ $0x00, R13
 
-	// | w9
+	// | w9 @ R8
 	XORQ R14, R14
 	MOVQ ·modulus8+16(SB), AX
 	MULQ CX
@@ -7877,7 +11240,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R13, R8
 	ADCQ $0x00, R14
 
-	// | w10
+	// | w10 @ R9
 	XORQ R13, R13
 	MOVQ ·modulus8+24(SB), AX
 	MULQ CX
@@ -7886,7 +11249,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, R9
 	ADCQ $0x00, R13
 
-	// | w11
+	// | w11 @ R10
 	XORQ R14, R14
 	MOVQ ·modulus8+32(SB), AX
 	MULQ CX
@@ -7895,7 +11258,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R13, R10
 	ADCQ $0x00, R14
 
-	// | w12
+	// | w12 @ R11
 	XORQ R13, R13
 	MOVQ ·modulus8+40(SB), AX
 	MULQ CX
@@ -7904,7 +11267,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, R11
 	ADCQ $0x00, R13
 
-	// | w13
+	// | w13 @ R12
 	XORQ R14, R14
 	MOVQ ·modulus8+48(SB), AX
 	MULQ CX
@@ -7913,7 +11276,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R13, R12
 	ADCQ $0x00, R14
 
-	// | w14
+	// | w14 @ SI
 	XORQ R13, R13
 	MOVQ ·modulus8+56(SB), AX
 	MULQ CX
@@ -7922,7 +11285,7 @@ TEXT ·mont8(SB), $40-16
 	ADDQ R14, SI
 	ADCQ $0x00, R13
 
-	// | w15
+	// | w15 @ (SP)
 	ADDQ R13, R15
 	ADCQ R15, (SP)
 	MOVQ $0x0000000000000000, R15
@@ -7952,11 +11315,8 @@ TEXT ·mont8(SB), $40-16
 
 	// | Compare & Return
 	MOVQ    c+0(FP), DI
-	MOVQ    16(SP), BX
-	CMOVQCC R13, BX
-	MOVQ    BX, 16(SP)
-	MOVQ    16(SP), BX
-	MOVQ    BX, (DI)
+	CMOVQCS 16(SP), R13
+	MOVQ    R13, (DI)
 	CMOVQCC R14, R8
 	MOVQ    R8, 8(DI)
 	CMOVQCC CX, R9
@@ -7971,13 +11331,11 @@ TEXT ·mont8(SB), $40-16
 	MOVQ    SI, 48(DI)
 	MOVQ    (SP), BX
 	CMOVQCC 32(SP), BX
-	MOVQ    BX, (SP)
-	MOVQ    (SP), BX
 	MOVQ    BX, 56(DI)
 	RET
 
 // func montmul8(c *Fe512, a *Fe512, b *Fe512)
-TEXT ·montmul8(SB), $96-24
+TEXT ·montmul8(SB), $104-24
 	// |
 	// | Multiplication
 	MOVQ a+8(FP), DI
@@ -7985,8 +11343,6 @@ TEXT ·montmul8(SB), $96-24
 
 	// |
 	// |
-	XORQ R8, R8
-	XORQ R9, R9
 	XORQ R10, R10
 	XORQ R11, R11
 	XORQ R12, R12
@@ -8007,48 +11363,56 @@ TEXT ·montmul8(SB), $96-24
 	MOVQ (SI), CX
 
 	// | a0 * b0
+	// | (w0, w1) @ (R8, R9)
 	MOVQ (DI), AX
 	MULQ CX
 	MOVQ AX, R8
 	MOVQ DX, R9
 
 	// | a1 * b0
+	// | (w1, w2) @ (R9, R10)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R9
 	ADCQ DX, R10
 
 	// | a2 * b0
+	// | (w2, w3) @ (R10, R11)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R10
 	ADCQ DX, R11
 
 	// | a3 * b0
+	// | (w3, w4) @ (R11, R12)
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R11
 	ADCQ DX, R12
 
 	// | a4 * b0
+	// | (w4, w5) @ (R12, R13)
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R12
 	ADCQ DX, R13
 
 	// | a5 * b0
+	// | (w5, w6) @ (R13, R14)
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, R13
 	ADCQ DX, R14
 
 	// | a6 * b0
+	// | (w6, w7) @ (R14, R15)
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, R14
 	ADCQ DX, R15
 
 	// | a7 * b0
+	// | (w7, w8) @ (R15, (SP))
 	MOVQ 56(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -8059,6 +11423,7 @@ TEXT ·montmul8(SB), $96-24
 	MOVQ 8(SI), CX
 
 	// | a0 * b1
+	// | (w1, w2, w3, w4) @ (R9, R10, R11, R12)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R9
@@ -8067,6 +11432,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, R12
 
 	// | a1 * b1
+	// | (w2, w3, w4, w5) @ (R10, R11, R12, R13)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R10
@@ -8075,6 +11441,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, R13
 
 	// | a2 * b1
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -8083,6 +11450,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, R14
 
 	// | a3 * b1
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -8091,6 +11459,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, R15
 
 	// | a4 * b1
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -8099,6 +11468,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, (SP)
 
 	// | a5 * b1
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -8107,6 +11477,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 8(SP)
 
 	// | a6 * b1
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -8115,6 +11486,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 16(SP)
 
 	// | a7 * b1
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 56(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -8127,6 +11499,7 @@ TEXT ·montmul8(SB), $96-24
 	MOVQ 16(SI), CX
 
 	// | a0 * b2
+	// | (w2, w3, w4, w5) @ (R10, R11, R12, R13)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R10
@@ -8135,6 +11508,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, R13
 
 	// | a1 * b2
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -8143,6 +11517,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, R14
 
 	// | a2 * b2
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -8151,6 +11526,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, R15
 
 	// | a3 * b2
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -8159,6 +11535,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, (SP)
 
 	// | a4 * b2
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -8167,6 +11544,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 8(SP)
 
 	// | a5 * b2
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -8175,6 +11553,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 16(SP)
 
 	// | a6 * b2
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -8183,6 +11562,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 24(SP)
 
 	// | a7 * b2
+	// | (w9, w10, w11, w12) @ (8(SP), 16(SP), 24(SP), 32(SP))
 	MOVQ 56(DI), AX
 	MULQ CX
 	ADDQ AX, 8(SP)
@@ -8195,6 +11575,7 @@ TEXT ·montmul8(SB), $96-24
 	MOVQ 24(SI), CX
 
 	// | a0 * b3
+	// | (w3, w4, w5, w6) @ (R11, R12, R13, R14)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R11
@@ -8203,6 +11584,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, R14
 
 	// | a1 * b3
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -8211,6 +11593,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, R15
 
 	// | a2 * b3
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -8219,6 +11602,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, (SP)
 
 	// | a3 * b3
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -8227,6 +11611,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 8(SP)
 
 	// | a4 * b3
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -8235,6 +11620,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 16(SP)
 
 	// | a5 * b3
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -8243,6 +11629,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 24(SP)
 
 	// | a6 * b3
+	// | (w9, w10, w11, w12) @ (8(SP), 16(SP), 24(SP), 32(SP))
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, 8(SP)
@@ -8251,6 +11638,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 32(SP)
 
 	// | a7 * b3
+	// | (w10, w11, w12, w13) @ (16(SP), 24(SP), 32(SP), 40(SP))
 	MOVQ 56(DI), AX
 	MULQ CX
 	ADDQ AX, 16(SP)
@@ -8263,6 +11651,7 @@ TEXT ·montmul8(SB), $96-24
 	MOVQ 32(SI), CX
 
 	// | a0 * b4
+	// | (w4, w5, w6, w7) @ (R12, R13, R14, R15)
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R12
@@ -8271,6 +11660,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, R15
 
 	// | a1 * b4
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -8279,6 +11669,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, (SP)
 
 	// | a2 * b4
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -8287,6 +11678,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 8(SP)
 
 	// | a3 * b4
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -8295,6 +11687,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 16(SP)
 
 	// | a4 * b4
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -8303,6 +11696,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 24(SP)
 
 	// | a5 * b4
+	// | (w9, w10, w11, w12) @ (8(SP), 16(SP), 24(SP), 32(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, 8(SP)
@@ -8311,6 +11705,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 32(SP)
 
 	// | a6 * b4
+	// | (w10, w11, w12, w13) @ (16(SP), 24(SP), 32(SP), 40(SP))
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, 16(SP)
@@ -8319,6 +11714,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 40(SP)
 
 	// | a7 * b4
+	// | (w11, w12, w13, w14) @ (24(SP), 32(SP), 40(SP), 48(SP))
 	MOVQ 56(DI), AX
 	MULQ CX
 	ADDQ AX, 24(SP)
@@ -8331,6 +11727,7 @@ TEXT ·montmul8(SB), $96-24
 	MOVQ 40(SI), CX
 
 	// | a0 * b5
+	// | (w5, w6, w7, w8) @ (R13, R14, R15, (SP))
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R13
@@ -8339,6 +11736,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, (SP)
 
 	// | a1 * b5
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -8347,6 +11745,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 8(SP)
 
 	// | a2 * b5
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -8355,6 +11754,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 16(SP)
 
 	// | a3 * b5
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -8363,6 +11763,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 24(SP)
 
 	// | a4 * b5
+	// | (w9, w10, w11, w12) @ (8(SP), 16(SP), 24(SP), 32(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, 8(SP)
@@ -8371,6 +11772,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 32(SP)
 
 	// | a5 * b5
+	// | (w10, w11, w12, w13) @ (16(SP), 24(SP), 32(SP), 40(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, 16(SP)
@@ -8379,6 +11781,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 40(SP)
 
 	// | a6 * b5
+	// | (w11, w12, w13, w14) @ (24(SP), 32(SP), 40(SP), 48(SP))
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, 24(SP)
@@ -8387,6 +11790,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 48(SP)
 
 	// | a7 * b5
+	// | (w12, w13, w14, w15) @ (32(SP), 40(SP), 48(SP), 56(SP))
 	MOVQ 56(DI), AX
 	MULQ CX
 	ADDQ AX, 32(SP)
@@ -8399,6 +11803,7 @@ TEXT ·montmul8(SB), $96-24
 	MOVQ 48(SI), CX
 
 	// | a0 * b6
+	// | (w6, w7, w8, w9) @ (R14, R15, (SP), 8(SP))
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R14
@@ -8407,6 +11812,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 8(SP)
 
 	// | a1 * b6
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -8415,6 +11821,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 16(SP)
 
 	// | a2 * b6
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -8423,6 +11830,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 24(SP)
 
 	// | a3 * b6
+	// | (w9, w10, w11, w12) @ (8(SP), 16(SP), 24(SP), 32(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, 8(SP)
@@ -8431,6 +11839,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 32(SP)
 
 	// | a4 * b6
+	// | (w10, w11, w12, w13) @ (16(SP), 24(SP), 32(SP), 40(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, 16(SP)
@@ -8439,6 +11848,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 40(SP)
 
 	// | a5 * b6
+	// | (w11, w12, w13, w14) @ (24(SP), 32(SP), 40(SP), 48(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, 24(SP)
@@ -8447,6 +11857,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 48(SP)
 
 	// | a6 * b6
+	// | (w12, w13, w14, w15) @ (32(SP), 40(SP), 48(SP), 56(SP))
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, 32(SP)
@@ -8455,6 +11866,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 56(SP)
 
 	// | a7 * b6
+	// | (w13, w14, w15) @ (40(SP), 48(SP), 56(SP))
 	MOVQ 56(DI), AX
 	MULQ CX
 	ADDQ AX, 40(SP)
@@ -8466,6 +11878,7 @@ TEXT ·montmul8(SB), $96-24
 	MOVQ 56(SI), CX
 
 	// | a0 * b7
+	// | (w7, w8, w9, w10) @ (R15, (SP), 8(SP), 16(SP))
 	MOVQ (DI), AX
 	MULQ CX
 	ADDQ AX, R15
@@ -8474,6 +11887,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 16(SP)
 
 	// | a1 * b7
+	// | (w8, w9, w10, w11) @ ((SP), 8(SP), 16(SP), 24(SP))
 	MOVQ 8(DI), AX
 	MULQ CX
 	ADDQ AX, (SP)
@@ -8482,6 +11896,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 24(SP)
 
 	// | a2 * b7
+	// | (w9, w10, w11, w12) @ (8(SP), 16(SP), 24(SP), 32(SP))
 	MOVQ 16(DI), AX
 	MULQ CX
 	ADDQ AX, 8(SP)
@@ -8490,6 +11905,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 32(SP)
 
 	// | a3 * b7
+	// | (w10, w11, w12, w13) @ (16(SP), 24(SP), 32(SP), 40(SP))
 	MOVQ 24(DI), AX
 	MULQ CX
 	ADDQ AX, 16(SP)
@@ -8498,6 +11914,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 40(SP)
 
 	// | a4 * b7
+	// | (w11, w12, w13, w14) @ (24(SP), 32(SP), 40(SP), 48(SP))
 	MOVQ 32(DI), AX
 	MULQ CX
 	ADDQ AX, 24(SP)
@@ -8506,6 +11923,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 48(SP)
 
 	// | a5 * b7
+	// | (w12, w13, w14, w15) @ (32(SP), 40(SP), 48(SP), 56(SP))
 	MOVQ 40(DI), AX
 	MULQ CX
 	ADDQ AX, 32(SP)
@@ -8514,6 +11932,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 56(SP)
 
 	// | a6 * b7
+	// | (w13, w14, w15) @ (40(SP), 48(SP), 56(SP))
 	MOVQ 48(DI), AX
 	MULQ CX
 	ADDQ AX, 40(SP)
@@ -8521,6 +11940,7 @@ TEXT ·montmul8(SB), $96-24
 	ADCQ $0x00, 56(SP)
 
 	// | a7 * b7
+	// | (w14, w15) @ (48(SP), 56(SP))
 	MOVQ 56(DI), AX
 	MULQ CX
 	ADDQ AX, 48(SP)
@@ -8531,20 +11951,19 @@ TEXT ·montmul8(SB), $96-24
 	MOVQ R15, 64(SP)
 
 	// |
-	// |
-	// | u @ CX = w0 * inp
+	// | (u @ CX) = (w0 @ R8) * inp
 	MOVQ R8, AX
 	MULQ ·inp8+0(SB)
 	MOVQ AX, CX
 
-	// | w0
+	// | w0 @ R8
 	XORQ DI, DI
 	MOVQ ·modulus8+0(SB), AX
 	MULQ CX
 	ADDQ AX, R8
 	ADCQ DX, DI
 
-	// | w1
+	// | w1 @ R9
 	XORQ SI, SI
 	MOVQ ·modulus8+8(SB), AX
 	MULQ CX
@@ -8553,7 +11972,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, R9
 	ADCQ $0x00, SI
 
-	// | w2
+	// | w2 @ R10
 	XORQ DI, DI
 	MOVQ ·modulus8+16(SB), AX
 	MULQ CX
@@ -8562,7 +11981,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ SI, R10
 	ADCQ $0x00, DI
 
-	// | w3
+	// | w3 @ R11
 	XORQ SI, SI
 	MOVQ ·modulus8+24(SB), AX
 	MULQ CX
@@ -8571,7 +11990,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, R11
 	ADCQ $0x00, SI
 
-	// | w4
+	// | w4 @ R12
 	XORQ DI, DI
 	MOVQ ·modulus8+32(SB), AX
 	MULQ CX
@@ -8580,7 +11999,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ SI, R12
 	ADCQ $0x00, DI
 
-	// | w5
+	// | w5 @ R13
 	XORQ SI, SI
 	MOVQ ·modulus8+40(SB), AX
 	MULQ CX
@@ -8589,7 +12008,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, R13
 	ADCQ $0x00, SI
 
-	// | w6
+	// | w6 @ R14
 	XORQ DI, DI
 	MOVQ ·modulus8+48(SB), AX
 	MULQ CX
@@ -8598,7 +12017,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ SI, R14
 	ADCQ $0x00, DI
 
-	// | w7
+	// | w7 @ 64(SP)
 	XORQ SI, SI
 	MOVQ ·modulus8+56(SB), AX
 	MULQ CX
@@ -8607,7 +12026,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, 64(SP)
 	ADCQ $0x00, SI
 
-	// | w8
+	// | w8 @ (SP)
 	ADDQ SI, (SP)
 	MOVQ $0x0000000000000000, R15
 	ADCQ $0x00, R15
@@ -8615,19 +12034,19 @@ TEXT ·montmul8(SB), $96-24
 	// |
 	MOVQ 8(SP), R8
 
-	// | u @ CX = w1 * inp
+	// | (u @ CX) = (w1 @ R9) * inp
 	MOVQ R9, AX
 	MULQ ·inp8+0(SB)
 	MOVQ AX, CX
 
-	// | w1
+	// | w1 @ R9
 	XORQ DI, DI
 	MOVQ ·modulus8+0(SB), AX
 	MULQ CX
 	ADDQ AX, R9
 	ADCQ DX, DI
 
-	// | w2
+	// | w2 @ R10
 	XORQ SI, SI
 	MOVQ ·modulus8+8(SB), AX
 	MULQ CX
@@ -8636,7 +12055,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, R10
 	ADCQ $0x00, SI
 
-	// | w3
+	// | w3 @ R11
 	XORQ DI, DI
 	MOVQ ·modulus8+16(SB), AX
 	MULQ CX
@@ -8645,7 +12064,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ SI, R11
 	ADCQ $0x00, DI
 
-	// | w4
+	// | w4 @ R12
 	XORQ SI, SI
 	MOVQ ·modulus8+24(SB), AX
 	MULQ CX
@@ -8654,7 +12073,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, R12
 	ADCQ $0x00, SI
 
-	// | w5
+	// | w5 @ R13
 	XORQ DI, DI
 	MOVQ ·modulus8+32(SB), AX
 	MULQ CX
@@ -8663,7 +12082,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ SI, R13
 	ADCQ $0x00, DI
 
-	// | w6
+	// | w6 @ R14
 	XORQ SI, SI
 	MOVQ ·modulus8+40(SB), AX
 	MULQ CX
@@ -8672,7 +12091,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, R14
 	ADCQ $0x00, SI
 
-	// | w7
+	// | w7 @ 64(SP)
 	XORQ DI, DI
 	MOVQ ·modulus8+48(SB), AX
 	MULQ CX
@@ -8681,7 +12100,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ SI, 64(SP)
 	ADCQ $0x00, DI
 
-	// | w8
+	// | w8 @ (SP)
 	XORQ SI, SI
 	MOVQ ·modulus8+56(SB), AX
 	MULQ CX
@@ -8690,7 +12109,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, (SP)
 	ADCQ $0x00, SI
 
-	// | w9
+	// | w9 @ R8
 	ADDQ SI, R15
 	ADCQ R15, R8
 	MOVQ $0x0000000000000000, R15
@@ -8699,19 +12118,19 @@ TEXT ·montmul8(SB), $96-24
 	// |
 	MOVQ 16(SP), R9
 
-	// | u @ CX = w2 * inp
+	// | (u @ CX) = (w2 @ R10) * inp
 	MOVQ R10, AX
 	MULQ ·inp8+0(SB)
 	MOVQ AX, CX
 
-	// | w2
+	// | w2 @ R10
 	XORQ DI, DI
 	MOVQ ·modulus8+0(SB), AX
 	MULQ CX
 	ADDQ AX, R10
 	ADCQ DX, DI
 
-	// | w3
+	// | w3 @ R11
 	XORQ SI, SI
 	MOVQ ·modulus8+8(SB), AX
 	MULQ CX
@@ -8720,7 +12139,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, R11
 	ADCQ $0x00, SI
 
-	// | w4
+	// | w4 @ R12
 	XORQ DI, DI
 	MOVQ ·modulus8+16(SB), AX
 	MULQ CX
@@ -8729,7 +12148,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ SI, R12
 	ADCQ $0x00, DI
 
-	// | w5
+	// | w5 @ R13
 	XORQ SI, SI
 	MOVQ ·modulus8+24(SB), AX
 	MULQ CX
@@ -8738,7 +12157,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, R13
 	ADCQ $0x00, SI
 
-	// | w6
+	// | w6 @ R14
 	XORQ DI, DI
 	MOVQ ·modulus8+32(SB), AX
 	MULQ CX
@@ -8747,7 +12166,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ SI, R14
 	ADCQ $0x00, DI
 
-	// | w7
+	// | w7 @ 64(SP)
 	XORQ SI, SI
 	MOVQ ·modulus8+40(SB), AX
 	MULQ CX
@@ -8756,7 +12175,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, 64(SP)
 	ADCQ $0x00, SI
 
-	// | w8
+	// | w8 @ (SP)
 	XORQ DI, DI
 	MOVQ ·modulus8+48(SB), AX
 	MULQ CX
@@ -8765,7 +12184,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ SI, (SP)
 	ADCQ $0x00, DI
 
-	// | w9
+	// | w9 @ R8
 	XORQ SI, SI
 	MOVQ ·modulus8+56(SB), AX
 	MULQ CX
@@ -8774,7 +12193,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, R8
 	ADCQ $0x00, SI
 
-	// | w10
+	// | w10 @ R9
 	ADDQ SI, R15
 	ADCQ R15, R9
 	MOVQ $0x0000000000000000, R15
@@ -8783,19 +12202,19 @@ TEXT ·montmul8(SB), $96-24
 	// |
 	MOVQ 24(SP), R10
 
-	// | u @ CX = w3 * inp
+	// | (u @ CX) = (w3 @ R11) * inp
 	MOVQ R11, AX
 	MULQ ·inp8+0(SB)
 	MOVQ AX, CX
 
-	// | w3
+	// | w3 @ R11
 	XORQ DI, DI
 	MOVQ ·modulus8+0(SB), AX
 	MULQ CX
 	ADDQ AX, R11
 	ADCQ DX, DI
 
-	// | w4
+	// | w4 @ R12
 	XORQ SI, SI
 	MOVQ ·modulus8+8(SB), AX
 	MULQ CX
@@ -8804,7 +12223,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, R12
 	ADCQ $0x00, SI
 
-	// | w5
+	// | w5 @ R13
 	XORQ DI, DI
 	MOVQ ·modulus8+16(SB), AX
 	MULQ CX
@@ -8813,7 +12232,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ SI, R13
 	ADCQ $0x00, DI
 
-	// | w6
+	// | w6 @ R14
 	XORQ SI, SI
 	MOVQ ·modulus8+24(SB), AX
 	MULQ CX
@@ -8822,7 +12241,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, R14
 	ADCQ $0x00, SI
 
-	// | w7
+	// | w7 @ 64(SP)
 	XORQ DI, DI
 	MOVQ ·modulus8+32(SB), AX
 	MULQ CX
@@ -8831,7 +12250,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ SI, 64(SP)
 	ADCQ $0x00, DI
 
-	// | w8
+	// | w8 @ (SP)
 	XORQ SI, SI
 	MOVQ ·modulus8+40(SB), AX
 	MULQ CX
@@ -8840,7 +12259,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, (SP)
 	ADCQ $0x00, SI
 
-	// | w9
+	// | w9 @ R8
 	XORQ DI, DI
 	MOVQ ·modulus8+48(SB), AX
 	MULQ CX
@@ -8849,7 +12268,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ SI, R8
 	ADCQ $0x00, DI
 
-	// | w10
+	// | w10 @ R9
 	XORQ SI, SI
 	MOVQ ·modulus8+56(SB), AX
 	MULQ CX
@@ -8858,7 +12277,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, R9
 	ADCQ $0x00, SI
 
-	// | w11
+	// | w11 @ R10
 	ADDQ SI, R15
 	ADCQ R15, R10
 	MOVQ $0x0000000000000000, R15
@@ -8867,19 +12286,19 @@ TEXT ·montmul8(SB), $96-24
 	// |
 	MOVQ 32(SP), R11
 
-	// | u @ CX = w4 * inp
+	// | (u @ CX) = (w4 @ R12) * inp
 	MOVQ R12, AX
 	MULQ ·inp8+0(SB)
 	MOVQ AX, CX
 
-	// | w4
+	// | w4 @ R12
 	XORQ DI, DI
 	MOVQ ·modulus8+0(SB), AX
 	MULQ CX
 	ADDQ AX, R12
 	ADCQ DX, DI
 
-	// | w5
+	// | w5 @ R13
 	XORQ SI, SI
 	MOVQ ·modulus8+8(SB), AX
 	MULQ CX
@@ -8888,7 +12307,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, R13
 	ADCQ $0x00, SI
 
-	// | w6
+	// | w6 @ R14
 	XORQ DI, DI
 	MOVQ ·modulus8+16(SB), AX
 	MULQ CX
@@ -8897,7 +12316,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ SI, R14
 	ADCQ $0x00, DI
 
-	// | w7
+	// | w7 @ 64(SP)
 	XORQ SI, SI
 	MOVQ ·modulus8+24(SB), AX
 	MULQ CX
@@ -8906,7 +12325,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, 64(SP)
 	ADCQ $0x00, SI
 
-	// | w8
+	// | w8 @ (SP)
 	XORQ DI, DI
 	MOVQ ·modulus8+32(SB), AX
 	MULQ CX
@@ -8915,7 +12334,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ SI, (SP)
 	ADCQ $0x00, DI
 
-	// | w9
+	// | w9 @ R8
 	XORQ SI, SI
 	MOVQ ·modulus8+40(SB), AX
 	MULQ CX
@@ -8924,7 +12343,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, R8
 	ADCQ $0x00, SI
 
-	// | w10
+	// | w10 @ R9
 	XORQ DI, DI
 	MOVQ ·modulus8+48(SB), AX
 	MULQ CX
@@ -8933,7 +12352,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ SI, R9
 	ADCQ $0x00, DI
 
-	// | w11
+	// | w11 @ R10
 	XORQ SI, SI
 	MOVQ ·modulus8+56(SB), AX
 	MULQ CX
@@ -8942,7 +12361,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, R10
 	ADCQ $0x00, SI
 
-	// | w12
+	// | w12 @ R11
 	ADDQ SI, R15
 	ADCQ R15, R11
 	MOVQ $0x0000000000000000, R15
@@ -8951,19 +12370,19 @@ TEXT ·montmul8(SB), $96-24
 	// |
 	MOVQ 40(SP), R12
 
-	// | u @ CX = w5 * inp
+	// | (u @ CX) = (w5 @ R13) * inp
 	MOVQ R13, AX
 	MULQ ·inp8+0(SB)
 	MOVQ AX, CX
 
-	// | w5
+	// | w5 @ R13
 	XORQ DI, DI
 	MOVQ ·modulus8+0(SB), AX
 	MULQ CX
 	ADDQ AX, R13
 	ADCQ DX, DI
 
-	// | w6
+	// | w6 @ R14
 	XORQ SI, SI
 	MOVQ ·modulus8+8(SB), AX
 	MULQ CX
@@ -8972,7 +12391,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, R14
 	ADCQ $0x00, SI
 
-	// | w7
+	// | w7 @ 64(SP)
 	XORQ DI, DI
 	MOVQ ·modulus8+16(SB), AX
 	MULQ CX
@@ -8981,7 +12400,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ SI, 64(SP)
 	ADCQ $0x00, DI
 
-	// | w8
+	// | w8 @ (SP)
 	XORQ SI, SI
 	MOVQ ·modulus8+24(SB), AX
 	MULQ CX
@@ -8990,7 +12409,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, (SP)
 	ADCQ $0x00, SI
 
-	// | w9
+	// | w9 @ R8
 	XORQ DI, DI
 	MOVQ ·modulus8+32(SB), AX
 	MULQ CX
@@ -8999,7 +12418,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ SI, R8
 	ADCQ $0x00, DI
 
-	// | w10
+	// | w10 @ R9
 	XORQ SI, SI
 	MOVQ ·modulus8+40(SB), AX
 	MULQ CX
@@ -9008,7 +12427,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, R9
 	ADCQ $0x00, SI
 
-	// | w11
+	// | w11 @ R10
 	XORQ DI, DI
 	MOVQ ·modulus8+48(SB), AX
 	MULQ CX
@@ -9017,7 +12436,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ SI, R10
 	ADCQ $0x00, DI
 
-	// | w12
+	// | w12 @ R11
 	XORQ SI, SI
 	MOVQ ·modulus8+56(SB), AX
 	MULQ CX
@@ -9026,7 +12445,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, R11
 	ADCQ $0x00, SI
 
-	// | w13
+	// | w13 @ R12
 	ADDQ SI, R15
 	ADCQ R15, R12
 	MOVQ $0x0000000000000000, R15
@@ -9035,19 +12454,19 @@ TEXT ·montmul8(SB), $96-24
 	// |
 	MOVQ 48(SP), R13
 
-	// | u @ CX = w6 * inp
+	// | (u @ CX) = (w6 @ R14) * inp
 	MOVQ R14, AX
 	MULQ ·inp8+0(SB)
 	MOVQ AX, CX
 
-	// | w6
+	// | w6 @ R14
 	XORQ DI, DI
 	MOVQ ·modulus8+0(SB), AX
 	MULQ CX
 	ADDQ AX, R14
 	ADCQ DX, DI
 
-	// | w7
+	// | w7 @ 64(SP)
 	XORQ SI, SI
 	MOVQ ·modulus8+8(SB), AX
 	MULQ CX
@@ -9056,7 +12475,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, 64(SP)
 	ADCQ $0x00, SI
 
-	// | w8
+	// | w8 @ (SP)
 	XORQ DI, DI
 	MOVQ ·modulus8+16(SB), AX
 	MULQ CX
@@ -9065,7 +12484,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ SI, (SP)
 	ADCQ $0x00, DI
 
-	// | w9
+	// | w9 @ R8
 	XORQ SI, SI
 	MOVQ ·modulus8+24(SB), AX
 	MULQ CX
@@ -9074,7 +12493,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, R8
 	ADCQ $0x00, SI
 
-	// | w10
+	// | w10 @ R9
 	XORQ DI, DI
 	MOVQ ·modulus8+32(SB), AX
 	MULQ CX
@@ -9083,7 +12502,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ SI, R9
 	ADCQ $0x00, DI
 
-	// | w11
+	// | w11 @ R10
 	XORQ SI, SI
 	MOVQ ·modulus8+40(SB), AX
 	MULQ CX
@@ -9092,7 +12511,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, R10
 	ADCQ $0x00, SI
 
-	// | w12
+	// | w12 @ R11
 	XORQ DI, DI
 	MOVQ ·modulus8+48(SB), AX
 	MULQ CX
@@ -9101,7 +12520,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ SI, R11
 	ADCQ $0x00, DI
 
-	// | w13
+	// | w13 @ R12
 	XORQ SI, SI
 	MOVQ ·modulus8+56(SB), AX
 	MULQ CX
@@ -9110,7 +12529,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, R12
 	ADCQ $0x00, SI
 
-	// | w14
+	// | w14 @ R13
 	ADDQ SI, R15
 	ADCQ R15, R13
 	MOVQ $0x0000000000000000, R15
@@ -9119,19 +12538,19 @@ TEXT ·montmul8(SB), $96-24
 	// |
 	MOVQ 56(SP), R14
 
-	// | u @ CX = w7 * inp
+	// | (u @ CX) = (w7 @ 64(SP)) * inp
 	MOVQ 64(SP), AX
 	MULQ ·inp8+0(SB)
 	MOVQ AX, CX
 
-	// | w7
+	// | w7 @ 64(SP)
 	XORQ DI, DI
 	MOVQ ·modulus8+0(SB), AX
 	MULQ CX
 	ADDQ AX, 64(SP)
 	ADCQ DX, DI
 
-	// | w8
+	// | w8 @ (SP)
 	XORQ SI, SI
 	MOVQ ·modulus8+8(SB), AX
 	MULQ CX
@@ -9140,7 +12559,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, (SP)
 	ADCQ $0x00, SI
 
-	// | w9
+	// | w9 @ R8
 	XORQ DI, DI
 	MOVQ ·modulus8+16(SB), AX
 	MULQ CX
@@ -9149,7 +12568,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ SI, R8
 	ADCQ $0x00, DI
 
-	// | w10
+	// | w10 @ R9
 	XORQ SI, SI
 	MOVQ ·modulus8+24(SB), AX
 	MULQ CX
@@ -9158,7 +12577,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, R9
 	ADCQ $0x00, SI
 
-	// | w11
+	// | w11 @ R10
 	XORQ DI, DI
 	MOVQ ·modulus8+32(SB), AX
 	MULQ CX
@@ -9167,7 +12586,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ SI, R10
 	ADCQ $0x00, DI
 
-	// | w12
+	// | w12 @ R11
 	XORQ SI, SI
 	MOVQ ·modulus8+40(SB), AX
 	MULQ CX
@@ -9176,7 +12595,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, R11
 	ADCQ $0x00, SI
 
-	// | w13
+	// | w13 @ R12
 	XORQ DI, DI
 	MOVQ ·modulus8+48(SB), AX
 	MULQ CX
@@ -9185,7 +12604,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ SI, R12
 	ADCQ $0x00, DI
 
-	// | w14
+	// | w14 @ R13
 	XORQ SI, SI
 	MOVQ ·modulus8+56(SB), AX
 	MULQ CX
@@ -9194,7 +12613,7 @@ TEXT ·montmul8(SB), $96-24
 	ADDQ DI, R13
 	ADCQ $0x00, SI
 
-	// | w15
+	// | w15 @ R14
 	ADDQ SI, R15
 	ADCQ R15, R14
 	MOVQ $0x0000000000000000, R15
@@ -9207,49 +12626,1525 @@ TEXT ·montmul8(SB), $96-24
 	SBBQ ·modulus8+8(SB), AX
 	MOVQ R9, DX
 	SBBQ ·modulus8+16(SB), DX
-	MOVQ R10, SI
-	SBBQ ·modulus8+24(SB), SI
+	MOVQ R10, BX
+	SBBQ ·modulus8+24(SB), BX
+	MOVQ BX, 64(SP)
 	MOVQ R11, BX
 	SBBQ ·modulus8+32(SB), BX
-	MOVQ BX, 64(SP)
+	MOVQ BX, 72(SP)
 	MOVQ R12, BX
 	SBBQ ·modulus8+40(SB), BX
-	MOVQ BX, 72(SP)
+	MOVQ BX, 80(SP)
 	MOVQ R13, BX
 	SBBQ ·modulus8+48(SB), BX
-	MOVQ BX, 80(SP)
+	MOVQ BX, 88(SP)
 	MOVQ R14, BX
 	SBBQ ·modulus8+56(SB), BX
-	MOVQ BX, 88(SP)
+	MOVQ BX, 96(SP)
 	SBBQ $0x00, R15
 
 	// | Compare & Return
 	MOVQ    c+0(FP), DI
-	MOVQ    (SP), BX
-	CMOVQCC CX, BX
-	MOVQ    BX, (SP)
-	MOVQ    (SP), BX
-	MOVQ    BX, (DI)
+	CMOVQCS (SP), CX
+	MOVQ    CX, (DI)
 	CMOVQCC AX, R8
 	MOVQ    R8, 8(DI)
 	CMOVQCC DX, R9
 	MOVQ    R9, 16(DI)
-	CMOVQCC SI, R10
+	CMOVQCC 64(SP), R10
 	MOVQ    R10, 24(DI)
-	CMOVQCC 64(SP), R11
+	CMOVQCC 72(SP), R11
 	MOVQ    R11, 32(DI)
-	CMOVQCC 72(SP), R12
+	CMOVQCC 80(SP), R12
 	MOVQ    R12, 40(DI)
-	CMOVQCC 80(SP), R13
+	CMOVQCC 88(SP), R13
 	MOVQ    R13, 48(DI)
-	CMOVQCC 88(SP), R14
+	CMOVQCC 96(SP), R14
 	MOVQ    R14, 56(DI)
 	RET
 
 // func square8(c *[16]uint64, a *Fe512)
-TEXT ·square8(SB), $0-16
+TEXT ·square8(SB), $56-16
+	// |
+	MOVQ a+8(FP), DI
+	XORQ R11, R11
+	XORQ R12, R12
+	XORQ R13, R13
+	XORQ R14, R14
+	XORQ R15, R15
+	XORQ CX, CX
+	XORQ SI, SI
+	MOVQ $0x00000000, (SP)
+	MOVQ $0x00000000, 8(SP)
+	MOVQ $0x00000000, 16(SP)
+	MOVQ $0x00000000, 24(SP)
+	MOVQ $0x00000000, 32(SP)
+	MOVQ $0x00000000, 40(SP)
+	MOVQ $0x00000000, 48(SP)
+
+	// | a0
+	// | w0 @ R9
+	MOVQ (DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	MOVQ AX, R9
+	MOVQ DX, R10
+
+	// | w1 @ R10
+	MOVQ 8(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R12
+	ADDQ AX, R10
+	ADCQ DX, R11
+
+	// | w2 @ R11
+	MOVQ 16(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R13
+	ADDQ AX, R11
+	ADCQ DX, R12
+	ADCQ $0x00, R13
+
+	// | w3 @ R12
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R14
+	ADDQ AX, R12
+	ADCQ DX, R13
+	ADCQ $0x00, R14
+
+	// | w4 @ R13
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R15
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+
+	// | w5 @ R14
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, CX
+	ADDQ AX, R14
+	ADCQ DX, R15
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	MOVQ 48(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, SI
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADCQ $0x00, SI
+
+	// | w7 @ CX
+	MOVQ 56(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, (SP)
+	ADDQ AX, CX
+	ADCQ DX, SI
+	ADCQ $0x00, (SP)
+
+	// | a1
+	// | w2 @ R11
+	MOVQ 8(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, R12
+	ADCQ $0x00, R13
+	ADCQ $0x00, R14
+
+	// | w3 @ R12
+	MOVQ 16(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R14
+	ADDQ AX, R12
+	ADCQ DX, R13
+	ADCQ $0x00, R14
+
+	// | w4 @ R13
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R15
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+
+	// | w5 @ R14
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, CX
+	ADDQ AX, R14
+	ADCQ DX, R15
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, SI
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADCQ $0x00, SI
+
+	// | w7 @ CX
+	MOVQ 48(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, (SP)
+	ADDQ AX, CX
+	ADCQ DX, SI
+	ADCQ $0x00, (SP)
+
+	// | w8 @ SI
+	MOVQ 56(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 8(SP)
+	ADDQ AX, SI
+	ADCQ DX, (SP)
+	ADCQ $0x00, 8(SP)
+
+	// | a2
+	// | w4 @ R13
+	MOVQ 16(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+	ADCQ $0x00, CX
+
+	// | w5 @ R14
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, CX
+	ADDQ AX, R14
+	ADCQ DX, R15
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, SI
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADCQ $0x00, SI
+
+	// | w7 @ CX
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, (SP)
+	ADDQ AX, CX
+	ADCQ DX, SI
+	ADCQ $0x00, (SP)
+
+	// | w8 @ SI
+	MOVQ 48(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 8(SP)
+	ADDQ AX, SI
+	ADCQ DX, (SP)
+	ADCQ $0x00, 8(SP)
+
+	// | w9 @ (SP)
+	MOVQ 56(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 16(SP)
+	ADDQ AX, (SP)
+	ADCQ DX, 8(SP)
+	ADCQ $0x00, 16(SP)
+
+	// | a3
+	// | w6 @ R15
+	MOVQ 24(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADCQ $0x00, SI
+	ADCQ $0x00, (SP)
+
+	// | w7 @ CX
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, (SP)
+	ADDQ AX, CX
+	ADCQ DX, SI
+	ADCQ $0x00, (SP)
+
+	// | w8 @ SI
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 8(SP)
+	ADDQ AX, SI
+	ADCQ DX, (SP)
+	ADCQ $0x00, 8(SP)
+
+	// | w9 @ (SP)
+	MOVQ 48(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 16(SP)
+	ADDQ AX, (SP)
+	ADCQ DX, 8(SP)
+	ADCQ $0x00, 16(SP)
+
+	// | w10 @ 8(SP)
+	MOVQ 56(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 24(SP)
+	ADDQ AX, 8(SP)
+	ADCQ DX, 16(SP)
+	ADCQ $0x00, 24(SP)
+
+	// | a4
+	// | w8 @ SI
+	MOVQ 32(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, SI
+	ADCQ DX, (SP)
+	ADCQ $0x00, 8(SP)
+	ADCQ $0x00, 16(SP)
+
+	// | w9 @ (SP)
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 16(SP)
+	ADDQ AX, (SP)
+	ADCQ DX, 8(SP)
+	ADCQ $0x00, 16(SP)
+
+	// | w10 @ 8(SP)
+	MOVQ 48(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 24(SP)
+	ADDQ AX, 8(SP)
+	ADCQ DX, 16(SP)
+	ADCQ $0x00, 24(SP)
+
+	// | w11 @ 16(SP)
+	MOVQ 56(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 32(SP)
+	ADDQ AX, 16(SP)
+	ADCQ DX, 24(SP)
+	ADCQ $0x00, 32(SP)
+
+	// | a5
+	// | w10 @ 8(SP)
+	MOVQ 40(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, 8(SP)
+	ADCQ DX, 16(SP)
+	ADCQ $0x00, 24(SP)
+	ADCQ $0x00, 32(SP)
+
+	// | w11 @ 16(SP)
+	MOVQ 48(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 32(SP)
+	ADDQ AX, 16(SP)
+	ADCQ DX, 24(SP)
+	ADCQ $0x00, 32(SP)
+
+	// | w12 @ 24(SP)
+	MOVQ 56(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 40(SP)
+	ADDQ AX, 24(SP)
+	ADCQ DX, 32(SP)
+	ADCQ $0x00, 40(SP)
+
+	// | a6
+	// | w12 @ 24(SP)
+	MOVQ 48(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, 24(SP)
+	ADCQ DX, 32(SP)
+	ADCQ $0x00, 40(SP)
+
+	// | w13 @ 32(SP)
+	MOVQ 56(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 48(SP)
+	ADDQ AX, 32(SP)
+	ADCQ DX, 40(SP)
+	ADCQ $0x00, 48(SP)
+
+	// | a7
+	// | w14 @ 40(SP)
+	MOVQ 56(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, 40(SP)
+	ADCQ DX, 48(SP)
+
+	// |
+	MOVQ c+0(FP), DI
+	MOVQ R9, (DI)
+	MOVQ R10, 8(DI)
+	MOVQ R11, 16(DI)
+	MOVQ R12, 24(DI)
+	MOVQ R13, 32(DI)
+	MOVQ R14, 40(DI)
+	MOVQ R15, 48(DI)
+	MOVQ CX, 56(DI)
+	MOVQ SI, 64(DI)
+	MOVQ (SP), BX
+	MOVQ BX, 72(DI)
+	MOVQ 8(SP), BX
+	MOVQ BX, 80(DI)
+	MOVQ 16(SP), BX
+	MOVQ BX, 88(DI)
+	MOVQ 24(SP), BX
+	MOVQ BX, 96(DI)
+	MOVQ 32(SP), BX
+	MOVQ BX, 104(DI)
+	MOVQ 40(SP), BX
+	MOVQ BX, 112(DI)
+	MOVQ 48(SP), BX
+	MOVQ BX, 120(DI)
 	RET
 
 // func montsquare8(c *Fe512, a *Fe512)
-TEXT ·montsquare8(SB), $0-16
+TEXT ·montsquare8(SB), $88-16
+	MOVQ a+8(FP), DI
+	XORQ R11, R11
+	XORQ R12, R12
+	XORQ R13, R13
+	XORQ R14, R14
+	XORQ R15, R15
+	XORQ CX, CX
+	XORQ SI, SI
+	MOVQ $0x00000000, (SP)
+	MOVQ $0x00000000, 8(SP)
+	MOVQ $0x00000000, 16(SP)
+	MOVQ $0x00000000, 24(SP)
+	MOVQ $0x00000000, 32(SP)
+	MOVQ $0x00000000, 40(SP)
+	MOVQ $0x00000000, 48(SP)
+
+	// | a0
+	// | w0 @ R9
+	MOVQ (DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	MOVQ AX, R9
+	MOVQ DX, R10
+
+	// | w1 @ R10
+	MOVQ 8(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R12
+	ADDQ AX, R10
+	ADCQ DX, R11
+
+	// | w2 @ R11
+	MOVQ 16(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R13
+	ADDQ AX, R11
+	ADCQ DX, R12
+	ADCQ $0x00, R13
+
+	// | w3 @ R12
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R14
+	ADDQ AX, R12
+	ADCQ DX, R13
+	ADCQ $0x00, R14
+
+	// | w4 @ R13
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R15
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+
+	// | w5 @ R14
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, CX
+	ADDQ AX, R14
+	ADCQ DX, R15
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	MOVQ 48(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, SI
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADCQ $0x00, SI
+
+	// | w7 @ CX
+	MOVQ 56(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, (SP)
+	ADDQ AX, CX
+	ADCQ DX, SI
+	ADCQ $0x00, (SP)
+
+	// | a1
+	// | w2 @ R11
+	MOVQ 8(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, R12
+	ADCQ $0x00, R13
+	ADCQ $0x00, R14
+
+	// | w3 @ R12
+	MOVQ 16(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R14
+	ADDQ AX, R12
+	ADCQ DX, R13
+	ADCQ $0x00, R14
+
+	// | w4 @ R13
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, R15
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+
+	// | w5 @ R14
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, CX
+	ADDQ AX, R14
+	ADCQ DX, R15
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, SI
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADCQ $0x00, SI
+
+	// | w7 @ CX
+	MOVQ 48(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, (SP)
+	ADDQ AX, CX
+	ADCQ DX, SI
+	ADCQ $0x00, (SP)
+
+	// | w8 @ SI
+	MOVQ 56(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 8(SP)
+	ADDQ AX, SI
+	ADCQ DX, (SP)
+	ADCQ $0x00, 8(SP)
+
+	// | a2
+	// | w4 @ R13
+	MOVQ 16(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, R14
+	ADCQ $0x00, R15
+	ADCQ $0x00, CX
+
+	// | w5 @ R14
+	MOVQ 24(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, CX
+	ADDQ AX, R14
+	ADCQ DX, R15
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, SI
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADCQ $0x00, SI
+
+	// | w7 @ CX
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, (SP)
+	ADDQ AX, CX
+	ADCQ DX, SI
+	ADCQ $0x00, (SP)
+
+	// | w8 @ SI
+	MOVQ 48(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 8(SP)
+	ADDQ AX, SI
+	ADCQ DX, (SP)
+	ADCQ $0x00, 8(SP)
+
+	// | w9 @ (SP)
+	MOVQ 56(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 16(SP)
+	ADDQ AX, (SP)
+	ADCQ DX, 8(SP)
+	ADCQ $0x00, 16(SP)
+
+	// | a3
+	// | w6 @ R15
+	MOVQ 24(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADCQ $0x00, SI
+	ADCQ $0x00, (SP)
+
+	// | w7 @ CX
+	MOVQ 32(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, (SP)
+	ADDQ AX, CX
+	ADCQ DX, SI
+	ADCQ $0x00, (SP)
+
+	// | w8 @ SI
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 8(SP)
+	ADDQ AX, SI
+	ADCQ DX, (SP)
+	ADCQ $0x00, 8(SP)
+
+	// | w9 @ (SP)
+	MOVQ 48(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 16(SP)
+	ADDQ AX, (SP)
+	ADCQ DX, 8(SP)
+	ADCQ $0x00, 16(SP)
+
+	// | w10 @ 8(SP)
+	MOVQ 56(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 24(SP)
+	ADDQ AX, 8(SP)
+	ADCQ DX, 16(SP)
+	ADCQ $0x00, 24(SP)
+
+	// | a4
+	// | w8 @ SI
+	MOVQ 32(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, SI
+	ADCQ DX, (SP)
+	ADCQ $0x00, 8(SP)
+	ADCQ $0x00, 16(SP)
+
+	// | w9 @ (SP)
+	MOVQ 40(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 16(SP)
+	ADDQ AX, (SP)
+	ADCQ DX, 8(SP)
+	ADCQ $0x00, 16(SP)
+
+	// | w10 @ 8(SP)
+	MOVQ 48(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 24(SP)
+	ADDQ AX, 8(SP)
+	ADCQ DX, 16(SP)
+	ADCQ $0x00, 24(SP)
+
+	// | w11 @ 16(SP)
+	MOVQ 56(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 32(SP)
+	ADDQ AX, 16(SP)
+	ADCQ DX, 24(SP)
+	ADCQ $0x00, 32(SP)
+
+	// | a5
+	// | w10 @ 8(SP)
+	MOVQ 40(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, 8(SP)
+	ADCQ DX, 16(SP)
+	ADCQ $0x00, 24(SP)
+	ADCQ $0x00, 32(SP)
+
+	// | w11 @ 16(SP)
+	MOVQ 48(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 32(SP)
+	ADDQ AX, 16(SP)
+	ADCQ DX, 24(SP)
+	ADCQ $0x00, 32(SP)
+
+	// | w12 @ 24(SP)
+	MOVQ 56(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 40(SP)
+	ADDQ AX, 24(SP)
+	ADCQ DX, 32(SP)
+	ADCQ $0x00, 40(SP)
+
+	// | a6
+	// | w12 @ 24(SP)
+	MOVQ 48(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, 24(SP)
+	ADCQ DX, 32(SP)
+	ADCQ $0x00, 40(SP)
+
+	// | w13 @ 32(SP)
+	MOVQ 56(DI), AX
+	MULQ R8
+	ADDQ AX, AX
+	ADCQ DX, DX
+	ADCQ $0x00, 48(SP)
+	ADDQ AX, 32(SP)
+	ADCQ DX, 40(SP)
+	ADCQ $0x00, 48(SP)
+
+	// | a7
+	// | w14 @ 40(SP)
+	MOVQ 56(DI), R8
+	MOVQ R8, AX
+	MULQ R8
+	ADDQ AX, 40(SP)
+	ADCQ DX, 48(SP)
+
+	// |
+	// | Montgomerry Reduction
+	MOVQ SI, 56(SP)
+	MOVQ CX, 64(SP)
+
+	// |
+	// | (u @ R8) = (w0 @ R9) * inp
+	MOVQ R9, AX
+	MULQ ·inp8+0(SB)
+	MOVQ AX, R8
+
+	// | w0 @ R9
+	XORQ SI, SI
+	MOVQ ·modulus8+0(SB), AX
+	MULQ R8
+	ADDQ AX, R9
+	ADCQ DX, SI
+
+	// | w1 @ R10
+	XORQ CX, CX
+	MOVQ ·modulus8+8(SB), AX
+	MULQ R8
+	ADDQ AX, R10
+	ADCQ DX, CX
+	ADDQ SI, R10
+	ADCQ $0x00, CX
+
+	// | w2 @ R11
+	XORQ SI, SI
+	MOVQ ·modulus8+16(SB), AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, SI
+	ADDQ CX, R11
+	ADCQ $0x00, SI
+
+	// | w3 @ R12
+	XORQ CX, CX
+	MOVQ ·modulus8+24(SB), AX
+	MULQ R8
+	ADDQ AX, R12
+	ADCQ DX, CX
+	ADDQ SI, R12
+	ADCQ $0x00, CX
+
+	// | w4 @ R13
+	XORQ SI, SI
+	MOVQ ·modulus8+32(SB), AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, SI
+	ADDQ CX, R13
+	ADCQ $0x00, SI
+
+	// | w5 @ R14
+	XORQ CX, CX
+	MOVQ ·modulus8+40(SB), AX
+	MULQ R8
+	ADDQ AX, R14
+	ADCQ DX, CX
+	ADDQ SI, R14
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	XORQ SI, SI
+	MOVQ ·modulus8+48(SB), AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, SI
+	ADDQ CX, R15
+	ADCQ $0x00, SI
+
+	// | w7 @ 64(SP)
+	XORQ CX, CX
+	MOVQ ·modulus8+56(SB), AX
+	MULQ R8
+	ADDQ AX, 64(SP)
+	ADCQ DX, CX
+	ADDQ SI, 64(SP)
+	ADCQ $0x00, CX
+
+	// | w8 @ 56(SP)
+	ADDQ CX, 56(SP)
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// |
+	MOVQ (SP), R9
+
+	// | (u @ R8) = (w1 @ R10) * inp
+	MOVQ R10, AX
+	MULQ ·inp8+0(SB)
+	MOVQ AX, R8
+
+	// | w1 @ R10
+	XORQ SI, SI
+	MOVQ ·modulus8+0(SB), AX
+	MULQ R8
+	ADDQ AX, R10
+	ADCQ DX, SI
+
+	// | w2 @ R11
+	XORQ CX, CX
+	MOVQ ·modulus8+8(SB), AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, CX
+	ADDQ SI, R11
+	ADCQ $0x00, CX
+
+	// | w3 @ R12
+	XORQ SI, SI
+	MOVQ ·modulus8+16(SB), AX
+	MULQ R8
+	ADDQ AX, R12
+	ADCQ DX, SI
+	ADDQ CX, R12
+	ADCQ $0x00, SI
+
+	// | w4 @ R13
+	XORQ CX, CX
+	MOVQ ·modulus8+24(SB), AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, CX
+	ADDQ SI, R13
+	ADCQ $0x00, CX
+
+	// | w5 @ R14
+	XORQ SI, SI
+	MOVQ ·modulus8+32(SB), AX
+	MULQ R8
+	ADDQ AX, R14
+	ADCQ DX, SI
+	ADDQ CX, R14
+	ADCQ $0x00, SI
+
+	// | w6 @ R15
+	XORQ CX, CX
+	MOVQ ·modulus8+40(SB), AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADDQ SI, R15
+	ADCQ $0x00, CX
+
+	// | w7 @ 64(SP)
+	XORQ SI, SI
+	MOVQ ·modulus8+48(SB), AX
+	MULQ R8
+	ADDQ AX, 64(SP)
+	ADCQ DX, SI
+	ADDQ CX, 64(SP)
+	ADCQ $0x00, SI
+
+	// | w8 @ 56(SP)
+	XORQ CX, CX
+	MOVQ ·modulus8+56(SB), AX
+	MULQ R8
+	ADDQ AX, 56(SP)
+	ADCQ DX, CX
+	ADDQ SI, 56(SP)
+	ADCQ $0x00, CX
+
+	// | w9 @ R9
+	ADDQ CX, DI
+	ADCQ DI, R9
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// |
+	MOVQ 8(SP), R10
+
+	// | (u @ R8) = (w2 @ R11) * inp
+	MOVQ R11, AX
+	MULQ ·inp8+0(SB)
+	MOVQ AX, R8
+
+	// | w2 @ R11
+	XORQ SI, SI
+	MOVQ ·modulus8+0(SB), AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, SI
+
+	// | w3 @ R12
+	XORQ CX, CX
+	MOVQ ·modulus8+8(SB), AX
+	MULQ R8
+	ADDQ AX, R12
+	ADCQ DX, CX
+	ADDQ SI, R12
+	ADCQ $0x00, CX
+
+	// | w4 @ R13
+	XORQ SI, SI
+	MOVQ ·modulus8+16(SB), AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, SI
+	ADDQ CX, R13
+	ADCQ $0x00, SI
+
+	// | w5 @ R14
+	XORQ CX, CX
+	MOVQ ·modulus8+24(SB), AX
+	MULQ R8
+	ADDQ AX, R14
+	ADCQ DX, CX
+	ADDQ SI, R14
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	XORQ SI, SI
+	MOVQ ·modulus8+32(SB), AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, SI
+	ADDQ CX, R15
+	ADCQ $0x00, SI
+
+	// | w7 @ 64(SP)
+	XORQ CX, CX
+	MOVQ ·modulus8+40(SB), AX
+	MULQ R8
+	ADDQ AX, 64(SP)
+	ADCQ DX, CX
+	ADDQ SI, 64(SP)
+	ADCQ $0x00, CX
+
+	// | w8 @ 56(SP)
+	XORQ SI, SI
+	MOVQ ·modulus8+48(SB), AX
+	MULQ R8
+	ADDQ AX, 56(SP)
+	ADCQ DX, SI
+	ADDQ CX, 56(SP)
+	ADCQ $0x00, SI
+
+	// | w9 @ R9
+	XORQ CX, CX
+	MOVQ ·modulus8+56(SB), AX
+	MULQ R8
+	ADDQ AX, R9
+	ADCQ DX, CX
+	ADDQ SI, R9
+	ADCQ $0x00, CX
+
+	// | w10 @ R10
+	ADDQ CX, DI
+	ADCQ DI, R10
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// |
+	MOVQ 16(SP), R11
+
+	// | (u @ R8) = (w3 @ R12) * inp
+	MOVQ R12, AX
+	MULQ ·inp8+0(SB)
+	MOVQ AX, R8
+
+	// | w3 @ R12
+	XORQ SI, SI
+	MOVQ ·modulus8+0(SB), AX
+	MULQ R8
+	ADDQ AX, R12
+	ADCQ DX, SI
+
+	// | w4 @ R13
+	XORQ CX, CX
+	MOVQ ·modulus8+8(SB), AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, CX
+	ADDQ SI, R13
+	ADCQ $0x00, CX
+
+	// | w5 @ R14
+	XORQ SI, SI
+	MOVQ ·modulus8+16(SB), AX
+	MULQ R8
+	ADDQ AX, R14
+	ADCQ DX, SI
+	ADDQ CX, R14
+	ADCQ $0x00, SI
+
+	// | w6 @ R15
+	XORQ CX, CX
+	MOVQ ·modulus8+24(SB), AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADDQ SI, R15
+	ADCQ $0x00, CX
+
+	// | w7 @ 64(SP)
+	XORQ SI, SI
+	MOVQ ·modulus8+32(SB), AX
+	MULQ R8
+	ADDQ AX, 64(SP)
+	ADCQ DX, SI
+	ADDQ CX, 64(SP)
+	ADCQ $0x00, SI
+
+	// | w8 @ 56(SP)
+	XORQ CX, CX
+	MOVQ ·modulus8+40(SB), AX
+	MULQ R8
+	ADDQ AX, 56(SP)
+	ADCQ DX, CX
+	ADDQ SI, 56(SP)
+	ADCQ $0x00, CX
+
+	// | w9 @ R9
+	XORQ SI, SI
+	MOVQ ·modulus8+48(SB), AX
+	MULQ R8
+	ADDQ AX, R9
+	ADCQ DX, SI
+	ADDQ CX, R9
+	ADCQ $0x00, SI
+
+	// | w10 @ R10
+	XORQ CX, CX
+	MOVQ ·modulus8+56(SB), AX
+	MULQ R8
+	ADDQ AX, R10
+	ADCQ DX, CX
+	ADDQ SI, R10
+	ADCQ $0x00, CX
+
+	// | w11 @ R11
+	ADDQ CX, DI
+	ADCQ DI, R11
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// |
+	MOVQ 24(SP), R12
+
+	// | (u @ R8) = (w4 @ R13) * inp
+	MOVQ R13, AX
+	MULQ ·inp8+0(SB)
+	MOVQ AX, R8
+
+	// | w4 @ R13
+	XORQ SI, SI
+	MOVQ ·modulus8+0(SB), AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, SI
+
+	// | w5 @ R14
+	XORQ CX, CX
+	MOVQ ·modulus8+8(SB), AX
+	MULQ R8
+	ADDQ AX, R14
+	ADCQ DX, CX
+	ADDQ SI, R14
+	ADCQ $0x00, CX
+
+	// | w6 @ R15
+	XORQ SI, SI
+	MOVQ ·modulus8+16(SB), AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, SI
+	ADDQ CX, R15
+	ADCQ $0x00, SI
+
+	// | w7 @ 64(SP)
+	XORQ CX, CX
+	MOVQ ·modulus8+24(SB), AX
+	MULQ R8
+	ADDQ AX, 64(SP)
+	ADCQ DX, CX
+	ADDQ SI, 64(SP)
+	ADCQ $0x00, CX
+
+	// | w8 @ 56(SP)
+	XORQ SI, SI
+	MOVQ ·modulus8+32(SB), AX
+	MULQ R8
+	ADDQ AX, 56(SP)
+	ADCQ DX, SI
+	ADDQ CX, 56(SP)
+	ADCQ $0x00, SI
+
+	// | w9 @ R9
+	XORQ CX, CX
+	MOVQ ·modulus8+40(SB), AX
+	MULQ R8
+	ADDQ AX, R9
+	ADCQ DX, CX
+	ADDQ SI, R9
+	ADCQ $0x00, CX
+
+	// | w10 @ R10
+	XORQ SI, SI
+	MOVQ ·modulus8+48(SB), AX
+	MULQ R8
+	ADDQ AX, R10
+	ADCQ DX, SI
+	ADDQ CX, R10
+	ADCQ $0x00, SI
+
+	// | w11 @ R11
+	XORQ CX, CX
+	MOVQ ·modulus8+56(SB), AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, CX
+	ADDQ SI, R11
+	ADCQ $0x00, CX
+
+	// | w12 @ R12
+	ADDQ CX, DI
+	ADCQ DI, R12
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// |
+	MOVQ 32(SP), R13
+
+	// | (u @ R8) = (w5 @ R14) * inp
+	MOVQ R14, AX
+	MULQ ·inp8+0(SB)
+	MOVQ AX, R8
+
+	// | w5 @ R14
+	XORQ SI, SI
+	MOVQ ·modulus8+0(SB), AX
+	MULQ R8
+	ADDQ AX, R14
+	ADCQ DX, SI
+
+	// | w6 @ R15
+	XORQ CX, CX
+	MOVQ ·modulus8+8(SB), AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, CX
+	ADDQ SI, R15
+	ADCQ $0x00, CX
+
+	// | w7 @ 64(SP)
+	XORQ SI, SI
+	MOVQ ·modulus8+16(SB), AX
+	MULQ R8
+	ADDQ AX, 64(SP)
+	ADCQ DX, SI
+	ADDQ CX, 64(SP)
+	ADCQ $0x00, SI
+
+	// | w8 @ 56(SP)
+	XORQ CX, CX
+	MOVQ ·modulus8+24(SB), AX
+	MULQ R8
+	ADDQ AX, 56(SP)
+	ADCQ DX, CX
+	ADDQ SI, 56(SP)
+	ADCQ $0x00, CX
+
+	// | w9 @ R9
+	XORQ SI, SI
+	MOVQ ·modulus8+32(SB), AX
+	MULQ R8
+	ADDQ AX, R9
+	ADCQ DX, SI
+	ADDQ CX, R9
+	ADCQ $0x00, SI
+
+	// | w10 @ R10
+	XORQ CX, CX
+	MOVQ ·modulus8+40(SB), AX
+	MULQ R8
+	ADDQ AX, R10
+	ADCQ DX, CX
+	ADDQ SI, R10
+	ADCQ $0x00, CX
+
+	// | w11 @ R11
+	XORQ SI, SI
+	MOVQ ·modulus8+48(SB), AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, SI
+	ADDQ CX, R11
+	ADCQ $0x00, SI
+
+	// | w12 @ R12
+	XORQ CX, CX
+	MOVQ ·modulus8+56(SB), AX
+	MULQ R8
+	ADDQ AX, R12
+	ADCQ DX, CX
+	ADDQ SI, R12
+	ADCQ $0x00, CX
+
+	// | w13 @ R13
+	ADDQ CX, DI
+	ADCQ DI, R13
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// |
+	MOVQ 40(SP), R14
+
+	// | (u @ R8) = (w6 @ R15) * inp
+	MOVQ R15, AX
+	MULQ ·inp8+0(SB)
+	MOVQ AX, R8
+
+	// | w6 @ R15
+	XORQ SI, SI
+	MOVQ ·modulus8+0(SB), AX
+	MULQ R8
+	ADDQ AX, R15
+	ADCQ DX, SI
+
+	// | w7 @ 64(SP)
+	XORQ CX, CX
+	MOVQ ·modulus8+8(SB), AX
+	MULQ R8
+	ADDQ AX, 64(SP)
+	ADCQ DX, CX
+	ADDQ SI, 64(SP)
+	ADCQ $0x00, CX
+
+	// | w8 @ 56(SP)
+	XORQ SI, SI
+	MOVQ ·modulus8+16(SB), AX
+	MULQ R8
+	ADDQ AX, 56(SP)
+	ADCQ DX, SI
+	ADDQ CX, 56(SP)
+	ADCQ $0x00, SI
+
+	// | w9 @ R9
+	XORQ CX, CX
+	MOVQ ·modulus8+24(SB), AX
+	MULQ R8
+	ADDQ AX, R9
+	ADCQ DX, CX
+	ADDQ SI, R9
+	ADCQ $0x00, CX
+
+	// | w10 @ R10
+	XORQ SI, SI
+	MOVQ ·modulus8+32(SB), AX
+	MULQ R8
+	ADDQ AX, R10
+	ADCQ DX, SI
+	ADDQ CX, R10
+	ADCQ $0x00, SI
+
+	// | w11 @ R11
+	XORQ CX, CX
+	MOVQ ·modulus8+40(SB), AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, CX
+	ADDQ SI, R11
+	ADCQ $0x00, CX
+
+	// | w12 @ R12
+	XORQ SI, SI
+	MOVQ ·modulus8+48(SB), AX
+	MULQ R8
+	ADDQ AX, R12
+	ADCQ DX, SI
+	ADDQ CX, R12
+	ADCQ $0x00, SI
+
+	// | w13 @ R13
+	XORQ CX, CX
+	MOVQ ·modulus8+56(SB), AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, CX
+	ADDQ SI, R13
+	ADCQ $0x00, CX
+
+	// | w14 @ R14
+	ADDQ CX, DI
+	ADCQ DI, R14
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// |
+	MOVQ 48(SP), R15
+
+	// | (u @ R8) = (w7 @ 64(SP)) * inp
+	MOVQ 64(SP), AX
+	MULQ ·inp8+0(SB)
+	MOVQ AX, R8
+
+	// | w7 @ 64(SP)
+	XORQ SI, SI
+	MOVQ ·modulus8+0(SB), AX
+	MULQ R8
+	ADDQ AX, 64(SP)
+	ADCQ DX, SI
+
+	// | w8 @ 56(SP)
+	XORQ CX, CX
+	MOVQ ·modulus8+8(SB), AX
+	MULQ R8
+	ADDQ AX, 56(SP)
+	ADCQ DX, CX
+	ADDQ SI, 56(SP)
+	ADCQ $0x00, CX
+
+	// | w9 @ R9
+	XORQ SI, SI
+	MOVQ ·modulus8+16(SB), AX
+	MULQ R8
+	ADDQ AX, R9
+	ADCQ DX, SI
+	ADDQ CX, R9
+	ADCQ $0x00, SI
+
+	// | w10 @ R10
+	XORQ CX, CX
+	MOVQ ·modulus8+24(SB), AX
+	MULQ R8
+	ADDQ AX, R10
+	ADCQ DX, CX
+	ADDQ SI, R10
+	ADCQ $0x00, CX
+
+	// | w11 @ R11
+	XORQ SI, SI
+	MOVQ ·modulus8+32(SB), AX
+	MULQ R8
+	ADDQ AX, R11
+	ADCQ DX, SI
+	ADDQ CX, R11
+	ADCQ $0x00, SI
+
+	// | w12 @ R12
+	XORQ CX, CX
+	MOVQ ·modulus8+40(SB), AX
+	MULQ R8
+	ADDQ AX, R12
+	ADCQ DX, CX
+	ADDQ SI, R12
+	ADCQ $0x00, CX
+
+	// | w13 @ R13
+	XORQ SI, SI
+	MOVQ ·modulus8+48(SB), AX
+	MULQ R8
+	ADDQ AX, R13
+	ADCQ DX, SI
+	ADDQ CX, R13
+	ADCQ $0x00, SI
+
+	// | w14 @ R14
+	XORQ CX, CX
+	MOVQ ·modulus8+56(SB), AX
+	MULQ R8
+	ADDQ AX, R14
+	ADCQ DX, CX
+	ADDQ SI, R14
+	ADCQ $0x00, CX
+
+	// | w15 @ R15
+	ADDQ CX, DI
+	ADCQ DI, R15
+	MOVQ $0x0000000000000000, DI
+	ADCQ $0x00, DI
+
+	// | Compare & Return
+	MOVQ    56(SP), R8
+	SUBQ    ·modulus8+0(SB), R8
+	MOVQ    R9, CX
+	SBBQ    ·modulus8+8(SB), CX
+	MOVQ    R10, AX
+	SBBQ    ·modulus8+16(SB), AX
+	MOVQ    R11, DX
+	SBBQ    ·modulus8+24(SB), DX
+	MOVQ    R12, SI
+	SBBQ    ·modulus8+32(SB), SI
+	MOVQ    R13, BX
+	SBBQ    ·modulus8+40(SB), BX
+	MOVQ    BX, 64(SP)
+	MOVQ    R14, BX
+	SBBQ    ·modulus8+48(SB), BX
+	MOVQ    BX, 72(SP)
+	MOVQ    R15, BX
+	SBBQ    ·modulus8+56(SB), BX
+	MOVQ    BX, 80(SP)
+	SBBQ    $0x00, DI
+	MOVQ    c+0(FP), DI
+	CMOVQCS 56(SP), R8
+	MOVQ    R8, (DI)
+	CMOVQCC CX, R9
+	MOVQ    R9, 8(DI)
+	CMOVQCC AX, R10
+	MOVQ    R10, 16(DI)
+	CMOVQCC DX, R11
+	MOVQ    R11, 24(DI)
+	CMOVQCC SI, R12
+	MOVQ    R12, 32(DI)
+	CMOVQCC 64(SP), R13
+	MOVQ    R13, 40(DI)
+	CMOVQCC 72(SP), R14
+	MOVQ    R14, 48(DI)
+	CMOVQCC 80(SP), R15
+	MOVQ    R15, 56(DI)
 	RET

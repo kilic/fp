@@ -120,7 +120,7 @@ func (f *Field256) Neg(c, a *Fe256) {
 }
 
 func (f *Field256) Square(c, a *Fe256) {
-	montmul4(c, a, a)
+	montsquare4(c, a)
 }
 
 func (f *Field256) Mul(c, a, b *Fe256) {
@@ -141,8 +141,8 @@ func (f *Field256) Exp(c, a *Fe256, e *big.Int) {
 func (f *Field256) InvMontUp(inv, fe *Fe256) {
 	u := new(Fe256).Set(f.P)
 	v := new(Fe256).Set(fe)
-	s := &Fe256{1, 0, 0, 0}
-	r := &Fe256{0, 0, 0, 0}
+	s := &Fe256{1}
+	r := &Fe256{0}
 	var k int
 	var z uint64
 	var found = false
@@ -183,15 +183,15 @@ func (f *Field256) InvMontUp(inv, fe *Fe256) {
 		}
 		inv.Set(u)
 	} else {
-		inv.Set(&Fe256{0, 0, 0, 0})
+		inv.Set(&Fe256{0})
 	}
 }
 
 func (f *Field256) InvMontDown(inv, fe *Fe256) {
 	u := new(Fe256).Set(f.P)
 	v := new(Fe256).Set(fe)
-	s := &Fe256{1, 0, 0, 0}
-	r := &Fe256{0, 0, 0, 0}
+	s := &Fe256{1}
+	r := &Fe256{0}
 	var k int
 	var z uint64
 	var found = false
@@ -238,7 +238,7 @@ func (f *Field256) InvMontDown(inv, fe *Fe256) {
 		}
 		inv.Set(u)
 	} else {
-		inv.Set(&Fe256{0, 0, 0, 0})
+		inv.Set(&Fe256{0})
 	}
 }
 
@@ -396,7 +396,7 @@ func (f *Field320) Neg(c, a *Fe320) {
 }
 
 func (f *Field320) Square(c, a *Fe320) {
-	montmul5(c, a, a)
+	montsquare5(c, a)
 }
 
 func (f *Field320) Mul(c, a, b *Fe320) {
@@ -417,8 +417,8 @@ func (f *Field320) Exp(c, a *Fe320, e *big.Int) {
 func (f *Field320) InvMontUp(inv, fe *Fe320) {
 	u := new(Fe320).Set(f.P)
 	v := new(Fe320).Set(fe)
-	s := &Fe320{1, 0, 0, 0}
-	r := &Fe320{0, 0, 0, 0}
+	s := &Fe320{1}
+	r := &Fe320{0}
 	var k int
 	var z uint64
 	var found = false
@@ -459,15 +459,15 @@ func (f *Field320) InvMontUp(inv, fe *Fe320) {
 		}
 		inv.Set(u)
 	} else {
-		inv.Set(&Fe320{0, 0, 0, 0})
+		inv.Set(&Fe320{0})
 	}
 }
 
 func (f *Field320) InvMontDown(inv, fe *Fe320) {
 	u := new(Fe320).Set(f.P)
 	v := new(Fe320).Set(fe)
-	s := &Fe320{1, 0, 0, 0}
-	r := &Fe320{0, 0, 0, 0}
+	s := &Fe320{1}
+	r := &Fe320{0}
 	var k int
 	var z uint64
 	var found = false
@@ -514,7 +514,7 @@ func (f *Field320) InvMontDown(inv, fe *Fe320) {
 		}
 		inv.Set(u)
 	} else {
-		inv.Set(&Fe320{0, 0, 0, 0})
+		inv.Set(&Fe320{0})
 	}
 }
 
@@ -672,7 +672,7 @@ func (f *Field384) Neg(c, a *Fe384) {
 }
 
 func (f *Field384) Square(c, a *Fe384) {
-	montmul6(c, a, a)
+	montsquare6(c, a)
 }
 
 func (f *Field384) Mul(c, a, b *Fe384) {
@@ -693,8 +693,8 @@ func (f *Field384) Exp(c, a *Fe384, e *big.Int) {
 func (f *Field384) InvMontUp(inv, fe *Fe384) {
 	u := new(Fe384).Set(f.P)
 	v := new(Fe384).Set(fe)
-	s := &Fe384{1, 0, 0, 0}
-	r := &Fe384{0, 0, 0, 0}
+	s := &Fe384{1}
+	r := &Fe384{0}
 	var k int
 	var z uint64
 	var found = false
@@ -735,15 +735,15 @@ func (f *Field384) InvMontUp(inv, fe *Fe384) {
 		}
 		inv.Set(u)
 	} else {
-		inv.Set(&Fe384{0, 0, 0, 0})
+		inv.Set(&Fe384{0})
 	}
 }
 
 func (f *Field384) InvMontDown(inv, fe *Fe384) {
 	u := new(Fe384).Set(f.P)
 	v := new(Fe384).Set(fe)
-	s := &Fe384{1, 0, 0, 0}
-	r := &Fe384{0, 0, 0, 0}
+	s := &Fe384{1}
+	r := &Fe384{0}
 	var k int
 	var z uint64
 	var found = false
@@ -790,7 +790,7 @@ func (f *Field384) InvMontDown(inv, fe *Fe384) {
 		}
 		inv.Set(u)
 	} else {
-		inv.Set(&Fe384{0, 0, 0, 0})
+		inv.Set(&Fe384{0})
 	}
 }
 
@@ -948,7 +948,7 @@ func (f *Field448) Neg(c, a *Fe448) {
 }
 
 func (f *Field448) Square(c, a *Fe448) {
-	montmul7(c, a, a)
+	montsquare7(c, a)
 }
 
 func (f *Field448) Mul(c, a, b *Fe448) {
@@ -969,8 +969,8 @@ func (f *Field448) Exp(c, a *Fe448, e *big.Int) {
 func (f *Field448) InvMontUp(inv, fe *Fe448) {
 	u := new(Fe448).Set(f.P)
 	v := new(Fe448).Set(fe)
-	s := &Fe448{1, 0, 0, 0}
-	r := &Fe448{0, 0, 0, 0}
+	s := &Fe448{1}
+	r := &Fe448{0}
 	var k int
 	var z uint64
 	var found = false
@@ -1011,15 +1011,15 @@ func (f *Field448) InvMontUp(inv, fe *Fe448) {
 		}
 		inv.Set(u)
 	} else {
-		inv.Set(&Fe448{0, 0, 0, 0})
+		inv.Set(&Fe448{0})
 	}
 }
 
 func (f *Field448) InvMontDown(inv, fe *Fe448) {
 	u := new(Fe448).Set(f.P)
 	v := new(Fe448).Set(fe)
-	s := &Fe448{1, 0, 0, 0}
-	r := &Fe448{0, 0, 0, 0}
+	s := &Fe448{1}
+	r := &Fe448{0}
 	var k int
 	var z uint64
 	var found = false
@@ -1066,7 +1066,7 @@ func (f *Field448) InvMontDown(inv, fe *Fe448) {
 		}
 		inv.Set(u)
 	} else {
-		inv.Set(&Fe448{0, 0, 0, 0})
+		inv.Set(&Fe448{0})
 	}
 }
 
@@ -1224,7 +1224,7 @@ func (f *Field512) Neg(c, a *Fe512) {
 }
 
 func (f *Field512) Square(c, a *Fe512) {
-	montmul8(c, a, a)
+	montsquare8(c, a)
 }
 
 func (f *Field512) Mul(c, a, b *Fe512) {
@@ -1245,8 +1245,8 @@ func (f *Field512) Exp(c, a *Fe512, e *big.Int) {
 func (f *Field512) InvMontUp(inv, fe *Fe512) {
 	u := new(Fe512).Set(f.P)
 	v := new(Fe512).Set(fe)
-	s := &Fe512{1, 0, 0, 0}
-	r := &Fe512{0, 0, 0, 0}
+	s := &Fe512{1}
+	r := &Fe512{0}
 	var k int
 	var z uint64
 	var found = false
@@ -1287,15 +1287,15 @@ func (f *Field512) InvMontUp(inv, fe *Fe512) {
 		}
 		inv.Set(u)
 	} else {
-		inv.Set(&Fe512{0, 0, 0, 0})
+		inv.Set(&Fe512{0})
 	}
 }
 
 func (f *Field512) InvMontDown(inv, fe *Fe512) {
 	u := new(Fe512).Set(f.P)
 	v := new(Fe512).Set(fe)
-	s := &Fe512{1, 0, 0, 0}
-	r := &Fe512{0, 0, 0, 0}
+	s := &Fe512{1}
+	r := &Fe512{0}
 	var k int
 	var z uint64
 	var found = false
@@ -1342,7 +1342,7 @@ func (f *Field512) InvMontDown(inv, fe *Fe512) {
 		}
 		inv.Set(u)
 	} else {
-		inv.Set(&Fe512{0, 0, 0, 0})
+		inv.Set(&Fe512{0})
 	}
 }
 
