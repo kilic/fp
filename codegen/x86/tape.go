@@ -15,38 +15,42 @@ func isGp(op Op) bool {
 type tape struct {
 	gpSet *gpSet
 	stack *stack
+	swap  GPPhysical
 }
 
-func newTape(reservedGps ...Op) *tape {
+func newTape(swap GPPhysical, reservedGps ...Op) *tape {
 	gpSet := newGpSet(R8, R9, R10, R11, R12, R13, R14, R15, RCX, RAX, RDX, RBX, RDI, RSI)
 	gpSet.reserve(reservedGps...)
+	gpSet.reserve(swap)
 	stack := newStack()
-	return &tape{gpSet, stack}
+	return &tape{gpSet, stack, swap}
 }
 
-func (t tape) newReprNoAlloc(size int, swapReg GPPhysical) *repr {
-	return newReprEmpty(size, swapReg)
+func (t tape) newReprNoAlloc(size int) *repr {
+	return newReprEmpty(size, t.swap)
 }
 
-func (t tape) newReprAlloc(size int, swapReg GPPhysical) *repr {
-	r := newReprEmpty(size, swapReg)
+func (t tape) newReprAlloc(size int) *repr {
+	r := newReprEmpty(size, t.swap)
 	for i := 0; i < size; i++ {
 		r.limbs[i].set(t.next(_ALLOC))
 	}
 	return r
 }
 
-func (t *tape) newReprAtParam(size int, param string, dst Register, swapReg GPPhysical) *repr {
-	t.reserveGp(dst)
-	return t.newReprAtMemory(size, Mem{Base: Load(Param(param), dst)}, swapReg)
+func (t *tape) newReprAtParam(size int, param string, dst Register) *repr {
+	if _, ok := dst.(GPPhysical); ok {
+		t.reserveGp(dst.(GPPhysical))
+	}
+	return t.newReprAtMemory(size, Mem{Base: Load(Param(param), dst)})
 }
 
-func (t *tape) newReprAtMemory(size int, base Mem, swapReg GPPhysical) *repr {
+func (t *tape) newReprAtMemory(size int, base Mem) *repr {
 	number := make([]limb, size)
 	for i := 0; i < size; i++ {
-		number[i] = newLimb(base.Offset(int(i*8)), swapReg)
+		number[i] = newLimb(base.Offset(int(i*8)), t.swap)
 	}
-	return &repr{number, 0, size, base.Base}
+	return &repr{number, 0, size, base.Base, t.swap}
 }
 
 func (t *tape) next(allocated bool) Op {
@@ -68,6 +72,18 @@ func (t tape) free(ops ...Op) {
 			t.stack.free(op)
 		}
 	}
+}
+
+func (t tape) donate(r *repr) Op {
+	var a Op
+	for j := r.size - 1; ; j-- {
+		if r.limbs[j].atReg() {
+			a = r.limbs[j].s
+			r.limbs[j].moveTo(t.next(_ALLOC), _ASSIGN)
+			return a
+		}
+	}
+	return nil
 }
 
 func (t tape) freeGp(gps ...Op) []Op {
@@ -92,12 +108,16 @@ type gpSet struct {
 	size      int
 }
 
-func newGpSet(regs ...GPPhysical) *gpSet {
+func newGpSet(regs ...Op) *gpSet {
 	allocated := make(map[GPPhysical]bool)
 	regs_ := make(map[int]GPPhysical)
 	for i, reg := range regs {
-		allocated[reg] = false
-		regs_[i] = reg
+		if reg, ok := reg.(GPPhysical); ok {
+			allocated[reg] = false
+			regs_[i] = reg
+		} else {
+			panic("bad operand for general purpose set")
+		}
 	}
 	return &gpSet{allocated: allocated, regs: regs_, size: len(regs)}
 }
@@ -115,32 +135,37 @@ func (set *gpSet) allocate(size int) ([]Op, int) {
 	return allocated, i
 }
 
-func (set *gpSet) reserve(ops ...Op) []Op {
-	regs := []Op{}
-	for _, op := range ops {
-		if isLimb(op) {
-			op = op.(limb).s
+func (set *gpSet) reserve(regs ...Op) []Op {
+	regs_ := []Op{}
+	for _, reg := range regs {
+		if reg, ok := reg.(GPPhysical); ok {
+			set.allocated[reg] = true
+			regs_ = append(regs_, reg)
+		} else {
+			panic("bad operand for general purpose set")
 		}
-		if isGp(op) {
-			set.allocated[op.(GPPhysical)] = true
-			regs = append(regs, op)
+	}
+	return regs_
+}
+
+func (set *gpSet) free(regs ...Op) []Op {
+	regs_ := []Op{}
+	for _, reg := range regs {
+		if isLimb(reg) {
+			reg = reg.(limb).s
+		}
+		if reg, ok := reg.(GPPhysical); ok {
+			set.allocated[reg] = false
+			regs_ = append(regs_, reg)
 		}
 	}
 	return regs
 }
 
-func (set *gpSet) free(ops ...Op) []Op {
-	regs := []Op{}
-	for _, op := range ops {
-		if isLimb(op) {
-			op = op.(limb).s
-		}
-		if isGp(op) {
-			set.allocated[op.(GPPhysical)] = false
-			regs = append(regs, op)
-		}
+func (set *gpSet) freeAll() {
+	for r := range set.allocated {
+		set.allocated[r] = false
 	}
-	return regs
 }
 
 func (set *gpSet) next(allocate bool) GPPhysical {
@@ -174,6 +199,14 @@ func (set *gpSet) sizeAllocated() int {
 		}
 	}
 	return c
+}
+
+func (set *gpSet) slice() []Op {
+	regs := make([]Op, set.size)
+	for i, r := range set.regs {
+		regs[i] = r
+	}
+	return regs
 }
 
 // stack manager with 8 byte slots

@@ -187,9 +187,9 @@ neg{{ $N_LIMB }}(c, a, f.P)
 	fTmplSquare = `
 func (f *{{ $FIELD }}) Square(c, a *{{ $FE }}) {
 {{- if $GlobMod }} 
-montmul{{ $N_LIMB }}(c, a, a) 
+montsquare{{ $N_LIMB }}(c, a) 
 {{- else }}
-montmul{{ $N_LIMB }}(c, a, a, f.P, f.inp) 
+montsquare{{ $N_LIMB }}(c, a, f.P, f.inp) 
 {{- end }} 
 }
 `
