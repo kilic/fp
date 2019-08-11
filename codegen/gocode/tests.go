@@ -127,10 +127,7 @@ limb(i int) uint64}
 
 	tmplTestRandField = `
 func ceil64(len int) int {
-size := 1 + ((len - 1) / 64)
-if size < 5 {
-return 4 }
-return size }
+return 1 + ((len - 1) / 64)}
 {{ $FIELDS := .LimbSizes }} 
 func randTestField(bitlen int) field {
 var field field
