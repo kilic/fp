@@ -291,8 +291,7 @@ func generateMont(size int, globMod bool) {
 	Commentf("| Compare & Return")
 	C := tape.newReprAtParam(2*size, "c", w.base)
 	for i := 0; i < size; i++ {
-		C_red.next(_ITER).moveIfNotCF(*C_mont.next(_NO_ITER))
-		C_mont.next(_ITER).moveTo(*C.next(_ITER), _ASSIGN)
+		C_red.next(_ITER).moveIfNotCFAux(*C_mont.next(_ITER), *C.next(_ITER))
 	}
 	tape.ret()
 	RET()
@@ -352,8 +351,7 @@ func generateMontMul(size int, globMod bool) {
 	Commentf("| Compare & Return")
 	C := tape.newReprAtParam(size, "c", A.base)
 	for i := 0; i < size; i++ {
-		C_red.next(_ITER).moveIfNotCF(*C_mont.next(_NO_ITER))
-		C_mont.next(_ITER).moveTo(*C.next(_ITER), _ASSIGN)
+		C_red.next(_ITER).moveIfNotCFAux(*C_mont.next(_ITER), *C.next(_ITER))
 	}
 	tape.ret()
 	RET()
@@ -438,8 +436,7 @@ func generateMontSquare(size int, globMod bool) {
 	SBBQ(Imm(0), longCarry)
 	C := tape.newReprAtParam(size, "c", longCarry)
 	for i := 0; i < size; i++ {
-		C_red.next(_ITER).moveIfNotCF(*C_mont.next(_NO_ITER))
-		C_mont.next(_ITER).moveTo(*C.next(_ITER), _ASSIGN)
+		C_red.next(_ITER).moveIfNotCFAux(*C_mont.next(_ITER), *C.next(_ITER))
 	}
 	tape.ret()
 	RET()
