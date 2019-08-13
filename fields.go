@@ -2,6 +2,7 @@ package fp
 
 import (
 	"crypto/rand"
+	"fmt"
 	"io"
 	"math/big"
 )
@@ -93,6 +94,16 @@ func (f *Field256) RandElement(fe *Fe256, r io.Reader) (*Fe256, error) {
 		return nil, err
 	}
 	return fe.SetBig(bi), nil
+}
+
+func (f *Field256) ToBytes(bytes []byte, fe *Fe256) ([]byte, error) {
+	if len(bytes) < 32 {
+		return bytes, fmt.Errorf("output slice should be equal or larger than 32 byte")
+	}
+	fe2 := new(Fe256)
+	f.Demont(fe2, fe)
+	copy(bytes[:32], fe2.Bytes())
+	return bytes, nil
 }
 
 func (f *Field256) Mont(c, a *Fe256) {
@@ -371,6 +382,16 @@ func (f *Field320) RandElement(fe *Fe320, r io.Reader) (*Fe320, error) {
 	return fe.SetBig(bi), nil
 }
 
+func (f *Field320) ToBytes(bytes []byte, fe *Fe320) ([]byte, error) {
+	if len(bytes) < 40 {
+		return bytes, fmt.Errorf("output slice should be equal or larger than 40 byte")
+	}
+	fe2 := new(Fe320)
+	f.Demont(fe2, fe)
+	copy(bytes[:40], fe2.Bytes())
+	return bytes, nil
+}
+
 func (f *Field320) Mont(c, a *Fe320) {
 	montmul5(c, a, f.r2)
 }
@@ -645,6 +666,16 @@ func (f *Field384) RandElement(fe *Fe384, r io.Reader) (*Fe384, error) {
 		return nil, err
 	}
 	return fe.SetBig(bi), nil
+}
+
+func (f *Field384) ToBytes(bytes []byte, fe *Fe384) ([]byte, error) {
+	if len(bytes) < 48 {
+		return bytes, fmt.Errorf("output slice should be equal or larger than 48 byte")
+	}
+	fe2 := new(Fe384)
+	f.Demont(fe2, fe)
+	copy(bytes[:48], fe2.Bytes())
+	return bytes, nil
 }
 
 func (f *Field384) Mont(c, a *Fe384) {
@@ -923,6 +954,16 @@ func (f *Field448) RandElement(fe *Fe448, r io.Reader) (*Fe448, error) {
 	return fe.SetBig(bi), nil
 }
 
+func (f *Field448) ToBytes(bytes []byte, fe *Fe448) ([]byte, error) {
+	if len(bytes) < 56 {
+		return bytes, fmt.Errorf("output slice should be equal or larger than 56 byte")
+	}
+	fe2 := new(Fe448)
+	f.Demont(fe2, fe)
+	copy(bytes[:56], fe2.Bytes())
+	return bytes, nil
+}
+
 func (f *Field448) Mont(c, a *Fe448) {
 	montmul7(c, a, f.r2)
 }
@@ -1197,6 +1238,16 @@ func (f *Field512) RandElement(fe *Fe512, r io.Reader) (*Fe512, error) {
 		return nil, err
 	}
 	return fe.SetBig(bi), nil
+}
+
+func (f *Field512) ToBytes(bytes []byte, fe *Fe512) ([]byte, error) {
+	if len(bytes) < 64 {
+		return bytes, fmt.Errorf("output slice should be equal or larger than 64 byte")
+	}
+	fe2 := new(Fe512)
+	f.Demont(fe2, fe)
+	copy(bytes[:64], fe2.Bytes())
+	return bytes, nil
 }
 
 func (f *Field512) Mont(c, a *Fe512) {
