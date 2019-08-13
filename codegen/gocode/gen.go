@@ -101,13 +101,14 @@ func GenerateFieldElements(out string, from, to int) {
 
 func GenerateFields(out string, from, to int, globalModulus bool) {
 	codeStr := pkg("fp")
-	codeStr = imports(codeStr, []string{"math/big", "io", "crypto/rand"})
+	codeStr = imports(codeStr, []string{"fmt", "math/big", "io", "crypto/rand"})
 	for i := from; i <= to; i++ {
 		data := feSize{
 			Limb:         i,
 			Bit:          64 * i,
 			FieldElement: fmt.Sprintf("Fe%d", 64*i),
 			Field:        fmt.Sprintf("Field%d", 64*i),
+			Bytes:        i * 8,
 			GlobMod:      globalModulus,
 		}
 		declerations := "" +
@@ -115,6 +116,7 @@ func GenerateFields(out string, from, to int, globalModulus bool) {
 			"{{ $N_BIT := .Bit }}" +
 			"{{ $FE := .FieldElement }}" +
 			"{{ $FIELD := .Field }}" +
+			"{{ $N_BYTES := .Bytes }}" +
 			"{{ $GlobMod := .GlobMod }}"
 		if generated, err := generate(declerations, fieldTemplates, utilFuncs, data); err != nil {
 			panic(err)
