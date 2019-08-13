@@ -12,6 +12,7 @@ var fieldTemplates = []string{
 	fTmplOne,
 	fTmplCopy,
 	fTmplRand,
+	fTmplToBytes,
 	fTmplMont,
 	fTmplDemont,
 	fTmplAdd,
@@ -125,6 +126,16 @@ bi, err := rand.Int(r, f.pBig)
 if err != nil {
 return nil, err }
 return fe.SetBig(bi), nil}		
+`
+
+	fTmplToBytes = `
+func (f *{{ $FIELD }}) ToBytes(bytes []byte, fe *{{ $FE }}) ([]byte, error) {
+if len(bytes) < {{ $N_BYTES }} {
+return bytes, fmt.Errorf("output slice should be equal or larger than {{ $N_BYTES }} byte")}
+fe2 := new({{ $FE }})
+f.Demont(fe2, fe)
+copy(bytes[:{{ $N_BYTES }}], fe2.Bytes())
+return bytes, nil}
 `
 
 	fTmplMont = `
