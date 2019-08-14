@@ -8,6 +8,7 @@ var fieldTemplates = []string{
 	fTmplNewFeUint,
 	fTmplNewFeBig,
 	fTmplNewFeString,
+	fTmplValid,
 	fTmplZero,
 	fTmplOne,
 	fTmplCopy,
@@ -73,27 +74,39 @@ P:    modulus,
 inp:  inp}}
 	`
 
+	fTmplValid = `
+func (f *{{ $FIELD }}) Valid(fe *{{ $FE }}) bool {
+return fe.Cmp(f.P) == -1
+}`
+
 	fTmplNewFeBytes = `
-func (f *{{ $FIELD }}) NewElementFromBytes(in []byte) *{{ $FE }} {
+func (f *{{ $FIELD }}) NewElementFromBytes(in []byte) (*{{ $FE }}, error) {
 fe := new({{ $FE }}).FromBytes(in)
+if !f.Valid(fe) {
+return nil, fmt.Errorf("invalid input string") }
 f.Mul(fe, fe, f.r2)
-return fe }
+return fe, nil }
 `
 
 	fTmplNewFeUint = `
-func (f *{{ $FIELD }}) NewElementFromUint(in uint64) *{{ $FE }} {
+func (f *{{ $FIELD }}) NewElementFromUint(in uint64) (*{{ $FE }}, error) {
 fe := &{{ $FE }}{in}
 if in == 0 {
-return fe }
+return fe, nil }
+if !f.Valid(fe) {
+return nil, fmt.Errorf("invalid input string") }
 f.Mul(fe, fe, f.r2)
-return fe }
+return fe, nil
+}
 `
 
 	fTmplNewFeBig = `
-func (f *{{ $FIELD }}) NewElementFromBig(in *big.Int) *{{ $FE }} {
+func (f *{{ $FIELD }}) NewElementFromBig(in *big.Int) (*{{ $FE }}, error) {
 fe := new({{ $FE }}).SetBig(in)
+if !f.Valid(fe) {
+return nil, fmt.Errorf("invalid input string") }
 f.Mul(fe, fe, f.r2)
-return fe }
+return fe, nil }
 `
 
 	fTmplNewFeString = `
@@ -101,6 +114,8 @@ func (f *{{ $FIELD }}) NewElementFromString(in string) (*{{ $FE }}, error) {
 fe, err := new({{ $FE }}).SetString(in)
 if err != nil {
 return nil, err }
+if !f.Valid(fe) {
+return nil, fmt.Errorf("invalid input string") }
 f.Mul(fe, fe, f.r2)
 return fe, nil }
 `
