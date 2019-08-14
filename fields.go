@@ -46,25 +46,34 @@ func NewField256(p []byte) *Field256 {
 		inp:  inp}
 }
 
-func (f *Field256) NewElementFromBytes(in []byte) *Fe256 {
+func (f *Field256) NewElementFromBytes(in []byte) (*Fe256, error) {
 	fe := new(Fe256).FromBytes(in)
-	f.Mul(fe, fe, f.r2)
-	return fe
-}
-
-func (f *Field256) NewElementFromUint(in uint64) *Fe256 {
-	fe := &Fe256{in}
-	if in == 0 {
-		return fe
+	if !f.Valid(fe) {
+		return nil, fmt.Errorf("invalid input string")
 	}
 	f.Mul(fe, fe, f.r2)
-	return fe
+	return fe, nil
 }
 
-func (f *Field256) NewElementFromBig(in *big.Int) *Fe256 {
-	fe := new(Fe256).SetBig(in)
+func (f *Field256) NewElementFromUint(in uint64) (*Fe256, error) {
+	fe := &Fe256{in}
+	if in == 0 {
+		return fe, nil
+	}
+	if !f.Valid(fe) {
+		return nil, fmt.Errorf("invalid input string")
+	}
 	f.Mul(fe, fe, f.r2)
-	return fe
+	return fe, nil
+}
+
+func (f *Field256) NewElementFromBig(in *big.Int) (*Fe256, error) {
+	fe := new(Fe256).SetBig(in)
+	if !f.Valid(fe) {
+		return nil, fmt.Errorf("invalid input string")
+	}
+	f.Mul(fe, fe, f.r2)
+	return fe, nil
 }
 
 func (f *Field256) NewElementFromString(in string) (*Fe256, error) {
@@ -72,8 +81,15 @@ func (f *Field256) NewElementFromString(in string) (*Fe256, error) {
 	if err != nil {
 		return nil, err
 	}
+	if !f.Valid(fe) {
+		return nil, fmt.Errorf("invalid input string")
+	}
 	f.Mul(fe, fe, f.r2)
 	return fe, nil
+}
+
+func (f *Field256) Valid(fe *Fe256) bool {
+	return fe.Cmp(f.P) == -1
 }
 
 func (f *Field256) Zero() *Fe256 {
@@ -332,25 +348,34 @@ func NewField320(p []byte) *Field320 {
 		inp:  inp}
 }
 
-func (f *Field320) NewElementFromBytes(in []byte) *Fe320 {
+func (f *Field320) NewElementFromBytes(in []byte) (*Fe320, error) {
 	fe := new(Fe320).FromBytes(in)
-	f.Mul(fe, fe, f.r2)
-	return fe
-}
-
-func (f *Field320) NewElementFromUint(in uint64) *Fe320 {
-	fe := &Fe320{in}
-	if in == 0 {
-		return fe
+	if !f.Valid(fe) {
+		return nil, fmt.Errorf("invalid input string")
 	}
 	f.Mul(fe, fe, f.r2)
-	return fe
+	return fe, nil
 }
 
-func (f *Field320) NewElementFromBig(in *big.Int) *Fe320 {
-	fe := new(Fe320).SetBig(in)
+func (f *Field320) NewElementFromUint(in uint64) (*Fe320, error) {
+	fe := &Fe320{in}
+	if in == 0 {
+		return fe, nil
+	}
+	if !f.Valid(fe) {
+		return nil, fmt.Errorf("invalid input string")
+	}
 	f.Mul(fe, fe, f.r2)
-	return fe
+	return fe, nil
+}
+
+func (f *Field320) NewElementFromBig(in *big.Int) (*Fe320, error) {
+	fe := new(Fe320).SetBig(in)
+	if !f.Valid(fe) {
+		return nil, fmt.Errorf("invalid input string")
+	}
+	f.Mul(fe, fe, f.r2)
+	return fe, nil
 }
 
 func (f *Field320) NewElementFromString(in string) (*Fe320, error) {
@@ -358,8 +383,15 @@ func (f *Field320) NewElementFromString(in string) (*Fe320, error) {
 	if err != nil {
 		return nil, err
 	}
+	if !f.Valid(fe) {
+		return nil, fmt.Errorf("invalid input string")
+	}
 	f.Mul(fe, fe, f.r2)
 	return fe, nil
+}
+
+func (f *Field320) Valid(fe *Fe320) bool {
+	return fe.Cmp(f.P) == -1
 }
 
 func (f *Field320) Zero() *Fe320 {
@@ -618,25 +650,34 @@ func NewField384(p []byte) *Field384 {
 		inp:  inp}
 }
 
-func (f *Field384) NewElementFromBytes(in []byte) *Fe384 {
+func (f *Field384) NewElementFromBytes(in []byte) (*Fe384, error) {
 	fe := new(Fe384).FromBytes(in)
-	f.Mul(fe, fe, f.r2)
-	return fe
-}
-
-func (f *Field384) NewElementFromUint(in uint64) *Fe384 {
-	fe := &Fe384{in}
-	if in == 0 {
-		return fe
+	if !f.Valid(fe) {
+		return nil, fmt.Errorf("invalid input string")
 	}
 	f.Mul(fe, fe, f.r2)
-	return fe
+	return fe, nil
 }
 
-func (f *Field384) NewElementFromBig(in *big.Int) *Fe384 {
-	fe := new(Fe384).SetBig(in)
+func (f *Field384) NewElementFromUint(in uint64) (*Fe384, error) {
+	fe := &Fe384{in}
+	if in == 0 {
+		return fe, nil
+	}
+	if !f.Valid(fe) {
+		return nil, fmt.Errorf("invalid input string")
+	}
 	f.Mul(fe, fe, f.r2)
-	return fe
+	return fe, nil
+}
+
+func (f *Field384) NewElementFromBig(in *big.Int) (*Fe384, error) {
+	fe := new(Fe384).SetBig(in)
+	if !f.Valid(fe) {
+		return nil, fmt.Errorf("invalid input string")
+	}
+	f.Mul(fe, fe, f.r2)
+	return fe, nil
 }
 
 func (f *Field384) NewElementFromString(in string) (*Fe384, error) {
@@ -644,8 +685,15 @@ func (f *Field384) NewElementFromString(in string) (*Fe384, error) {
 	if err != nil {
 		return nil, err
 	}
+	if !f.Valid(fe) {
+		return nil, fmt.Errorf("invalid input string")
+	}
 	f.Mul(fe, fe, f.r2)
 	return fe, nil
+}
+
+func (f *Field384) Valid(fe *Fe384) bool {
+	return fe.Cmp(f.P) == -1
 }
 
 func (f *Field384) Zero() *Fe384 {
@@ -904,25 +952,34 @@ func NewField448(p []byte) *Field448 {
 		inp:  inp}
 }
 
-func (f *Field448) NewElementFromBytes(in []byte) *Fe448 {
+func (f *Field448) NewElementFromBytes(in []byte) (*Fe448, error) {
 	fe := new(Fe448).FromBytes(in)
-	f.Mul(fe, fe, f.r2)
-	return fe
-}
-
-func (f *Field448) NewElementFromUint(in uint64) *Fe448 {
-	fe := &Fe448{in}
-	if in == 0 {
-		return fe
+	if !f.Valid(fe) {
+		return nil, fmt.Errorf("invalid input string")
 	}
 	f.Mul(fe, fe, f.r2)
-	return fe
+	return fe, nil
 }
 
-func (f *Field448) NewElementFromBig(in *big.Int) *Fe448 {
-	fe := new(Fe448).SetBig(in)
+func (f *Field448) NewElementFromUint(in uint64) (*Fe448, error) {
+	fe := &Fe448{in}
+	if in == 0 {
+		return fe, nil
+	}
+	if !f.Valid(fe) {
+		return nil, fmt.Errorf("invalid input string")
+	}
 	f.Mul(fe, fe, f.r2)
-	return fe
+	return fe, nil
+}
+
+func (f *Field448) NewElementFromBig(in *big.Int) (*Fe448, error) {
+	fe := new(Fe448).SetBig(in)
+	if !f.Valid(fe) {
+		return nil, fmt.Errorf("invalid input string")
+	}
+	f.Mul(fe, fe, f.r2)
+	return fe, nil
 }
 
 func (f *Field448) NewElementFromString(in string) (*Fe448, error) {
@@ -930,8 +987,15 @@ func (f *Field448) NewElementFromString(in string) (*Fe448, error) {
 	if err != nil {
 		return nil, err
 	}
+	if !f.Valid(fe) {
+		return nil, fmt.Errorf("invalid input string")
+	}
 	f.Mul(fe, fe, f.r2)
 	return fe, nil
+}
+
+func (f *Field448) Valid(fe *Fe448) bool {
+	return fe.Cmp(f.P) == -1
 }
 
 func (f *Field448) Zero() *Fe448 {
@@ -1190,25 +1254,34 @@ func NewField512(p []byte) *Field512 {
 		inp:  inp}
 }
 
-func (f *Field512) NewElementFromBytes(in []byte) *Fe512 {
+func (f *Field512) NewElementFromBytes(in []byte) (*Fe512, error) {
 	fe := new(Fe512).FromBytes(in)
-	f.Mul(fe, fe, f.r2)
-	return fe
-}
-
-func (f *Field512) NewElementFromUint(in uint64) *Fe512 {
-	fe := &Fe512{in}
-	if in == 0 {
-		return fe
+	if !f.Valid(fe) {
+		return nil, fmt.Errorf("invalid input string")
 	}
 	f.Mul(fe, fe, f.r2)
-	return fe
+	return fe, nil
 }
 
-func (f *Field512) NewElementFromBig(in *big.Int) *Fe512 {
-	fe := new(Fe512).SetBig(in)
+func (f *Field512) NewElementFromUint(in uint64) (*Fe512, error) {
+	fe := &Fe512{in}
+	if in == 0 {
+		return fe, nil
+	}
+	if !f.Valid(fe) {
+		return nil, fmt.Errorf("invalid input string")
+	}
 	f.Mul(fe, fe, f.r2)
-	return fe
+	return fe, nil
+}
+
+func (f *Field512) NewElementFromBig(in *big.Int) (*Fe512, error) {
+	fe := new(Fe512).SetBig(in)
+	if !f.Valid(fe) {
+		return nil, fmt.Errorf("invalid input string")
+	}
+	f.Mul(fe, fe, f.r2)
+	return fe, nil
 }
 
 func (f *Field512) NewElementFromString(in string) (*Fe512, error) {
@@ -1216,8 +1289,15 @@ func (f *Field512) NewElementFromString(in string) (*Fe512, error) {
 	if err != nil {
 		return nil, err
 	}
+	if !f.Valid(fe) {
+		return nil, fmt.Errorf("invalid input string")
+	}
 	f.Mul(fe, fe, f.r2)
 	return fe, nil
+}
+
+func (f *Field512) Valid(fe *Fe512) bool {
+	return fe.Cmp(f.P) == -1
 }
 
 func (f *Field512) Zero() *Fe512 {
