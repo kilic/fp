@@ -112,6 +112,14 @@ func (f *Field256) RandElement(fe *Fe256, r io.Reader) (*Fe256, error) {
 	return fe.SetBig(bi), nil
 }
 
+func (f *Field256) Equal(a, b *Fe256) bool {
+	return a.Equals(b)
+}
+
+func (f *Field256) IsZero(a *Fe256) bool {
+	return a.IsZero()
+}
+
 func (f *Field256) ToBytes(bytes []byte, fe *Fe256) ([]byte, error) {
 	if len(bytes) < 32 {
 		return bytes, fmt.Errorf("output slice should be equal or larger than 32 byte")
@@ -163,6 +171,10 @@ func (f *Field256) Exp(c, a *Fe256, e *big.Int) {
 		}
 	}
 	c.Set(z)
+}
+
+func (f *Field256) Inverse(inv, fe *Fe256) {
+	f.InvMontDown(inv, fe)
 }
 
 func (f *Field256) InvMontUp(inv, fe *Fe256) {
@@ -414,6 +426,14 @@ func (f *Field320) RandElement(fe *Fe320, r io.Reader) (*Fe320, error) {
 	return fe.SetBig(bi), nil
 }
 
+func (f *Field320) Equal(a, b *Fe320) bool {
+	return a.Equals(b)
+}
+
+func (f *Field320) IsZero(a *Fe320) bool {
+	return a.IsZero()
+}
+
 func (f *Field320) ToBytes(bytes []byte, fe *Fe320) ([]byte, error) {
 	if len(bytes) < 40 {
 		return bytes, fmt.Errorf("output slice should be equal or larger than 40 byte")
@@ -465,6 +485,10 @@ func (f *Field320) Exp(c, a *Fe320, e *big.Int) {
 		}
 	}
 	c.Set(z)
+}
+
+func (f *Field320) Inverse(inv, fe *Fe320) {
+	f.InvMontDown(inv, fe)
 }
 
 func (f *Field320) InvMontUp(inv, fe *Fe320) {
@@ -716,6 +740,14 @@ func (f *Field384) RandElement(fe *Fe384, r io.Reader) (*Fe384, error) {
 	return fe.SetBig(bi), nil
 }
 
+func (f *Field384) Equal(a, b *Fe384) bool {
+	return a.Equals(b)
+}
+
+func (f *Field384) IsZero(a *Fe384) bool {
+	return a.IsZero()
+}
+
 func (f *Field384) ToBytes(bytes []byte, fe *Fe384) ([]byte, error) {
 	if len(bytes) < 48 {
 		return bytes, fmt.Errorf("output slice should be equal or larger than 48 byte")
@@ -767,6 +799,10 @@ func (f *Field384) Exp(c, a *Fe384, e *big.Int) {
 		}
 	}
 	c.Set(z)
+}
+
+func (f *Field384) Inverse(inv, fe *Fe384) {
+	f.InvMontDown(inv, fe)
 }
 
 func (f *Field384) InvMontUp(inv, fe *Fe384) {
@@ -1018,6 +1054,14 @@ func (f *Field448) RandElement(fe *Fe448, r io.Reader) (*Fe448, error) {
 	return fe.SetBig(bi), nil
 }
 
+func (f *Field448) Equal(a, b *Fe448) bool {
+	return a.Equals(b)
+}
+
+func (f *Field448) IsZero(a *Fe448) bool {
+	return a.IsZero()
+}
+
 func (f *Field448) ToBytes(bytes []byte, fe *Fe448) ([]byte, error) {
 	if len(bytes) < 56 {
 		return bytes, fmt.Errorf("output slice should be equal or larger than 56 byte")
@@ -1069,6 +1113,10 @@ func (f *Field448) Exp(c, a *Fe448, e *big.Int) {
 		}
 	}
 	c.Set(z)
+}
+
+func (f *Field448) Inverse(inv, fe *Fe448) {
+	f.InvMontDown(inv, fe)
 }
 
 func (f *Field448) InvMontUp(inv, fe *Fe448) {
@@ -1320,6 +1368,14 @@ func (f *Field512) RandElement(fe *Fe512, r io.Reader) (*Fe512, error) {
 	return fe.SetBig(bi), nil
 }
 
+func (f *Field512) Equal(a, b *Fe512) bool {
+	return a.Equals(b)
+}
+
+func (f *Field512) IsZero(a *Fe512) bool {
+	return a.IsZero()
+}
+
 func (f *Field512) ToBytes(bytes []byte, fe *Fe512) ([]byte, error) {
 	if len(bytes) < 64 {
 		return bytes, fmt.Errorf("output slice should be equal or larger than 64 byte")
@@ -1371,6 +1427,10 @@ func (f *Field512) Exp(c, a *Fe512, e *big.Int) {
 		}
 	}
 	c.Set(z)
+}
+
+func (f *Field512) Inverse(inv, fe *Fe512) {
+	f.InvMontDown(inv, fe)
 }
 
 func (f *Field512) InvMontUp(inv, fe *Fe512) {
