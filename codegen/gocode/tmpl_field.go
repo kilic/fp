@@ -12,6 +12,8 @@ var fieldTemplates = []string{
 	fTmplOne,
 	fTmplCopy,
 	fTmplRand,
+	fTmplEqual,
+	fTmplIsZero,
 	fTmplToBytes,
 	fTmplMont,
 	fTmplDemont,
@@ -22,6 +24,7 @@ var fieldTemplates = []string{
 	fTmplSquare,
 	fTmplMul,
 	fTmplExp,
+	fTmplInverse,
 	fTmplInvMontUp,
 	fTemplInvMontDown,
 	fTmplInvEEA,
@@ -126,6 +129,17 @@ bi, err := rand.Int(r, f.pBig)
 if err != nil {
 return nil, err }
 return fe.SetBig(bi), nil}		
+`
+
+	fTmplEqual = `
+func (f *{{ $FIELD }}) Equal(a, b *{{ $FE }}) bool {
+return a.Equals(b)
+}`
+
+	fTmplIsZero = `
+func (f *{{ $FIELD }}) IsZero(a *{{ $FE }}) bool {
+return a.IsZero()
+}
 `
 
 	fTmplToBytes = `
@@ -275,6 +289,12 @@ if u.IsOne() {
 inv.Set(x1)
 return }
 inv.Set(x2)}
+`
+
+	fTmplInverse = `
+func (f *{{ $FIELD }}) Inverse(inv, fe *{{ $FE }}) {
+f.InvMontDown(inv, fe)
+}
 `
 
 	fTmplInvMontUp = `
