@@ -174,7 +174,7 @@ func (f *Field256) Exp(c, a *Fe256, e *big.Int) {
 }
 
 func (f *Field256) Inverse(inv, fe *Fe256) {
-	f.InvMontDown(inv, fe)
+	f.InvMontUp(inv, fe)
 }
 
 func (f *Field256) InvMontUp(inv, fe *Fe256) {
@@ -488,7 +488,7 @@ func (f *Field320) Exp(c, a *Fe320, e *big.Int) {
 }
 
 func (f *Field320) Inverse(inv, fe *Fe320) {
-	f.InvMontDown(inv, fe)
+	f.InvMontUp(inv, fe)
 }
 
 func (f *Field320) InvMontUp(inv, fe *Fe320) {
@@ -802,7 +802,7 @@ func (f *Field384) Exp(c, a *Fe384, e *big.Int) {
 }
 
 func (f *Field384) Inverse(inv, fe *Fe384) {
-	f.InvMontDown(inv, fe)
+	f.InvMontUp(inv, fe)
 }
 
 func (f *Field384) InvMontUp(inv, fe *Fe384) {
@@ -1116,7 +1116,7 @@ func (f *Field448) Exp(c, a *Fe448, e *big.Int) {
 }
 
 func (f *Field448) Inverse(inv, fe *Fe448) {
-	f.InvMontDown(inv, fe)
+	f.InvMontUp(inv, fe)
 }
 
 func (f *Field448) InvMontUp(inv, fe *Fe448) {
@@ -1430,7 +1430,7 @@ func (f *Field512) Exp(c, a *Fe512, e *big.Int) {
 }
 
 func (f *Field512) Inverse(inv, fe *Fe512) {
-	f.InvMontDown(inv, fe)
+	f.InvMontUp(inv, fe)
 }
 
 func (f *Field512) InvMontUp(inv, fe *Fe512) {
