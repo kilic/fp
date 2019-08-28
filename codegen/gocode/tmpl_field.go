@@ -308,7 +308,7 @@ inv.Set(x2)}
 
 	fTmplInverse = `
 func (f *{{ $FIELD }}) Inverse(inv, fe *{{ $FE }}) {
-f.InvMontDown(inv, fe)
+f.InvMontUp(inv, fe)
 }
 `
 
