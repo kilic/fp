@@ -78,27 +78,6 @@ func generateCopy(size int, single bool) {
 	RET()
 }
 
-// func cmp4(a *[4]uint64, b *[4]uint64) int8
-// TEXT ·cmpx(SB), NOSPLIT, $0-17
-// 	MOVQ a+0(FP), DI
-// 	MOVQ b+8(FP), SI
-// 	MOVQ 0(DI), R8
-// 	SUBQ 0(SI), R8
-// 	JB  lt
-// 	JA  gt
-// 	MOVB $0x00, ret+16(FP)
-// 	JMP  ret
-
-// gt:
-// 	MOVB $0x01, ret+16(FP)
-// 	JMP  ret
-
-// lt:
-// 	MOVB $0xff, ret+16(FP)
-
-// ret:
-// 	RET
-
 func generateCmp(size int, single bool) {
 	funcName := "cmp"
 	if !single {
