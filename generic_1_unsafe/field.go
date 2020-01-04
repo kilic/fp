@@ -437,25 +437,4 @@ func (f *field) inverse(inv, e fieldElement) {
 		f.double(u, u)
 	}
 	f.cpy(inv, u)
-
 }
-
-// func fieldElementToBytes2(out []byte, in fieldElement) error {
-// 	byteSize := len(out)
-// 	limbSize := byteSize / 8
-// 	if byteSize%8 != 0 && limbSize < 1 {
-// 		return fmt.Errorf("bad output allocation")
-// 	}
-// 	var data []byte
-// 	sh := (*reflect.SliceHeader)(unsafe.Pointer(&data))
-// 	sh.Data = uintptr(in)
-// 	sh.Len, sh.Cap = byteSize, byteSize
-// 	for i := 0; i < limbSize; i++ {
-// 		l := i * 8
-// 		binary.BigEndian.PutUint64(
-// 			out[byteSize-l-8:byteSize-l],
-// 			binary.LittleEndian.Uint64(data[l:l+8]),
-// 		)
-// 	}
-// 	return nil
-// }
