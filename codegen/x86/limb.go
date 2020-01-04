@@ -1,7 +1,8 @@
-package main
+package x86
 
 import (
 	"errors"
+	"fmt"
 
 	. "github.com/mmcloughlin/avo/build"
 	. "github.com/mmcloughlin/avo/operand"
@@ -22,7 +23,7 @@ const (
 )
 
 type repr struct {
-	limbs []limb
+	limbs []*limb
 	i     int
 	size  int
 	base  Register // set base if loaded from memory
@@ -30,11 +31,50 @@ type repr struct {
 }
 
 func newReprEmpty(size int, swap GPPhysical) *repr {
-	number := make([]limb, size)
+	number := make([]*limb, size)
 	for i := 0; i < size; i++ {
 		number[i] = newLimbEmpty(swap)
 	}
 	return &repr{number, 0, size, nil, swap}
+}
+
+// func (r *repr) ops() []Op {
+// 	ops := []Op{}
+// 	for i := 0; i < r.size; i++ {
+// 		limb := r.limbs[i]
+// 		if limb != nil {
+// 			ops = append(ops, r.limbs[i])
+// 		}
+// 	}
+// 	return ops
+// }
+
+func (r *repr) ops() []Op {
+	ops := make([]Op, r.size)
+	for i, l := range r.limbs {
+		ops[i] = l.s
+	}
+	return ops
+}
+
+func (r *repr) debug() {
+	fmt.Printf("--------------\n\n")
+	fmt.Printf("Repr Debug\n")
+	fmt.Printf("Size: %d\n", r.size)
+	for i := 0; i < len(r.limbs); i++ {
+		fmt.Printf("[%d]: ", i)
+		limb := r.limbs[i]
+		if limb == nil {
+			fmt.Printf("notset\n")
+		} else {
+			fmt.Printf("%s\n", limb.Asm())
+		}
+	}
+	fmt.Printf("--------------\n")
+}
+
+func (t *repr) commentCurrent(name string) {
+	Commentf("| %s%d @ %s", name, t.i, t.next(_NO_ITER).Asm())
 }
 
 // load will cause changing of source index
@@ -45,16 +85,31 @@ func (r *repr) load(src *repr) *repr {
 	return r
 }
 
-func (r *repr) set(i int, op Op) {
+// func (r *repr) set(i int, op Op) {
+// 	if isLimb(op) {
+// 		r.limbs[i] = op.(*limb)
+// 		return
+// 	}
+// 	r.limbs[i].s = op
+// }
+
+func (r *repr) set(op Op) {
 	if isLimb(op) {
-		r.limbs[i] = op.(limb)
+		r.limbs[r.i] = op.(*limb)
 		return
 	}
-	r.limbs[i].s = op
+	r.limbs[r.i].s = op
 }
 
-func (r *repr) updateIndex(i int) {
-	r.i = i
+func (r *repr) setSwap(reg Register) {
+	for i := 0; i < r.size; i++ {
+		r.limbs[i].swapReg = reg
+	}
+}
+
+func (r *repr) updateIndex(i int) *repr {
+	r.i = (i + r.size) % r.size
+	return r
 }
 
 // slice will cause changing of source index
@@ -66,7 +121,7 @@ func (r *repr) slice(from, to int) *repr {
 	dst := newReprEmpty(size, RBX)
 	r.updateIndex(from)
 	for i := 0; i < size; i++ {
-		dst.next(_ITER).set(*r.next(_ITER))
+		dst.next(_ITER).set(r.next(_ITER))
 	}
 	return dst
 }
@@ -76,19 +131,25 @@ func (r *repr) next(iter bool) *limb {
 	if iter {
 		r.i = (r.i + 1) % r.size
 	}
-	return &r.limbs[i]
+	return r.limbs[i]
+}
+
+func (r *repr) previous() *limb {
+	i := r.i
+	r.i = ((r.i - 1) + r.size) % r.size
+	return r.limbs[i]
+}
+
+func (r *repr) get() *limb {
+	return r.limbs[r.i]
+}
+
+func (r *repr) at(i int) *limb {
+	return r.limbs[i]
 }
 
 func (r *repr) mul(iter bool, op Op, lo Op, hi Op, addOrMove bool) {
 	r.next(iter).mul(op, lo, hi, addOrMove)
-}
-
-func (r *repr) ops() []Op {
-	ops := make([]Op, r.size)
-	for i, l := range r.limbs {
-		ops[i] = l
-	}
-	return ops
 }
 
 type limb struct {
@@ -96,16 +157,16 @@ type limb struct {
 	swapReg Register
 }
 
-func isLimb(op Op) bool { _, ok := op.(limb); return ok }
+func isLimb(op Op) bool { _, ok := op.(*limb); return ok }
 
-func newLimbEmpty(swapReg Register) limb {
-	return limb{
+func newLimbEmpty(swapReg Register) *limb {
+	return &limb{
 		swapReg: swapReg,
 	}
 }
 
-func newLimb(op Op, swapReg Register) limb {
-	return limb{
+func newLimb(op Op, swapReg Register) *limb {
+	return &limb{
 		s:       op,
 		swapReg: swapReg,
 	}
@@ -122,16 +183,22 @@ func (l *limb) String() string {
 	return "NN"
 }
 
-func (l *limb) set(op Op) {
+func (l *limb) set(op Op) *limb {
 	if isLimb(op) {
-		op = op.(limb).s
+		l.s = op.(*limb).s
+		return l
 	}
 	l.s = op
+	return l
 }
 
 func (l *limb) atMem() bool { return IsMem(l.s) }
 
 func (l *limb) atReg() bool { return IsRegister(l.s) }
+
+func (l *limb) clone() *limb {
+	return newLimb(l.s, nil)
+}
 
 func (l *limb) load(src Op, dst Op) {
 	if isLimb(src) {
@@ -160,31 +227,49 @@ func (l *limb) load(src Op, dst Op) {
 	MOVQ(src, l.s)
 }
 
-func (l *limb) moveTo(dst Op, assign bool) {
+// func (l *limb) moveTo(dst Op, assign bool) *limb {
+// 	if isLimb(dst) {
+// 		dst = dst.(*limb).s
+// 	}
+// 	if assign {
+// 		l.load(l.s, dst)
+// 		return l
+// 	}
+// 	if l.atMem() && IsMem(dst) {
+// 		MOVQ(l.s, RBX)
+// 		MOVQ(RBX, dst)
+// 		return l
+// 	}
+// 	MOVQ(l.s, dst)
+// 	return l
+// }
+
+func (l *limb) moveTo(dst Op, assign bool) *limb {
 	if isLimb(dst) {
-		dst = dst.(limb).s
+		dst = dst.(*limb).s
 	}
 	if assign {
 		l.load(l.s, dst)
-		return
+		return l
 	}
 	if l.atMem() && IsMem(dst) {
-		MOVQ(l.s, RBX)
-		MOVQ(RBX, dst)
-		return
+		MOVQ(l.s, l.swapReg)
+		MOVQ(l.swapReg, dst)
+		return l
 	}
 	MOVQ(l.s, dst)
+	return l
 }
 
-func (l *limb) moveIfNotCF(dst limb) {
-
+func (l *limb) moveIfNotCF(dst limb) *limb {
 	if dst.atMem() {
 		MOVQ(dst.s, l.swapReg)
 		CMOVQCC(l.s, l.swapReg)
 		MOVQ(l.swapReg, dst.s)
-		return
+		return l
 	}
 	CMOVQCC(l.s, dst.s)
+	return l
 }
 
 // if CF == 0:
@@ -348,34 +433,69 @@ func (l *limb) loadDouble(l2 limb, brw bool) {
 }
 
 func (l *limb) mul(op Op, a0 Op, a1 Op, addOrMove bool) {
+	_a0, _a1, _op := a0, a1, op
+	if isLimb(a0) {
+		_a0 = a0.(*limb).s
+	}
+	if isLimb(a1) {
+		_a1 = a1.(*limb).s
+	}
+	if isLimb(op) {
+		_op = op.(*limb).s
+	}
 	MOVQ(l.s, RAX)
-	MULQ(op)
+	MULQ(_op)
 	if addOrMove == _MUL_ADD {
-		if a0 != nil {
-			ADDQ(RAX, a0)
-			if a1 != nil {
-				ADCQ(RDX, a1)
-			}
+		if _a0 != nil {
+			ADDQ(RAX, _a0)
+		}
+		if _a1 != nil {
+			ADCQ(RDX, _a1)
 		}
 		return
 	}
-	if a0 != nil {
-		MOVQ(RAX, a0)
-		if a1 != nil {
-			MOVQ(RDX, a1)
-		}
+	if _a0 != nil {
+		MOVQ(RAX, _a0)
+	}
+	if _a1 != nil {
+		MOVQ(RDX, _a1)
 	}
 }
 
 func (l *limb) add(op Op, car bool) {
+	var _op Op = op
+	if isLimb(op) {
+		_op = op.(*limb).s
+	}
 	operation := ADDQ
 	if car {
 		operation = ADCQ
 	}
-	operation(op, l.s)
+	operation(_op, l.s)
+}
+
+func (l *limb) addTo(op Op, car bool) {
+	var _op Op = op
+	if isLimb(op) {
+		_op = op.(*limb).s
+	}
+	operation := ADDQ
+	if car {
+		operation = ADCQ
+	}
+	operation(l.s, _op)
 }
 
 func (l *limb) addCarry() *limb {
 	ADCQ(Imm(0), l.s)
 	return l
+}
+
+func (l *limb) clear() *limb {
+	MOVQ(U64(0), l.s)
+	return l
+}
+
+func (l *limb) cmp(op Op) {
+	CMPQ(l.s, op)
 }

@@ -1,3 +1,8 @@
+generated go code is better to be considered as boilerplate
+you could tweak the templates and generate for your needs
+we called 
+while non static
+
 Given prime number bit size, `fp` generates prime fields, field elements and x86 optimized, high speed field operations. Assembly code that performs field operations are generated with [avo](https://github.com/mmcloughlin/avo) library.
 
 ## Install, Build & Test

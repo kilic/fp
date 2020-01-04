@@ -1,6 +1,8 @@
-package main
+package x86
 
 import (
+	"fmt"
+
 	. "github.com/mmcloughlin/avo/build"
 	. "github.com/mmcloughlin/avo/operand"
 	. "github.com/mmcloughlin/avo/reg"
@@ -18,10 +20,16 @@ type tape struct {
 	swap  GPPhysical
 }
 
+var (
+	_NO_SWAP GPPhysical = nil
+)
+
 func newTape(swap GPPhysical, reservedGps ...Op) *tape {
-	gpSet := newGpSet(R8, R9, R10, R11, R12, R13, R14, R15, RCX, RAX, RDX, RBX, RDI, RSI)
+	gpSet := newGpSet(RCX, RAX, RDX, RBX, RDI, RSI, R8, R9, R10, R11, R12, R13, R14, R15)
 	gpSet.reserve(reservedGps...)
-	gpSet.reserve(swap)
+	if swap != nil {
+		gpSet.reserve(swap)
+	}
 	stack := newStack()
 	return &tape{gpSet, stack, swap}
 }
@@ -38,6 +46,56 @@ func (t tape) newReprAlloc(size int) *repr {
 	return r
 }
 
+func (t tape) newLimb() *limb {
+	return newLimb(t.next(_ALLOC), nil)
+}
+
+func (t *tape) newReprAllocRemainingGPRs() *repr {
+	r := newReprEmpty(t.gpSet.sizeFree(), t.swap)
+	var i = 0
+	for t.gpSet.sizeFree() != 0 {
+		r.limbs[i].set(t.next(_ALLOC))
+		i++
+	}
+	return r
+}
+
+func (t *tape) newReprAllocGPRs(upto int) *repr {
+	size := t.sizeFreeGp()
+	if upto < size {
+		size = upto
+	}
+	r := newReprEmpty(size, t.swap)
+	for i := 0; i < size; i++ {
+		R := t.next(_ALLOC)
+		if !isGp(R) {
+			panic("bad allocation processing")
+		}
+		r.next(_ITER).set(R)
+	}
+	return r
+}
+
+// func (t *tape) newReprAllocGPRs(size int) *repr {
+// 	r := newReprEmpty(size, t.swap)
+// 	for i := 0; i < size; i++ {
+// 		R := t.next(_ALLOC)
+// 		if !isGp(R) {
+// 			panic("bad allocation request")
+// 		}
+// 		r.next(_ITER).set(R)
+// 	}
+// 	return r
+// }
+
+func (t *tape) allocStack(size int) *repr {
+	r := newReprEmpty(size, t.swap)
+	for i := 0; i < size; i++ {
+		r.limbs[i].set(t.stack.next(_ALLOC))
+	}
+	return r
+}
+
 func (t *tape) newReprAtParam(size int, param string, dst Register) *repr {
 	if _, ok := dst.(GPPhysical); ok {
 		t.reserveGp(dst.(GPPhysical))
@@ -46,7 +104,15 @@ func (t *tape) newReprAtParam(size int, param string, dst Register) *repr {
 }
 
 func (t *tape) newReprAtMemory(size int, base Mem) *repr {
-	number := make([]limb, size)
+	number := make([]*limb, size)
+	for i := 0; i < size; i++ {
+		number[i] = newLimb(base.Offset(int(i*8)), t.swap)
+	}
+	return &repr{number, 0, size, base.Base, t.swap}
+}
+
+func (t *tape) newLimbAtMemory(size int, base Mem) *repr {
+	number := make([]*limb, size)
 	for i := 0; i < size; i++ {
 		number[i] = newLimb(base.Offset(int(i*8)), t.swap)
 	}
@@ -60,11 +126,11 @@ func (t *tape) next(allocated bool) Op {
 	return t.stack.next(allocated)
 }
 
-func (t tape) free(ops ...Op) {
+func (t *tape) free(ops ...Op) {
 	for i := 0; i < len(ops); i++ {
 		op := ops[i]
 		if isLimb(op) {
-			op = op.(limb).s
+			op = op.(*limb).s
 		}
 		if isGp(op) {
 			t.gpSet.free(op)
@@ -72,6 +138,11 @@ func (t tape) free(ops ...Op) {
 			t.stack.free(op)
 		}
 	}
+}
+
+func (t *tape) freeAll() {
+	t.gpSet.freeAll()
+	t.stack.freeAll()
 }
 
 func (t tape) donate(r *repr) Op {
@@ -100,6 +171,19 @@ func (t tape) sizeFreeGp() int {
 
 func (t tape) ret() {
 	t.stack.allocLocal()
+}
+
+func (t *tape) debug() {
+	fmt.Printf("--------------\n\n")
+	fmt.Printf("Register Debug\n")
+	t.gpSet.debug()
+	t.stack.debug()
+	if t.swap != nil {
+		fmt.Printf("Swap: %s\n", t.swap.Asm())
+	} else {
+		fmt.Printf("No Swap\n")
+	}
+	fmt.Printf("--------------\n")
 }
 
 type gpSet struct {
@@ -152,14 +236,15 @@ func (set *gpSet) free(regs ...Op) []Op {
 	regs_ := []Op{}
 	for _, reg := range regs {
 		if isLimb(reg) {
-			reg = reg.(limb).s
+			fmt.Println("limbs")
+			reg = reg.(*limb).s
 		}
 		if reg, ok := reg.(GPPhysical); ok {
 			set.allocated[reg] = false
 			regs_ = append(regs_, reg)
 		}
 	}
-	return regs
+	return regs_
 }
 
 func (set *gpSet) freeAll() {
@@ -201,12 +286,26 @@ func (set *gpSet) sizeAllocated() int {
 	return c
 }
 
-func (set *gpSet) slice() []Op {
-	regs := make([]Op, set.size)
+func (set *gpSet) slice() []GPPhysical {
+	regs := make([]GPPhysical, set.size)
 	for i, r := range set.regs {
 		regs[i] = r
 	}
 	return regs
+}
+
+func (set *gpSet) debug() {
+	fmt.Printf("GP: %d/%d\n", set.sizeAllocated(), set.size)
+	for i := 0; i < set.size; i++ {
+		reg := set.regs[i]
+		fmt.Printf("%s\t", reg.Asm())
+		if set.allocated[reg] {
+			fmt.Printf("ALLOC\n")
+		} else {
+			fmt.Printf("FREE\n")
+		}
+	}
+	fmt.Printf("\n")
 }
 
 // stack manager with 8 byte slots
@@ -227,6 +326,10 @@ func newStack() *stack {
 
 func (s *stack) allocLocal() {
 	AllocLocal(s.size * 8)
+}
+
+func (s *stack) allocLocalFineTuned(finetune int) {
+	AllocLocal((s.size + finetune) * 8)
 }
 
 func (s *stack) extend(size int, allocate bool) Mem {
@@ -255,7 +358,7 @@ func (s *stack) free(mems ...Op) []Op {
 	for _, op := range mems {
 		// todo : consider removing limb
 		if isLimb(op) {
-			op = op.(limb).s
+			op = op.(*limb).s
 		}
 		if isMem(op) {
 			mem := op.(Mem)
@@ -276,7 +379,7 @@ func (s stack) sizeFree() int {
 	return c
 }
 
-func (s stack) sizeAllocated() int {
+func (s *stack) sizeAllocated() int {
 	c := 0
 	for i := 0; i < s.size; i++ {
 		if s.allocated[i] {
@@ -284,4 +387,23 @@ func (s stack) sizeAllocated() int {
 		}
 	}
 	return c
+}
+
+func (s *stack) freeAll() {
+	for r := range s.allocated {
+		s.allocated[r] = false
+	}
+}
+
+func (s *stack) debug() {
+	fmt.Printf("Stack: %d/%d\n", s.sizeAllocated(), s.size)
+	for i := 0; i < s.size; i++ {
+		fmt.Printf("%d\t", i)
+		if s.allocated[i] {
+			fmt.Printf("ALLOC\n")
+		} else {
+			fmt.Printf("FREE\n")
+		}
+	}
+	fmt.Printf("\n")
 }

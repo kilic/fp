@@ -1,209 +1,101 @@
-package main
+package gocode
 
 import (
-	"bytes"
+	"crypto/rand"
+	"encoding/hex"
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"text/template"
+	"math/big"
+	"path/filepath"
 )
 
-func main() {
-	out := flag.String("out", "", "")
-	from := flag.Int("from", 4, "")
-	to := flag.Int("to", 16, "")
-	genFields := flag.Bool("field", false, "")
-	genDeclarations := flag.Bool("decl", false, "")
-	globalModulus := flag.Bool("globmod", false, "")
-	flag.Parse()
-	if *genFields {
-		GenerateFieldElements(*out+"/"+"field_elements.go", *from, *to)
-		GenerateFields(*out+"/"+"fields.go", *from, *to, *globalModulus)
-		GenerateFieldElementTests(*out+"/"+"field_test.go", *from, *to)
-	}
-	if *genDeclarations {
-		GenerateDeclerations(*out+"/"+"arithmetic_decl.go", *from, *to, *globalModulus)
-		GenerateTypes(*out+"/"+"types.go", *from, *to)
-	}
+var supportedBitSizes = map[int]bool{
+	256: true,
+	320: true,
+	384: true,
+	448: true,
+	512: true,
 }
 
-type feSize struct {
-	Bit          int
-	Limb         int
-	Bytes        int
-	Iter         int
-	FieldElement string
-	Field        string
-	GlobMod      bool
+func resolveBitSize(byteSize int) int {
+	size := (byteSize / 8)
+	if byteSize%8 != 0 {
+		size += 1
+	}
+	return size * 64
+}
+
+func GenField(out string, bitSize int, modulus string, opt string) error {
+
+	var limbSize int
+	var fixedModulus bool
+	var modulusBig *big.Int
+	switch opt {
+	case "A":
+		if modulus == "" {
+			return fmt.Errorf("Modulus should be set for option A\n")
+		}
+		if len(modulus) < 2 || modulus[:2] != "0x" {
+			return fmt.Errorf("Bad format for modulus\n")
+		}
+		bts, err := hex.DecodeString(modulus[2:])
+		if err != nil {
+			return err
+		}
+		bitSize := resolveBitSize(len(bts))
+		if !supportedBitSizes[bitSize] {
+			return fmt.Errorf("Bit size %d is not supported\n", bitSize)
+
+		}
+		modulusBig = new(big.Int).SetBytes(bts)
+		limbSize = bitSize / 64
+		fixedModulus = true
+	case "B":
+		if !supportedBitSizes[bitSize] {
+			return fmt.Errorf("Bit size %d is not supported", bitSize)
+		}
+		limbSize = bitSize / 64
+		var err error
+		modulusBig, err = rand.Prime(rand.Reader, bitSize)
+		if err != nil {
+			panic(err)
+		}
+		fixedModulus = true
+	case "C":
+		if !supportedBitSizes[bitSize] {
+			fmt.Printf("Bit size %d is not supported\n", bitSize)
+			break
+		}
+		limbSize = bitSize / 64
+		fixedModulus = false
+	default:
+		fmt.Printf("Do nothing. No such option %s\n\n", opt)
+		flag.PrintDefaults()
+	}
+	outDir := filepath.Clean(out)
+	arithmeticDeclerationsCode := pkg("fp") + arithmeticDeclerations(limbSize, fixedModulus)
+	fieldElementImplCode := pkg("fp") + fieldElementImpl(limbSize)
+	fieldImplCode := pkg("fp") + fieldImpl(limbSize, modulusBig)
+	testCode := ""
+	if fixedModulus {
+		testCode = fieldTestFixedModulus
+	} else {
+		testCode = fieldTestNonFixedModulus
+	}
+	writeToFile(arithmeticDeclerationsCode, filepath.Join(outDir, "arith_decl.go"))
+	writeToFile(fieldElementImplCode, filepath.Join(outDir, "field_element.go"))
+	writeToFile(fieldImplCode, filepath.Join(outDir, "field.go"))
+	writeToFile(pkg("fp")+testCode, filepath.Join(outDir, "field_test.go"))
+	return nil
 }
 
 func pkg(name string) string {
 	return fmt.Sprintf("package %s\n", name)
 }
 
-func imports(str string, imports []string) string {
-	if len(imports) > 0 {
-		str += fmt.Sprintf("%s\n", "import (")
-		for _, imprt := range imports {
-			str += fmt.Sprintf("\"%s\"\n", imprt)
-		}
-		str += fmt.Sprintf("%s\n", ")")
-	}
-	return str
-}
-
-func generate(declerations string, templates []string, funcs template.FuncMap, data interface{}) (string, error) {
-	codeStr := ""
-	acc := declerations + "\n"
-	for _, t := range templates {
-		acc += t + "\n"
-	}
-	template, err := template.New("").Funcs(funcs).Parse(acc)
-	if err != nil {
-		return "", err
-	}
-	buffer := new(bytes.Buffer)
-	err = template.Execute(buffer, data)
-	if err != nil {
-		return "", err
-	}
-	codeStr += fmt.Sprintf("\n%s", buffer.String())
-	return codeStr, nil
-}
-
-func GenerateFieldElements(out string, from, to int) {
-	codeStr := pkg("fp")
-	codeStr = imports(codeStr, []string{"math/big", "math/bits", "io", "fmt", "encoding/hex"})
-	for i := from; i <= to; i++ {
-		data := feSize{
-			Limb:         i,
-			Bit:          64 * i,
-			FieldElement: fmt.Sprintf("Fe%d", 64*i),
-			Field:        fmt.Sprintf("Field%d", 64*i),
-			Bytes:        i * 8,
-		}
-		declerations := "" +
-			"{{ $N_LIMB := .Limb }}" +
-			"{{ $N_BIT := .Bit }}" +
-			"{{ $FE := .FieldElement }}" +
-			"{{ $FIELD := .Field }}" +
-			"{{ $N_BYTES := .Bytes }}"
-		if generated, err := generate(declerations, fieldElementTemplates, utilFuncs, data); err != nil {
-			panic(err)
-		} else {
-			codeStr += "\n" + generated
-		}
-	}
-	if err := ioutil.WriteFile(out, []byte(codeStr), 0600); err != nil {
+func writeToFile(content string, out string) {
+	if err := ioutil.WriteFile(out, []byte(content), 0600); err != nil {
 		panic(err)
 	}
-}
-
-func GenerateFields(out string, from, to int, globalModulus bool) {
-	codeStr := pkg("fp")
-	codeStr = imports(codeStr, []string{"fmt", "math/big", "io", "crypto/rand"})
-	for i := from; i <= to; i++ {
-		data := feSize{
-			Limb:         i,
-			Bit:          64 * i,
-			FieldElement: fmt.Sprintf("Fe%d", 64*i),
-			Field:        fmt.Sprintf("Field%d", 64*i),
-			Bytes:        i * 8,
-			GlobMod:      globalModulus,
-		}
-		declerations := "" +
-			"{{ $N_LIMB := .Limb }}" +
-			"{{ $N_BIT := .Bit }}" +
-			"{{ $FE := .FieldElement }}" +
-			"{{ $FIELD := .Field }}" +
-			"{{ $N_BYTES := .Bytes }}" +
-			"{{ $GlobMod := .GlobMod }}"
-		if generated, err := generate(declerations, fieldTemplates, utilFuncs, data); err != nil {
-			panic(err)
-		} else {
-			codeStr += "\n" + generated
-		}
-	}
-	if err := ioutil.WriteFile(out, []byte(codeStr), 0600); err != nil {
-		panic(err)
-	}
-}
-
-func GenerateDeclerations(out string, from, to int, globalModulus bool) {
-	codeStr := pkg("fp")
-	// https://github.com/mmcloughlinto/avo/issues/60
-	// function declaration in avo with TEXT function
-	// does not support external types.
-	// So we have generate stubs in advance.
-	for i := from; i <= to; i++ {
-		if globalModulus {
-			codeStr += fmt.Sprintf("func add%d(c, a, b *Fe%d)\n\n", i, i*64)
-			codeStr += fmt.Sprintf("func addn%d(a, b *Fe%d) uint64\n\n", i, i*64)
-			codeStr += fmt.Sprintf("func sub%d(c, a, b *Fe%d)\n\n", i, i*64)
-			codeStr += fmt.Sprintf("func subn%d(a, b *Fe%d) uint64\n\n", i, i*64)
-			codeStr += fmt.Sprintf("func neg%d(c, a *Fe%d)\n\n", i, i*64)
-			codeStr += fmt.Sprintf("func double%d(c, a *Fe%d)\n\n", i, i*64)
-			codeStr += fmt.Sprintf("func mul%d(c *[%d]uint64, a, b *Fe%d)\n\n", i, i*2, i*64)
-			codeStr += fmt.Sprintf("func square%d(c *[%d]uint64, a *Fe%d)\n\n", i, i*2, i*64)
-			codeStr += fmt.Sprintf("func mont%d(c *Fe%d, w *[%d]uint64)\n\n", i, i*64, i*2)
-			codeStr += fmt.Sprintf("func montmul%d(c, a, b *Fe%d)\n\n", i, i*64)
-			codeStr += fmt.Sprintf("func montsquare%d(c, a *Fe%d)\n\n", i, i*64)
-		} else {
-			codeStr += fmt.Sprintf("func add%d(c, a, b, p *Fe%d)\n\n", i, i*64)
-			codeStr += fmt.Sprintf("func addn%d(a, b *Fe%d) uint64\n\n", i, i*64)
-			codeStr += fmt.Sprintf("func sub%d(c, a, b, p *Fe%d)\n\n", i, i*64)
-			codeStr += fmt.Sprintf("func subn%d(a, b *Fe%d) uint64\n\n", i, i*64)
-			codeStr += fmt.Sprintf("func neg%d(c, a, p *Fe%d)\n\n", i, i*64)
-			codeStr += fmt.Sprintf("func double%d(c, a, p *Fe%d)\n\n", i, i*64)
-			codeStr += fmt.Sprintf("func mul%d(c *[%d]uint64, a, b *Fe%d)\n\n", i, i*2, i*64)
-			codeStr += fmt.Sprintf("func square%d(c *[%d]uint64, a, p *Fe%d)\n\n", i, i*2, i*64)
-			codeStr += fmt.Sprintf("func mont%d(c *Fe%d, w *[%d]uint64, p *Fe%d,inp uint64)\n\n", i, i*64, i*2, i*64)
-			codeStr += fmt.Sprintf("func montmul%d(c, a, b, p *Fe%d, inp uint64)\n\n", i, i*64)
-			codeStr += fmt.Sprintf("func montsquare%d(c, a, p *Fe%d, inp uint64)\n\n", i, i*64)
-		}
-	}
-	if err := ioutil.WriteFile(out, []byte(codeStr), 0600); err != nil {
-		panic(err)
-	}
-}
-
-func GenerateTypes(out string, from, to int) {
-	codeStr := pkg("fp")
-	for i := from; i <= to; i++ {
-		codeStr += fmt.Sprintf("type Fe%d [%d]uint64\n", i*64, i)
-	}
-	if err := ioutil.WriteFile(out, []byte(codeStr), 0600); err != nil {
-		panic(err)
-	}
-}
-
-var utilFuncs = map[string]interface{}{
-	"iterUp":   iterUp,
-	"iterDown": iterDown,
-	"decr":     decr,
-	"mul":      mul,
-}
-
-func iterUp(from int, n int) []int {
-	it := make([]int, n-from)
-	for i := 0; i < len(it); i++ {
-		it[i] = i + from
-	}
-	return it
-}
-
-func iterDown(n int) []int {
-	it := make([]int, n)
-	for i := 0; i < n; i++ {
-		it[i] = n - 1 - i
-	}
-	return it
-}
-
-func decr(n int) int {
-	return n - 1
-}
-
-func mul(n, m int) int {
-	return n * m
 }
