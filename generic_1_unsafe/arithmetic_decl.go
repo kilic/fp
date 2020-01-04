@@ -2,18 +2,37 @@ package fp
 
 import "unsafe"
 
+//go:noescape
 func mul_two_4(a unsafe.Pointer)
+
+//go:noescape
 func mul_two_5(a unsafe.Pointer)
+
+//go:noescape
 func mul_two_6(a unsafe.Pointer)
+
+//go:noescape
 func mul_two_7(a unsafe.Pointer)
+
+//go:noescape
 func mul_two_8(a unsafe.Pointer)
 
+//go:noescape
 func div_two_4(a unsafe.Pointer)
+
+//go:noescape
 func div_two_5(a unsafe.Pointer)
+
+//go:noescape
 func div_two_6(a unsafe.Pointer)
+
+//go:noescape
 func div_two_7(a unsafe.Pointer)
+
+//go:noescape
 func div_two_8(a unsafe.Pointer)
 
+//go:noescape
 func is_even(a unsafe.Pointer) bool
 
 //go:noescape
@@ -123,7 +142,6 @@ func cpy8(dst, src unsafe.Pointer)
 
 //go:noescape
 func cmp4(a, b unsafe.Pointer) int8
-func cmpx(a, b unsafe.Pointer) int8
 
 //go:noescape
 func cmp5(a, b unsafe.Pointer) int8
