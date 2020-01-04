@@ -123,7 +123,7 @@ func TestShift(t *testing.T) {
 			a := field.randFieldElement(rand.Reader)
 			bi := field.toBigNoTransform(a)
 			da := field.newFieldElement()
-			field.cpy(da, a)
+			field.copy(da, a)
 			field.div_two(da)
 			dbi := new(big.Int).Div(bi, two)
 			dbi_2 := field.toBigNoTransform(da)
@@ -131,7 +131,7 @@ func TestShift(t *testing.T) {
 				t.Fatalf("bad div 2 operation")
 			}
 			ma := field.newFieldElement()
-			field.cpy(ma, a)
+			field.copy(ma, a)
 			field.mul_two(ma)
 			mbi := new(big.Int).Mul(bi, two)
 			mbi_2 := field.toBigNoTransform(ma)
@@ -180,7 +180,7 @@ func TestCopy(t *testing.T) {
 			field := randField(limbSize)
 			a := field.randFieldElement(rand.Reader)
 			b := field.newFieldElement()
-			field.cpy(b, a)
+			field.copy(b, a)
 			if !field.equal(a, b) {
 				t.Fatalf("copy operation fails")
 			}
