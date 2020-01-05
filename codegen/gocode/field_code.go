@@ -130,30 +130,42 @@ func (f *field) newFieldElement() *fieldElement {
 	return &fieldElement{}
 }
 
-
-func (f *field) toMont(c, a *fieldElement) {
-	mul(c, a, f.r2, f.p, f.inp)
-}
-
-func (f *field) fromMont(c, a *fieldElement) {
-	mul(c, a, f._one, f.p, f.inp)
-}
-
 func (f *field) randFieldElement(r io.Reader) (*fieldElement, error) {
 	bi, err := rand.Int(r, f.pbig)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	return f.newFieldElementFromBig(bi)
 }
 
-func (f *field) equal(a1, a2 *fieldElement) bool {
-	for i := 0; i < limbSize; i++ {
-		if a1[i] != a2[i] {
-			return false
-		}
+func (f *field) newFieldElementFromBytes(in []byte) (*fieldElement, error) {
+	fe, err := new(fieldElement).fromBytes(in)
+	if err != nil {
+		return nil, err
 	}
-	return true
+	if !f.isValid(fe) {
+		return nil, fmt.Errorf("input is not valid")
+	}
+	f.toMont(fe, fe)
+	return fe, nil
+}
+
+func (f *field) newFieldElementFromBig(in *big.Int) (*fieldElement, error) {
+	fe, err := new(fieldElement).fromBig(in)
+	if err != nil {
+		return nil, err
+	}
+	f.toMont(fe, fe)
+	return fe, nil
+}
+
+func (f *field) newFieldElementFromString(in string) (*fieldElement, error) {
+	fe, err := new(fieldElement).fromString(in)
+	if err != nil {
+		return nil, err
+	}
+	f.toMont(fe, fe)
+	return fe, nil
 }
 
 func (f *field) toBytes(fe *fieldElement) []byte {
@@ -162,38 +174,37 @@ func (f *field) toBytes(fe *fieldElement) []byte {
 	return t.toBytes()
 }
 
-func (f *field) toBytesNoTransform(fe *fieldElement) []byte {
-	return fe.toBytes()
-}
-
 func (f *field) toBig(fe *fieldElement) *big.Int {
 	t := new(fieldElement)
 	f.fromMont(t, fe)
-	return new(big.Int).SetBytes(f.toBytes(t))
-}
-
-func (f *field) toBigNoTransform(fe *fieldElement) *big.Int {
-	return new(big.Int).SetBytes(f.toBytes(fe))
+	return t.toBig()
 }
 
 func (f *field) toString(fe *fieldElement) string {
 	return hex.EncodeToString(f.toBytes(fe))
 }
 
-func (f *field) newFieldElementFromBytes(in []byte) (*fieldElement, error) {
-	fe, err := new(fieldElement).fromBytes(in)
-	if err != nil {
-		return nil, err
+func (f *field) isValid(fe *fieldElement) bool {
+	if fe.cmp(f.p) != -1 {
+		return false
 	}
-	f.toMont(fe, fe)
-	return fe, nil
+	return true
 }
 
-func (f *field) newFieldElementFromBig(bi *big.Int) (*fieldElement, error) {
-	bts := bi.Bytes()
-	in := make([]byte, byteSize)
-	copy(in[len(in)-len(bts):], bts[:])
-	return f.newFieldElementFromBytes(in)
+func (f *field) isZero(fe *fieldElement) bool {
+	return fe.equal(f.zero)
+}
+
+func (f *field) isOne(fe *fieldElement) bool {
+	return fe.equal(f.one)
+}
+
+func (f *field) toMont(c, a *fieldElement) {
+	mul(c, a, f.r2, f.p, f.inp)
+}
+
+func (f *field) fromMont(c, a *fieldElement) {
+	mul(c, a, f._one, f.p, f.inp)
 }
 
 func (f *field) add(c, a, b *fieldElement) {
@@ -209,8 +220,8 @@ func (f *field) sub(c, a, b *fieldElement) {
 }
 
 func (f *field) neg(c, a *fieldElement) {
-	if f.equal(a, f.zero) {
-		a.Set(f.zero)
+	if a.equal(f.zero) {
+		a.set(f.zero)
 		return
 	}
 	_neg(c, a, f.p)
@@ -220,8 +231,23 @@ func (f *field) mul(c, a, b *fieldElement) {
 	mul(c, a, b, f.p, f.inp)
 }
 
+func (f *field) exp(c, a *fieldElement, e *big.Int) {
+	z := f.newFieldElement()
+	z.set(f.r)
+	for i := e.BitLen(); i >= 0; i-- {
+		f.mul(z, z, z)
+		if e.Bit(i) == 1 {
+			f.mul(z, z, a)
+		}
+	}
+	c.set(z)
+}
+
 func padBytes(in []byte, size int) []byte {
 	out := make([]byte, size)
+	if len(in) > size {
+		panic("bad input for padding")
+	}
 	copy(out[size-len(in):], in)
 	return out
 }
@@ -232,13 +258,83 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"io"
+	"fmt"
 	"math/big"
 )
 `
 const fieldImplFixedModulus1 = `
 
+func randFieldElement(r io.Reader) (*fieldElement, error) {
+	bi, err := rand.Int(r, pbig)
+	if err != nil {
+		return nil, err
+	}
+	return newFieldElementFromBig(bi)
+}
+
 func newFieldElement() *fieldElement {
 	return &fieldElement{}
+}
+
+func newFieldElementFromBytes(in []byte) (*fieldElement, error) {
+	fe, err := new(fieldElement).fromBytes(in)
+	if err != nil {
+		return nil, err
+	}
+	if !isValid(fe) {
+		return nil, fmt.Errorf("input is not valid")
+	}
+	toMont(fe, fe)
+	return fe, nil
+}
+
+func newFieldElementFromBig(in *big.Int) (*fieldElement, error) {
+	fe, err := new(fieldElement).fromBig(in)
+	if err != nil {
+		return nil, err
+	}
+	toMont(fe, fe)
+	return fe, nil
+}
+
+func newFieldElementFromString(in string) (*fieldElement, error) {
+	fe, err := new(fieldElement).fromString(in)
+	if err != nil {
+		return nil, err
+	}
+	toMont(fe, fe)
+	return fe, nil
+}
+
+func toBytes(fe *fieldElement) []byte {
+	t := new(fieldElement)
+	fromMont(t, fe)
+	return t.toBytes()
+}
+
+func toBig(fe *fieldElement) *big.Int {
+	t := new(fieldElement)
+	fromMont(t, fe)
+	return t.toBig()
+}
+
+func toString(fe *fieldElement) string {
+	return hex.EncodeToString(toBytes(fe))
+}
+
+func isValid(fe *fieldElement) bool {
+	if fe.cmp(&modulus) != -1 {
+		return false
+	}
+	return true
+}
+
+func isZero(fe *fieldElement) bool {
+	return fe.equal(zero)
+}
+
+func isOne(fe *fieldElement) bool {
+	return fe.equal(one)
 }
 
 func toMont(c, a *fieldElement) {
@@ -249,69 +345,32 @@ func fromMont(c, a *fieldElement) {
 	mul(c, a, _one)
 }
 
-func equal(a1, a2 *fieldElement) bool {
-	for i := 0; i < limbSize; i++ {
-		if a1[i] != a2[i] {
-			return false
-		}
-	}
-	return true
-}
-
-func randFieldElement(r io.Reader) (*fieldElement, error) {
-	bi, err := rand.Int(r, pbig)
-	if err != nil {
-		panic(err)
-	}
-	return newFieldElementFromBig(bi)
-}
-
-func toBytes(fe *fieldElement) []byte {
-	t := new(fieldElement)
-	fromMont(t, fe)
-	return t.toBytes()
-}
-
-func toBytesNoTransform(fe *fieldElement) []byte {
-	return fe.toBytes()
-}
-
-func toBig(fe *fieldElement) *big.Int {
-	t := new(fieldElement)
-	fromMont(t, fe)
-	return new(big.Int).SetBytes(toBytes(t))
-}
-
-func toBigNoTransform(fe *fieldElement) *big.Int {
-	return new(big.Int).SetBytes(toBytes(fe))
-}
-
-func toString(fe *fieldElement) string {
-	return hex.EncodeToString(toBytes(fe))
-}
-
-func newFieldElementFromBytes(in []byte) (*fieldElement, error) {
-	fe, err := new(fieldElement).fromBytes(in)
-	if err != nil {
-		return nil, err
-	}
-	toMont(fe, fe)
-	return fe, nil
-}
-
-func newFieldElementFromBig(bi *big.Int) (*fieldElement, error) {
-	bts := bi.Bytes()
-	in := make([]byte, byteSize)
-	copy(in[len(in)-len(bts):], bts[:])
-	return newFieldElementFromBytes(in)
-}
-
-
 func neg(c, a *fieldElement) {
-	if equal(a, zero) {
-		a.Set(zero)
+	if a.equal(zero) {
+		a.set(zero)
 		return
 	}
 	_neg(c, a)
+}
+
+func exp(c, a *fieldElement, e *big.Int) {
+	z := newFieldElement()
+	z.set(r)
+	for i := e.BitLen(); i >= 0; i-- {
+		mul(z, z, z)
+		if e.Bit(i) == 1 {
+			mul(z, z, a)
+		}
+	}
+	c.set(z)
+}
+
+func padBytes(in []byte, size int) []byte {
+	out := make([]byte, size)
+	if len(in) > size {
+		panic("bad input for padding")
+	}
+	copy(out[size-len(in):], in)
+	return out
 }
 `

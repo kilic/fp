@@ -9,6 +9,8 @@ func fieldElementImpl(limbSize int) string {
 	code0 := `
 import (
 	"fmt"
+	"math/big"
+	"encoding/hex"
 )
 `
 
@@ -20,16 +22,36 @@ type fieldElement [%d]uint64
 `, limbSize*8, limbSize, limbSize)
 
 	code2 := `
-func (fe fieldElement) Set(fe2 *fieldElement) {
-	fe[0] = fe2[0]
-	fe[1] = fe2[1]
-	fe[2] = fe2[2]
-	fe[3] = fe2[3]
+func (fe *fieldElement) set(fe2 *fieldElement) *fieldElement {
+	for i := 0; i < limbSize; i++ {
+		fe[i] = fe2[i]
+	}
+	return fe
+}
+
+func (fe *fieldElement) cmp(fe2 *fieldElement) int8 {
+	for i := limbSize-1; i > -1; i-- {
+		if fe[i] > fe2[i] {
+			return 1
+		} else if fe[i] < fe2[i] {
+			return -1
+		}
+	}
+	return 0
+}
+
+func (fe *fieldElement) equal(fe2 *fieldElement) bool {
+	for i := 0; i < limbSize; i++ {
+		if fe[i] != fe2[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func (fe *fieldElement) fromBytes(in []byte) (*fieldElement, error) {
 	if len(in) != byteSize {
-		return nil, fmt.Errorf("bad input len")
+		return nil, fmt.Errorf("bad input size")
 	}
 	var a int
 	var size = byteSize
@@ -58,6 +80,32 @@ func (fe *fieldElement) toBytes() []byte {
 		out[a-8] = byte(fe[i] >> 56)
 	}
 	return out
-}`
+}
+
+func (fe *fieldElement) fromBig(b *big.Int) (*fieldElement, error) {
+	in := padBytes(b.Bytes(), byteSize)
+	return fe.fromBytes(in)
+}
+
+func (fe *fieldElement) toBig() *big.Int {
+	return new(big.Int).SetBytes(fe.toBytes())
+}
+
+func (fe *fieldElement) fromString(str string) (*fieldElement, error) {
+	in := str
+	if len(in) > 2 && in[:2] == "0x" {
+		in = in[:2]
+	}
+	data, err := hex.DecodeString(in)
+	if err != nil {
+		return nil, err
+	}
+	return fe.fromBytes(padBytes(data, byteSize))
+}
+
+func (fe *fieldElement) toString() string {
+	return 	hex.EncodeToString(fe.toBytes())
+}
+`
 	return code0 + code1 + code2
 }
