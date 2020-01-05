@@ -410,7 +410,7 @@ func genMontMul48NoAdx(size int, fixedmod bool, single bool) {
 		}
 		W.updateIndex(0)
 	}
-	mont48NoAdx(tape, W, inp, modulus, u, sCarry, lCarry, false)
+	mont48NoAdx(tape, W, inp, modulus, u, sCarry, lCarry, fixedmod)
 	tape.ret()
 	RET()
 	comment("end")
