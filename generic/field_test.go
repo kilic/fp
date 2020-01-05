@@ -200,7 +200,6 @@ func TestSerialization(t *testing.T) {
 			b0[len(b0)-1] = byte(1)
 			b1 := field.toBytes(field.r)
 			if !bytes.Equal(b0, b1) {
-				debugBytes(b0, b1)
 				t.Fatalf("demont(r) must be equal to 1\n")
 			}
 			// is a => modulus should not be valid
@@ -221,7 +220,6 @@ func TestSerialization(t *testing.T) {
 				}
 				b1 = field.toBytes(a0)
 				if !bytes.Equal(b0, b1) {
-					debugBytes(b0, b1)
 					t.Fatalf("bad serialization (bytes)")
 				}
 				// string
