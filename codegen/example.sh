@@ -18,21 +18,21 @@ ARCH='ADX'
 ######################################
 ## 384 bit field with a random modulus
 
-go run . -output $GEN_DIR -opt B \
--bit 384 \
--arch $ARCH
+# go run . -output $GEN_DIR -opt B \
+# -bit 384 \
+# -arch $ARCH
 
 
 ###     Option C
 #######################################
 ### 384 bit field with not-predefined modulus
-#
-# go run . -output ./generated -bit 256 -opt C
-#
+go run . -output ./generated -opt C \
+-bit 384 \
+# -arch $ARCH
 
 ###     Option D
 #######################################
-### Only x86 assembly operations all supported bit sizes
+### generate only x86 assembly backend for all supported bit sizes
 #
 # go run . -output $GEN_DIR -opt D
 #
