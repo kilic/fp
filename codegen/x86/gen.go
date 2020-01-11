@@ -102,9 +102,9 @@ func GenX86(output string, bitSize int, arch string, fixedmod bool, single bool)
 	generateNeg(limbSize, fixedmod, single)
 	switch arch {
 	case "ADX":
-		if !fixedmod {
-			return fmt.Errorf("architecture ADX with fixed mod to be implemented\n")
-		}
+		// if !fixedmod {
+		// 	return fmt.Errorf("architecture ADX with fixed mod to be implemented\n")
+		// }
 		genMontMulAdx(limbSize, fixedmod, single)
 	default:
 		genMontMulNoAdx(limbSize, fixedmod, single)

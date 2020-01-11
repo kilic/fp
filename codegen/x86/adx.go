@@ -248,8 +248,6 @@ func genMontMul48Adx(size int, fixedmod bool, single bool) {
 		panic("")
 	}
 
-	// Allocate stack if limb size is larger than 4.
-	// Otherwise we don't need stack space.
 	stackSize := 2*size - 10
 	if stackSize < 0 {
 		stackSize = 0
@@ -273,28 +271,58 @@ func genMontMul48Adx(size int, fixedmod bool, single bool) {
 	W.updateIndex(0)
 	switch size {
 	case 4:
+		if !fixedmod {
+			modulus = tape.newReprAtParam(size, "p", R.at(R.size-1).s.(Register))
+		}
 		hi = newLimb(A.base, nil)
 		lCarry = newLimb(RBX, nil)
 	case 5:
 		hi = newLimb(A.base, nil)
 		lCarry = newLimb(RBX, nil)
+		if !fixedmod {
+			s := tape.stack.extend(1, true)
+			w := W.updateIndex(-1).next(_NO_ITER)
+			t := newLimb(w.s, nil)
+			w.moveTo(s, _ASSIGN)
+			modulus = tape.newReprAtParam(size, "p", t.s.(Register))
+		}
 	case 6:
 		W.next(_ITER).moveTo(A.base, _ASSIGN)
 		W.next(_ITER).moveTo(RBX, _ASSIGN)
-		W.updateIndex(10)
+		//
+		if !fixedmod {
+			W.updateIndex(9)
+		} else {
+			W.updateIndex(10)
+		}
+		Stack.updateIndex(0)
+		//
 		w := W.next(_ITER)
 		hi = newLimb(w.s, nil)
 		w.moveTo(Stack.next(_ITER), _ASSIGN)
 		w = W.next(_ITER)
 		lCarry = newLimb(w.s, nil)
 		w.moveTo(Stack.next(_ITER), _ASSIGN)
+		if !fixedmod {
+			s := tape.stack.extend(1, true)
+			w := W.next(_ITER)
+			t := newLimb(w.s, nil)
+			w.moveTo(s, _ASSIGN)
+			modulus = tape.newReprAtParam(size, "p", t.s.(Register))
+		}
 	case 7:
-		Stack.updateIndex(0)
 		W.next(_ITER).moveTo(A.base, _ASSIGN)
 		W.next(_ITER).moveTo(RBX, _ASSIGN)
+		//
 		w2 := W.next(_ITER)
 		w3 := W.next(_ITER)
-		W.updateIndex(10)
+		//
+		if !fixedmod {
+			W.updateIndex(9)
+		} else {
+			W.updateIndex(10)
+		}
+		Stack.updateIndex(0)
 		//
 		w10 := W.next(_ITER)
 		t := w10.clone()
@@ -313,15 +341,30 @@ func genMontMul48Adx(size int, fixedmod bool, single bool) {
 		w = W.next(_ITER)
 		lCarry = newLimb(w.s, nil)
 		w.moveTo(Stack.next(_ITER), _ASSIGN)
+		//
+		if !fixedmod {
+			s := tape.stack.extend(1, true)
+			w := W.next(_ITER)
+			t := newLimb(w.s, nil)
+			w.moveTo(s, _ASSIGN)
+			modulus = tape.newReprAtParam(size, "p", t.s.(Register))
+		}
 	case 8:
 		Stack.updateIndex(0)
 		W.next(_ITER).moveTo(A.base, _ASSIGN)
 		W.next(_ITER).moveTo(RBX, _ASSIGN)
+		//
 		w2 := W.next(_ITER)
 		w3 := W.next(_ITER)
 		w4 := W.next(_ITER)
 		w5 := W.next(_ITER)
-		W.updateIndex(10)
+		//
+		if !fixedmod {
+			W.updateIndex(9)
+		} else {
+			W.updateIndex(10)
+		}
+		Stack.updateIndex(0)
 		//
 		w10 := W.next(_ITER)
 		t := w10.clone()
@@ -350,9 +393,17 @@ func genMontMul48Adx(size int, fixedmod bool, single bool) {
 		w = W.next(_ITER)
 		lCarry = newLimb(w.s, nil)
 		w.moveTo(Stack.next(_ITER), _ASSIGN)
-
+		//
+		if !fixedmod {
+			s := tape.stack.extend(1, true)
+			w := W.next(_ITER)
+			t := newLimb(w.s, nil)
+			w.moveTo(s, _ASSIGN)
+			modulus = tape.newReprAtParam(size, "p", t.s.(Register))
+		}
 	default:
 	}
+	W.updateIndex(0)
 	mont48Adx(tape, W, inp, modulus, hi, lCarry, fixedmod)
 	tape.ret()
 	RET()
