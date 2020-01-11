@@ -499,3 +499,8 @@ func (l *limb) clear() *limb {
 func (l *limb) cmp(op Op) {
 	CMPQ(l.s, op)
 }
+
+func (l *limb) xorself() *limb {
+	XORQ(l.s, l.s)
+	return l
+}

@@ -94,7 +94,7 @@ func (fe *fieldElement) toBig() *big.Int {
 func (fe *fieldElement) fromString(str string) (*fieldElement, error) {
 	in := str
 	if len(in) > 2 && in[:2] == "0x" {
-		in = in[:2]
+		in = in[2:]
 	}
 	data, err := hex.DecodeString(in)
 	if err != nil {

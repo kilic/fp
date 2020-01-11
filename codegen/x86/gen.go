@@ -54,22 +54,22 @@ func GenX86All(output string, arch string) error {
 	fixedmod := false
 	for _, bitSize := range supportedBitSizes {
 		limbSize := bitSize / 64
+		generateCopy(limbSize, single)
+		generateEq(limbSize, single)
+		generateCmp(limbSize, single)
+		generateAdd(limbSize, fixedmod, single)
+		generateAddNoCar(limbSize, single)
+		generateDouble(limbSize, fixedmod, single)
+		generateSub(limbSize, fixedmod, single)
+		generateSubNoCar(limbSize, single)
+		generateNeg(limbSize, fixedmod, single)
+		generateMul2(limbSize, single)
+		generateDiv2(limbSize, single)
 		switch arch {
 		case "ADX":
-			return fmt.Errorf("architecture ADX to be implemented\n")
+			genMontMulAdx(limbSize, fixedmod, single)
 		default:
-			generateCopy(limbSize, single)
-			generateEq(limbSize, single)
-			generateCmp(limbSize, single)
-			generateAdd(limbSize, fixedmod, single)
-			generateAddNoCar(limbSize, single)
-			generateDouble(limbSize, fixedmod, single)
-			generateSub(limbSize, fixedmod, single)
-			generateSubNoCar(limbSize, single)
-			generateNeg(limbSize, fixedmod, single)
 			genMontMulNoAdx(limbSize, fixedmod, single)
-			generateMul2(limbSize, single)
-			generateDiv2(limbSize, single)
 		}
 	}
 	Generate()
@@ -91,19 +91,22 @@ func GenX86(output string, bitSize int, arch string, fixedmod bool, single bool)
 	if limbSize < 4 || limbSize > 8 {
 		return fmt.Errorf("limb size %d not implemented\n", limbSize)
 	}
+	generateCopy(limbSize, single)
+	generateEq(limbSize, single)
+	generateCmp(limbSize, single)
+	generateAdd(limbSize, fixedmod, single)
+	generateAddNoCar(limbSize, single)
+	generateDouble(limbSize, fixedmod, single)
+	generateSub(limbSize, fixedmod, single)
+	generateSubNoCar(limbSize, single)
+	generateNeg(limbSize, fixedmod, single)
 	switch arch {
 	case "ADX":
-		return fmt.Errorf("architecture ADX to be implemented\n")
+		if !fixedmod {
+			return fmt.Errorf("architecture ADX with fixed mod to be implemented\n")
+		}
+		genMontMulAdx(limbSize, fixedmod, single)
 	default:
-		generateCopy(limbSize, single)
-		generateEq(limbSize, single)
-		generateCmp(limbSize, single)
-		generateAdd(limbSize, fixedmod, single)
-		generateAddNoCar(limbSize, single)
-		generateDouble(limbSize, fixedmod, single)
-		generateSub(limbSize, fixedmod, single)
-		generateSubNoCar(limbSize, single)
-		generateNeg(limbSize, fixedmod, single)
 		genMontMulNoAdx(limbSize, fixedmod, single)
 	}
 	Generate()

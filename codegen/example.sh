@@ -1,7 +1,7 @@
 #!/bin/bash -e
-
-N_FUZZ=50
+N_FUZZ=1000
 GEN_DIR='./generated'
+ARCH='ADX'
 
 ### I would like to generate,
 
@@ -10,16 +10,18 @@ GEN_DIR='./generated'
 ### 384 bit field with given modulus
 #
 # MODULUS=0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab
-# go run . -output $GEN_DIR -bit 384 -opt A -modulus $MODULUS
+# go run . -output $GEN_DIR -bit 384 -opt A -modulus $MODULUS -arch $ARCH
 #
 
 
-###     Option B
-#######################################
-### 384 bit field with a random modulus
-#
-go run . -output $GEN_DIR -bit 384 -opt B
-#
+##     Option B
+######################################
+## 384 bit field with a random modulus
+
+go run . -output $GEN_DIR -opt B \
+-bit 384 \
+-arch $ARCH
+
 
 ###     Option C
 #######################################
