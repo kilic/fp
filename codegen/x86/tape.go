@@ -96,17 +96,17 @@ func (t *tape) allocStack(size int) *repr {
 	return r
 }
 
-func (t *tape) newReprAtParam(size int, param string, dst Register) *repr {
+func (t *tape) newReprAtParam(size int, param string, dst Register, offset int) *repr {
 	if _, ok := dst.(GPPhysical); ok {
 		t.reserveGp(dst.(GPPhysical))
 	}
-	return t.newReprAtMemory(size, Mem{Base: Load(Param(param), dst)})
+	return t.newReprAtMemory(size, Mem{Base: Load(Param(param), dst)}, offset)
 }
 
-func (t *tape) newReprAtMemory(size int, base Mem) *repr {
+func (t *tape) newReprAtMemory(size int, base Mem, offset int) *repr {
 	number := make([]*limb, size)
-	for i := 0; i < size; i++ {
-		number[i] = newLimb(base.Offset(int(i*8)), t.swap)
+	for i := offset; i < size+offset; i++ {
+		number[i-offset] = newLimb(base.Offset(int(i*8)), t.swap)
 	}
 	return &repr{number, 0, size, base.Base, t.swap}
 }

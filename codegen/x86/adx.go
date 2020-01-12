@@ -215,7 +215,7 @@ func mont48Adx(tape *tape, W *repr, inp Op, modulus *repr, hi, c *limb, fixedMod
 	}
 	SBBQ(U32(0), c.s)
 	Commentf("|")
-	C := tape.newReprAtParam(C_red.size, "c", c.s.(Register))
+	C := tape.newReprAtParam(C_red.size, "c", c.s.(Register), 0)
 	for i := 0; i < C_red.size; i++ {
 		T.next(_ITER).moveIfNotCFAux(
 			*C_red.next(_ITER),
@@ -237,8 +237,8 @@ func genMontMul48Adx(size int, fixedmod bool, single bool) {
 	}
 	comment("inputs")
 	tape := newTape(_NO_SWAP, RDX, RAX, RBX)
-	A := tape.newReprAtParam(size, "a", RDI)
-	B := tape.newReprAtParam(size, "b", RSI)
+	A := tape.newReprAtParam(size, "a", RDI, 0)
+	B := tape.newReprAtParam(size, "b", RSI, 0)
 	if tape.sizeFreeGp() != 9 {
 		panic("")
 	}
@@ -264,7 +264,7 @@ func genMontMul48Adx(size int, fixedmod bool, single bool) {
 	var lCarry, hi *limb
 	if fixedmod {
 		inp = NewDataAddr(Symbol{Name: fmt.Sprintf("·inp")}, 0)
-		modulus = tape.newReprAtMemory(size, NewDataAddr(Symbol{Name: modulusName}, 0))
+		modulus = tape.newReprAtMemory(size, NewDataAddr(Symbol{Name: modulusName}, 0), 0)
 	} else {
 		inp = NewParamAddr("inp", 32)
 	}
@@ -272,7 +272,7 @@ func genMontMul48Adx(size int, fixedmod bool, single bool) {
 	switch size {
 	case 4:
 		if !fixedmod {
-			modulus = tape.newReprAtParam(size, "p", R.at(R.size-1).s.(Register))
+			modulus = tape.newReprAtParam(size, "p", R.at(R.size-1).s.(Register), 0)
 		}
 		hi = newLimb(A.base, nil)
 		lCarry = newLimb(RBX, nil)
@@ -284,7 +284,7 @@ func genMontMul48Adx(size int, fixedmod bool, single bool) {
 			w := W.updateIndex(-1).next(_NO_ITER)
 			t := newLimb(w.s, nil)
 			w.moveTo(s, _ASSIGN)
-			modulus = tape.newReprAtParam(size, "p", t.s.(Register))
+			modulus = tape.newReprAtParam(size, "p", t.s.(Register), 0)
 		}
 	case 6:
 		W.next(_ITER).moveTo(A.base, _ASSIGN)
@@ -308,7 +308,7 @@ func genMontMul48Adx(size int, fixedmod bool, single bool) {
 			w := W.next(_ITER)
 			t := newLimb(w.s, nil)
 			w.moveTo(s, _ASSIGN)
-			modulus = tape.newReprAtParam(size, "p", t.s.(Register))
+			modulus = tape.newReprAtParam(size, "p", t.s.(Register), 0)
 		}
 	case 7:
 		W.next(_ITER).moveTo(A.base, _ASSIGN)
@@ -347,7 +347,7 @@ func genMontMul48Adx(size int, fixedmod bool, single bool) {
 			w := W.next(_ITER)
 			t := newLimb(w.s, nil)
 			w.moveTo(s, _ASSIGN)
-			modulus = tape.newReprAtParam(size, "p", t.s.(Register))
+			modulus = tape.newReprAtParam(size, "p", t.s.(Register), 0)
 		}
 	case 8:
 		Stack.updateIndex(0)
@@ -399,7 +399,7 @@ func genMontMul48Adx(size int, fixedmod bool, single bool) {
 			w := W.next(_ITER)
 			t := newLimb(w.s, nil)
 			w.moveTo(s, _ASSIGN)
-			modulus = tape.newReprAtParam(size, "p", t.s.(Register))
+			modulus = tape.newReprAtParam(size, "p", t.s.(Register), 0)
 		}
 	default:
 	}

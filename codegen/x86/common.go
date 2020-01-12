@@ -15,7 +15,7 @@ func generateDiv2(size int, single bool) {
 	}
 	TEXT(funcName, NOSPLIT, fmt.Sprintf("func(a *[%d]uint64)", size))
 	tape := newTape(nil)
-	A := tape.newReprAtParam(size, "a", RDI)
+	A := tape.newReprAtParam(size, "a", RDI, 0)
 	XORQ(RAX, RAX)
 	A.previous()
 	for i := 0; i < size; i++ {
@@ -31,7 +31,7 @@ func generateMul2(size int, single bool) {
 	}
 	TEXT(funcName, NOSPLIT, fmt.Sprintf("func(a *[%d]uint64)", size))
 	tape := newTape(nil)
-	A := tape.newReprAtParam(size, "a", RDI)
+	A := tape.newReprAtParam(size, "a", RDI, 0)
 	XORQ(RAX, RAX)
 	for i := 0; i < size; i++ {
 		RCLQ(Imm(1), A.next(_ITER).s)
@@ -46,8 +46,8 @@ func generateEq(size int, single bool) {
 	}
 	TEXT(funcName, NOSPLIT, fmt.Sprintf("func(a, b *[%d]uint64) bool", size))
 	tape := newTape(nil)
-	A := tape.newReprAtParam(size, "a", RDI)
-	B := tape.newReprAtParam(size, "b", RSI)
+	A := tape.newReprAtParam(size, "a", RDI, 0)
+	B := tape.newReprAtParam(size, "b", RSI, 0)
 	r := NewParamAddr("ret", 16)
 	t := R8
 	MOVB(U8(0), r)
@@ -68,8 +68,8 @@ func generateCopy(size int, single bool) {
 	}
 	TEXT(funcName, NOSPLIT, fmt.Sprintf("func(dst, src *[%d]uint64)", size))
 	tape := newTape(nil)
-	A := tape.newReprAtParam(size, "dst", RDI)
-	B := tape.newReprAtParam(size, "src", RSI)
+	A := tape.newReprAtParam(size, "dst", RDI, 0)
+	B := tape.newReprAtParam(size, "src", RSI, 0)
 	t := R8
 	for i := 0; i < size; i++ {
 		B.next(_ITER).moveTo(t, _NO_ASSIGN)
@@ -85,8 +85,8 @@ func generateCmp(size int, single bool) {
 	}
 	TEXT(funcName, NOSPLIT, fmt.Sprintf("func(a, b *[%d]uint64) int8", size))
 	tape := newTape(nil)
-	A := tape.newReprAtParam(size, "a", RDI)
-	B := tape.newReprAtParam(size, "b", RSI)
+	A := tape.newReprAtParam(size, "a", RDI, 0)
+	B := tape.newReprAtParam(size, "b", RSI, 0)
 	r := NewParamAddr("ret", 16)
 	A.previous()
 	B.previous()
@@ -120,8 +120,8 @@ func generateAdd(size int, fixedmod bool, single bool) {
 	}
 	Commentf("|")
 	tape := newTape(RBX, RAX)
-	A := tape.newReprAtParam(size, "a", RDI)
-	B := tape.newReprAtParam(size, "b", RSI)
+	A := tape.newReprAtParam(size, "a", RDI, 0)
+	B := tape.newReprAtParam(size, "b", RSI, 0)
 	C_sum := tape.newReprAlloc(size)
 	XORQ(RAX, RAX)
 	Commentf("|")
@@ -143,8 +143,8 @@ func generateAddNoCar(size int, single bool) {
 	TEXT(funcName, NOSPLIT, fmt.Sprintf("func(a, b *[%d]uint64) uint64", size))
 	Commentf("|")
 	tape := newTape(RBX, RAX)
-	A := tape.newReprAtParam(size, "a", RDI)
-	B := tape.newReprAtParam(size, "b", RSI)
+	A := tape.newReprAtParam(size, "a", RDI, 0)
+	B := tape.newReprAtParam(size, "b", RSI, 0)
 	C_sum := tape.newReprAlloc(size)
 	MOVQ(RAX, RAX)
 	Commentf("|")
@@ -178,7 +178,7 @@ func generateDouble(size int, fixedmod bool, single bool) {
 	if !fixedmod {
 		tape.reserveGp(RSI)
 	}
-	A := tape.newReprAtParam(size, "a", RDI)
+	A := tape.newReprAtParam(size, "a", RDI, 0)
 	C_sum := tape.newReprAlloc(size)
 	XORQ(RAX, RAX)
 	for i := 0; i < size; i++ {
@@ -199,9 +199,9 @@ func reduceAdded(tape *tape, C_sum *repr, fixedmod bool, single bool) {
 	Commentf("|")
 	var modulus *repr
 	if fixedmod {
-		modulus = tape.newReprAtMemory(size, NewDataAddr(Symbol{Name: modulusName}, 0))
+		modulus = tape.newReprAtMemory(size, NewDataAddr(Symbol{Name: modulusName}, 0), 0)
 	} else {
-		modulus = tape.newReprAtParam(size, "p", RSI)
+		modulus = tape.newReprAtParam(size, "p", RSI, 0)
 	}
 	C_red := tape.newReprAlloc(size)
 	for i := 0; i < size; i++ {
@@ -209,7 +209,7 @@ func reduceAdded(tape *tape, C_sum *repr, fixedmod bool, single bool) {
 	}
 	SBBQ(Imm(0), RAX)
 	Commentf("|")
-	C := tape.newReprAtParam(size, "c", RDI)
+	C := tape.newReprAtParam(size, "c", RDI, 0)
 	for i := 0; i < size; i++ {
 		C_red.next(_ITER).moveIfNotCFAux(*C_sum.next(_ITER), *C.next(_ITER))
 	}
@@ -229,8 +229,8 @@ func generateSub(size int, fixedmod bool, single bool) {
 	}
 	Commentf("|")
 	tape := newTape(RBX, RAX)
-	A := tape.newReprAtParam(size, "a", RDI)
-	B := tape.newReprAtParam(size, "b", RSI)
+	A := tape.newReprAtParam(size, "a", RDI, 0)
+	B := tape.newReprAtParam(size, "b", RSI, 0)
 	C_sub := tape.newReprAlloc(size)
 	zero := tape.newReprNoAlloc(size)
 	for i := 0; i < size; i++ {
@@ -244,16 +244,16 @@ func generateSub(size int, fixedmod bool, single bool) {
 	var modulus *repr
 	if fixedmod {
 		tape.free(B.base)
-		modulus = tape.newReprAtMemory(size, NewDataAddr(Symbol{Name: modulusName}, 0))
+		modulus = tape.newReprAtMemory(size, NewDataAddr(Symbol{Name: modulusName}, 0), 0)
 	} else {
-		modulus = tape.newReprAtParam(size, "p", B.base)
+		modulus = tape.newReprAtParam(size, "p", B.base, 0)
 	}
 	C_mod := tape.newReprAlloc(size)
 	for i := 0; i < size; i++ {
 		zero.next(_ITER).moveIfNotCFAux(*modulus.next(_ITER), *C_mod.next(_ITER))
 	}
 	Commentf("|")
-	C := tape.newReprAtParam(size, "c", RDI)
+	C := tape.newReprAtParam(size, "c", RDI, 0)
 	for i := 0; i < size; i++ {
 		C.next(_ITER).loadAdd(*C_sub.next(_ITER), *C_mod.next(_ITER), i != 0)
 	}
@@ -269,8 +269,8 @@ func generateSubNoCar(size int, single bool) {
 	TEXT(funcName, NOSPLIT, fmt.Sprintf("func(a, b *[%d]uint64) uint64", size))
 	Commentf("|")
 	tape := newTape(RBX, RAX)
-	A := tape.newReprAtParam(size, "a", RDI)
-	B := tape.newReprAtParam(size, "b", RSI)
+	A := tape.newReprAtParam(size, "a", RDI, 0)
+	B := tape.newReprAtParam(size, "b", RSI, 0)
 	C_sum := tape.newReprAlloc(size)
 	XORQ(RAX, RAX)
 	Commentf("|")
@@ -297,7 +297,7 @@ func generateNeg(size int, fixedmod bool, single bool) {
 	TEXT(funcName, NOSPLIT, fmt.Sprintf("func(c, a, p *[%d]uint64)", size))
 	Commentf("|")
 	tape := newTape(RBX, RAX)
-	A := tape.newReprAtParam(size, "a", RDI)
+	A := tape.newReprAtParam(size, "a", RDI, 0)
 	if !fixedmod {
 		tape.reserveGp(RSI)
 	}
@@ -305,15 +305,15 @@ func generateNeg(size int, fixedmod bool, single bool) {
 	Commentf("|")
 	var modulus *repr
 	if fixedmod {
-		modulus = tape.newReprAtMemory(size, NewDataAddr(Symbol{Name: modulusName}, 0))
+		modulus = tape.newReprAtMemory(size, NewDataAddr(Symbol{Name: modulusName}, 0), 0)
 	} else {
-		modulus = tape.newReprAtParam(size, "p", RSI)
+		modulus = tape.newReprAtParam(size, "p", RSI, 0)
 	}
 	for i := 0; i < size; i++ {
 		C_sub.next(_ITER).loadSub(*modulus.next(_ITER), *A.next(_ITER), i != 0)
 	}
 	Commentf("|")
-	C := tape.newReprAtParam(size, "c", RDI)
+	C := tape.newReprAtParam(size, "c", RDI, 0)
 	for i := 0; i < size; i++ {
 		C_sub.next(_ITER).moveTo(C.next(_ITER), _NO_ASSIGN)
 	}
