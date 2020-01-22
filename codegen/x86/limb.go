@@ -57,18 +57,23 @@ func (r *repr) ops() []Op {
 	return ops
 }
 
-func (r *repr) debug() {
+func (r *repr) debug(desc string) {
 	fmt.Printf("--------------\n\n")
-	fmt.Printf("Repr Debug\n")
+	fmt.Printf("Repr Debug, %s\n", desc)
 	fmt.Printf("Size: %d\n", r.size)
+	p := r.i
 	for i := 0; i < len(r.limbs); i++ {
 		fmt.Printf("[%d]: ", i)
 		limb := r.limbs[i]
-		if limb == nil {
-			fmt.Printf("notset\n")
+		if limb == nil || limb.s == nil {
+			fmt.Printf("NN")
 		} else {
-			fmt.Printf("%s\n", limb.Asm())
+			fmt.Printf("%s", limb.Asm())
 		}
+		if i == p {
+			fmt.Printf("\t*")
+		}
+		fmt.Printf("\n")
 	}
 	fmt.Printf("--------------\n")
 }
@@ -198,6 +203,11 @@ func (l *limb) atReg() bool { return IsRegister(l.s) }
 
 func (l *limb) clone() *limb {
 	return newLimb(l.s, nil)
+}
+
+func (l *limb) delete() {
+	l.s = nil
+	l.swapReg = nil
 }
 
 func (l *limb) load(src Op, dst Op) {

@@ -103,6 +103,22 @@ func (t *tape) newReprAtParam(size int, param string, dst Register, offset int) 
 	return t.newReprAtMemory(size, Mem{Base: Load(Param(param), dst)}, offset)
 }
 
+func (t *tape) ax() *limb {
+	return newLimb(RAX, nil)
+}
+
+func (t *tape) bx() *limb {
+	return newLimb(RBX, nil)
+}
+
+func (t *tape) cx() *limb {
+	return newLimb(RCX, nil)
+}
+
+func (t *tape) dx() *limb {
+	return newLimb(RDX, nil)
+}
+
 func (t *tape) newReprAtMemory(size int, base Mem, offset int) *repr {
 	number := make([]*limb, size)
 	for i := offset; i < size+offset; i++ {
@@ -341,22 +357,35 @@ func (s *stack) extend(size int, allocate bool) Mem {
 	return s.head.Offset(offset)
 }
 
-func (s *stack) next(allocate bool) Mem {
+// func (s *stack) next(allocate bool) Mem {
+// 	// look up for free stack slot
+// 	for i := 0; i < s.size; i++ {
+// 		if !s.allocated[i] {
+// 			s.allocated[i] = allocate
+// 			return s.head.Offset(8 * i)
+// 		}
+// 	}
+// 	// else extend by one
+// 	return s.extend(1, allocate)
+// }
+
+func (s *stack) next(allocate bool) *limb {
 	// look up for free stack slot
 	for i := 0; i < s.size; i++ {
 		if !s.allocated[i] {
 			s.allocated[i] = allocate
-			return s.head.Offset(8 * i)
+			m := s.head.Offset(8 * i)
+			return newLimb(m, nil)
 		}
 	}
 	// else extend by one
-	return s.extend(1, allocate)
+	m := s.extend(1, allocate)
+	return newLimb(m, nil)
 }
 
 func (s *stack) free(mems ...Op) []Op {
 	_mems := []Op{}
 	for _, op := range mems {
-		// todo : consider removing limb
 		if isLimb(op) {
 			op = op.(*limb).s
 		}
@@ -398,7 +427,7 @@ func (s *stack) freeAll() {
 func (s *stack) debug() {
 	fmt.Printf("Stack: %d/%d\n", s.sizeAllocated(), s.size)
 	for i := 0; i < s.size; i++ {
-		fmt.Printf("%d\t", i)
+		fmt.Printf("%d\t", i*8)
 		if s.allocated[i] {
 			fmt.Printf("ALLOC\n")
 		} else {
