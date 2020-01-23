@@ -207,12 +207,9 @@ func mont816NoAdxI1(tape *tape, W *repr, gpSize int, inp Op, modulus *repr, u, s
 	size := modulus.size
 	span := size - gpSize
 	iCarry := newLimb(RDX, _NO_SWAP)
-	lCarry := W.at(0).clone()
-	WR := tape.newReprNoAlloc(size + gpSize + 1)
-	var k int = 1
-	// for i := 0; i < size*2; i++ {
+	lCarry := W.at(gpSize).clone()
 	modulusOffset := gpSize
-	for i := 0; i < size; i++ {
+	for i := gpSize; i < gpSize+1; i++ {
 		Commentf("| \n\n/*\ti = %d\t\t\t\t*/\n", i)
 		W.updateIndex(i)
 		modulus.updateIndex(modulusOffset)
@@ -228,11 +225,9 @@ func mont816NoAdxI1(tape *tape, W *repr, gpSize int, inp Op, modulus *repr, u, s
 				w := W.next(_ITER)
 				idle.set(w)
 				modulus.next(_ITER).mul(u, w, sCarry, _MUL_ADD)
-				wr := WR.next(_ITER)
 				if i >= gpSize {
 					s := stack.next(_ALLOC)
 					w.moveTo(s, _ASSIGN)
-					wr.set(s.clone())
 				} else {
 					w.delete()
 				}
@@ -255,7 +250,6 @@ func mont816NoAdxI1(tape *tape, W *repr, gpSize int, inp Op, modulus *repr, u, s
 							Comment("| move to idle register")
 							stack.free(w2)
 							w2.moveTo(idle.clone(), _ASSIGN)
-							k++
 						} else {
 							W.commentCurrent("w")
 						}
@@ -271,7 +265,6 @@ func mont816NoAdxI1(tape *tape, W *repr, gpSize int, inp Op, modulus *repr, u, s
 							Comment("| move to idle register")
 							stack.free(w2)
 							w2.moveTo(idle.clone(), _ASSIGN)
-							k++
 						} else {
 							W.commentCurrent("w")
 						}
