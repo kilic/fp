@@ -12,9 +12,9 @@ func genMontMulNoAdx(size int, fixedmod bool, single bool) {
 	/*
 	   ("func mul%d(c *[%d]uint64, a, b *Fe%d)\n\n", i, i*2, i*64)
 	*/
-	if size < 4 {
-		panic("not implemented")
-	} else if size >= 4 || size < 9 {
+	if size < 2 {
+		panic("bad size")
+	} else if size >= 2 || size < 9 {
 		genMontMul48NoAdx(size, fixedmod, single)
 	} else {
 		panic("not implemented")
@@ -62,7 +62,9 @@ func mul48NoAdx(tape *tape, A, B, R, Stack *repr, bi, carry *limb) *repr {
 			} else {
 				if j == 0 {
 					Rc := R.next(_ITER)
-					Rc.addCarry()
+					if size > 2 {
+						Rc.addCarry()
+					}
 					carry.addCarry()
 					if i < 2*size-9 {
 						Ra.moveTo(Stack.next(_ITER), _NO_ASSIGN)
@@ -86,15 +88,13 @@ func mul48NoAdx(tape *tape, A, B, R, Stack *repr, bi, carry *limb) *repr {
 	}
 	// W is 2n sized output
 	W := tape.newReprNoAlloc(size * 2)
-	if stackSize < 1 {
-		R.updateIndex(0)
-	}
 	// Limbs at stack are lowest ones
 	for i := 0; i < stackSize; i++ {
 		W.next(_ITER).set(Stack.next(_ITER))
 	}
 	if stackSize < 1 {
-		for i := 0; i < R.size-1; i++ {
+		R.updateIndex(0)
+		for i := 0; i < size*2-1; i++ {
 			W.next(_ITER).set(R.next(_ITER))
 		}
 	} else {
@@ -250,15 +250,28 @@ func genMontMul48NoAdx(size int, fixedmod bool, single bool) {
 	}
 	Stack := tape.allocStack(stackSize)
 
+	var r *repr
+	switch size {
+	case 1:
+		r = R.slice(0, 1)
+	case 2:
+		r = R.slice(0, 3)
+	case 3:
+		r = R.slice(0, 5)
+	case 4:
+		r = R.slice(0, 7)
+	default:
+		r = R
+	}
 	// Do zero GPRs
-	for i := 0; i < R.size; i++ {
-		r := R.next(_ITER)
+	for i := 0; i < r.size; i++ {
+		rr := r.next(_ITER)
 		if (i != 0 && i != 1) || (stackSize > 0 && i == 1) {
-			r.clear()
+			rr.clear()
 		}
 	}
-
-	W := mul48NoAdx(tape, A, B, R, Stack, bi, carry)
+	rLast := R.last()
+	W := mul48NoAdx(tape, A, B, r, Stack, bi, carry)
 	if W.size != 2*size {
 		panic("")
 	}
@@ -275,9 +288,30 @@ func genMontMul48NoAdx(size int, fixedmod bool, single bool) {
 	comment("swap")
 	var lCarry, sCarry, u *limb
 	switch size {
+	case 1:
+		if !fixedmod {
+			modulus = tape.newReprAtParam(size, "p", rLast.asRegister(), 0)
+		}
+		lCarry = newLimb(A.base, nil)
+		sCarry = newLimb(B.base, nil)
+		u = bi
+	case 2:
+		if !fixedmod {
+			modulus = tape.newReprAtParam(size, "p", rLast.asRegister(), 0)
+		}
+		lCarry = newLimb(A.base, nil)
+		sCarry = newLimb(B.base, nil)
+		u = bi
+	case 3:
+		if !fixedmod {
+			modulus = tape.newReprAtParam(size, "p", rLast.asRegister(), 0)
+		}
+		lCarry = newLimb(A.base, nil)
+		sCarry = newLimb(B.base, nil)
+		u = bi
 	case 4:
 		if !fixedmod {
-			modulus = tape.newReprAtParam(size, "p", R.at(R.size-1).s.(Register), 0)
+			modulus = tape.newReprAtParam(size, "p", rLast.asRegister(), 0)
 		}
 		lCarry = newLimb(A.base, nil)
 		sCarry = newLimb(B.base, nil)

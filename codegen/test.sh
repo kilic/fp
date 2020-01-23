@@ -2,7 +2,7 @@
 N_FUZZ=50
 GEN_DIR='./generated'
 
-field_sizes=(256 320 384 448 512)
+field_sizes=(128 192 256 320 384 448 512)
 
 # ADX backend
 ARCH='ADX'

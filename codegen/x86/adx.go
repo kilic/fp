@@ -12,9 +12,9 @@ func genMontMulAdx(size int, fixedmod bool, single bool) {
 	/*
 	   ("func mul%d(c *[%d]uint64, a, b *Fe%d)\n\n", i, i*2, i*64)
 	*/
-	if size < 4 {
+	if size < 2 {
 		panic("not implemented")
-	} else if size >= 4 || size < 9 {
+	} else if size >= 2 || size < 9 {
 		genMontMul48Adx(size, fixedmod, single)
 	} else {
 		panic("not implemented")
@@ -104,35 +104,13 @@ func mul48Adx(tape *tape, A, B, R, Stack *repr) *repr {
 			}
 		}
 	}
-	// // W is 2n sized output
-	// Stack.updateIndex(0)
-	// W := tape.newReprNoAlloc(size * 2)
-	// if stackSize < 1 {
-	// 	R.updateIndex(0)
-	// }
-	// for i := 0; i < stackSize; i++ {
-	// 	W.next(_ITER).set(Stack.next(_ITER))
-	// }
-	// if stackSize < 1 {
-	// 	for i := 0; i < W.size-1; i++ {
-	// 		W.next(_ITER).set(R.next(_ITER))
-	// 	}
-	// } else {
-	// 	for i := 0; i < R.size; i++ {
-	// 		W.next(_ITER).set(R.next(_ITER))
-	// 	}
-	// }
-	// W.next(_ITER).set(B.base)
-	// W.updateIndex(0)
 	W := tape.newReprNoAlloc(size * 2)
-	if stackSize < 1 {
-		R.updateIndex(0)
-	}
 	for i := 0; i < stackSize; i++ {
 		W.next(_ITER).set(Stack.next(_ITER))
 	}
 	if stackSize < 1 {
-		for i := 0; i < W.size-1; i++ {
+		R.updateIndex(0)
+		for i := 0; i < size*2-1; i++ {
 			W.next(_ITER).set(R.next(_ITER))
 		}
 	} else {
@@ -140,6 +118,7 @@ func mul48Adx(tape *tape, A, B, R, Stack *repr) *repr {
 			W.next(_ITER).set(R.next(_ITER))
 		}
 	}
+
 	W.next(_ITER).set(B.base)
 	W.updateIndex(0)
 	return W
@@ -248,13 +227,28 @@ func genMontMul48Adx(size int, fixedmod bool, single bool) {
 		panic("")
 	}
 
+	var r *repr
+	switch size {
+	case 1:
+		r = R.slice(0, 1)
+	case 2:
+		r = R.slice(0, 3)
+	case 3:
+		r = R.slice(0, 5)
+	case 4:
+		r = R.slice(0, 7)
+	default:
+		r = R
+	}
+	rLast := R.last()
+
 	stackSize := 2*size - 10
 	if stackSize < 0 {
 		stackSize = 0
 	}
 	Stack := tape.allocStack(stackSize)
 
-	W := mul48Adx(tape, A, B, R, Stack)
+	W := mul48Adx(tape, A, B, r, Stack)
 	if W.size != 2*size {
 		panic("")
 	}
@@ -270,9 +264,21 @@ func genMontMul48Adx(size int, fixedmod bool, single bool) {
 	}
 	W.updateIndex(0)
 	switch size {
+	case 2:
+		if !fixedmod {
+			modulus = tape.newReprAtParam(size, "p", rLast.asRegister(), 0)
+		}
+		hi = newLimb(A.base, nil)
+		lCarry = newLimb(RBX, nil)
+	case 3:
+		if !fixedmod {
+			modulus = tape.newReprAtParam(size, "p", rLast.asRegister(), 0)
+		}
+		hi = newLimb(A.base, nil)
+		lCarry = newLimb(RBX, nil)
 	case 4:
 		if !fixedmod {
-			modulus = tape.newReprAtParam(size, "p", R.at(R.size-1).s.(Register), 0)
+			modulus = tape.newReprAtParam(size, "p", rLast.asRegister(), 0)
 		}
 		hi = newLimb(A.base, nil)
 		lCarry = newLimb(RBX, nil)
@@ -284,7 +290,7 @@ func genMontMul48Adx(size int, fixedmod bool, single bool) {
 			w := W.updateIndex(-1).next(_NO_ITER)
 			t := newLimb(w.s, nil)
 			w.moveTo(s, _ASSIGN)
-			modulus = tape.newReprAtParam(size, "p", t.s.(Register), 0)
+			modulus = tape.newReprAtParam(size, "p", t.asRegister(), 0)
 		}
 	case 6:
 		W.next(_ITER).moveTo(A.base, _ASSIGN)

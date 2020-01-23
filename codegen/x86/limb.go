@@ -148,6 +148,10 @@ func (r *repr) at(i int) *limb {
 	return r.limbs[i]
 }
 
+func (r *repr) last() *limb {
+	return r.limbs[r.size-1]
+}
+
 func (r *repr) mul(iter bool, op Op, lo Op, hi Op, addOrMove bool) {
 	r.next(iter).mul(op, lo, hi, addOrMove)
 }
@@ -198,6 +202,10 @@ func (l *limb) atReg() bool { return IsRegister(l.s) }
 
 func (l *limb) clone() *limb {
 	return newLimb(l.s, nil)
+}
+
+func (l *limb) asRegister() Register {
+	return l.s.(Register)
 }
 
 func (l *limb) load(src Op, dst Op) {

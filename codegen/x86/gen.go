@@ -18,6 +18,8 @@ var mlo = RAX
 var mhi = RDX
 
 var supportedBitSizes = []int{
+	128,
+	192,
 	256,
 	320,
 	384,
@@ -88,7 +90,7 @@ func GenX86(output string, bitSize int, arch string, fixedmod bool, single bool)
 	if bitSize%64 != 0 {
 		return fmt.Errorf(fmt.Sprintf("bad bit size, %d\n", bitSize))
 	}
-	if limbSize < 4 || limbSize > 8 {
+	if limbSize < 2 || limbSize > 8 {
 		return fmt.Errorf("limb size %d not implemented\n", limbSize)
 	}
 	generateCopy(limbSize, single)
@@ -102,9 +104,6 @@ func GenX86(output string, bitSize int, arch string, fixedmod bool, single bool)
 	generateNeg(limbSize, fixedmod, single)
 	switch arch {
 	case "ADX":
-		// if !fixedmod {
-		// 	return fmt.Errorf("architecture ADX with fixed mod to be implemented\n")
-		// }
 		genMontMulAdx(limbSize, fixedmod, single)
 	default:
 		genMontMulNoAdx(limbSize, fixedmod, single)

@@ -11,6 +11,8 @@ import (
 )
 
 var supportedBitSizes = map[int]bool{
+	128: true,
+	192: true,
 	256: true,
 	320: true,
 	384: true,
