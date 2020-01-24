@@ -16,6 +16,14 @@ var targetNumberOfLimb int = -1
 var from = 2
 var to = 8
 
+func TestArch(t *testing.T) {
+	answer := "Yes."
+	if nonADXBMI2 {
+		answer = "No."
+	}
+	fmt.Printf("Is using ADX backend extension? %s\n", answer)
+}
+
 func TestMain(m *testing.M) {
 	_fuz := flag.Int("fuzz", 1, "# of iters")
 	nol := flag.Int("nol", 0, "backend bit size")

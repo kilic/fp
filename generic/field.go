@@ -8,11 +8,15 @@ import (
 	"math/big"
 	"reflect"
 	"unsafe"
+
+	"golang.org/x/sys/cpu"
 )
 
 // fieldElement is a pointer that addresses
 // any field element in any limb size
 type fieldElement = unsafe.Pointer
+
+var nonADXBMI2 = !(cpu.X86.HasADX && cpu.X86.HasBMI2) || forceNonADXBMI2()
 
 type field struct {
 	limbSize int
@@ -69,91 +73,120 @@ func newField(p []byte) (*field, error) {
 		f.cmp = cmp2
 		f.addn = addn2
 		f.subn = subn2
-		f._mul = mul2
 		f._add = add2
 		f._sub = sub2
 		f._double = double2
 		f._neg = _neg2
 		f.div_two = div_two_2
 		f.mul_two = mul_two_2
+		if nonADXBMI2 {
+			f._mul = mul_no_adx_bmi2_2
+		} else {
+			f._mul = mul2
+		}
 	case 3:
 		f.equal = eq3
 		f.copy = cpy3
 		f.cmp = cmp3
 		f.addn = addn3
 		f.subn = subn3
-		f._mul = mul3
 		f._add = add3
 		f._sub = sub3
 		f._double = double3
 		f._neg = _neg3
 		f.div_two = div_two_3
 		f.mul_two = mul_two_3
+		if nonADXBMI2 {
+			f._mul = mul_no_adx_bmi2_3
+		} else {
+			f._mul = mul3
+		}
 	case 4:
 		f.equal = eq4
 		f.copy = cpy4
 		f.cmp = cmp4
 		f.addn = addn4
 		f.subn = subn4
-		f._mul = mul4
 		f._add = add4
 		f._sub = sub4
 		f._double = double4
 		f._neg = _neg4
 		f.div_two = div_two_4
 		f.mul_two = mul_two_4
+		if nonADXBMI2 {
+			f._mul = mul_no_adx_bmi2_4
+		} else {
+			f._mul = mul4
+		}
 	case 5:
 		f.equal = eq5
 		f.copy = cpy5
 		f.cmp = cmp5
 		f.addn = addn5
 		f.subn = subn5
-		f._mul = mul5
 		f._add = add5
 		f._sub = sub5
 		f._double = double5
 		f._neg = _neg5
 		f.div_two = div_two_5
 		f.mul_two = mul_two_5
+		if nonADXBMI2 {
+			f._mul = mul_no_adx_bmi2_5
+		} else {
+			f._mul = mul5
+		}
 	case 6:
 		f.equal = eq6
 		f.copy = cpy6
 		f.cmp = cmp6
 		f.addn = addn6
 		f.subn = subn6
-		f._mul = mul6
 		f._add = add6
 		f._sub = sub6
 		f._double = double6
 		f._neg = _neg6
 		f.div_two = div_two_6
 		f.mul_two = mul_two_6
+		f._mul = mul6
+		if nonADXBMI2 {
+			f._mul = mul_no_adx_bmi2_6
+		} else {
+			f._mul = mul6
+		}
 	case 7:
 		f.equal = eq7
 		f.copy = cpy7
 		f.cmp = cmp7
 		f.addn = addn7
 		f.subn = subn7
-		f._mul = mul7
 		f._add = add7
 		f._sub = sub7
 		f._double = double7
 		f._neg = _neg7
 		f.div_two = div_two_7
 		f.mul_two = mul_two_7
+		if nonADXBMI2 {
+			f._mul = mul_no_adx_bmi2_7
+		} else {
+			f._mul = mul7
+		}
 	case 8:
 		f.equal = eq8
 		f.copy = cpy8
 		f.cmp = cmp8
 		f.addn = addn8
 		f.subn = subn8
-		f._mul = mul8
 		f._add = add8
 		f._sub = sub8
 		f._double = double8
 		f._neg = _neg8
 		f.div_two = div_two_8
 		f.mul_two = mul_two_8
+		if nonADXBMI2 {
+			f._mul = mul_no_adx_bmi2_8
+		} else {
+			f._mul = mul8
+		}
 	default:
 		return nil, fmt.Errorf("limb size %d is not implemented", f.limbSize)
 	}
@@ -192,6 +225,10 @@ func (f *field) mul(c, a, b fieldElement) {
 	f._mul(c, a, b, f.p, f.inp)
 }
 
+func (f *field) square(c, a fieldElement) {
+	f._mul(c, a, a, f.p, f.inp)
+}
+
 func (f *field) exp(c, a fieldElement, e *big.Int) {
 	z := f.newFieldElement()
 	f.copy(z, f.r)
@@ -202,6 +239,14 @@ func (f *field) exp(c, a fieldElement, e *big.Int) {
 		}
 	}
 	f.copy(c, z)
+}
+
+func (f *field) isOne(fe fieldElement) bool {
+	return f.equal(fe, f.one)
+}
+
+func (f *field) isZero(fe fieldElement) bool {
+	return f.equal(fe, f.zero)
 }
 
 func (f *field) isValid(fe []byte) bool {
@@ -387,7 +432,9 @@ func newFieldElementFromBytes(in []byte) (fieldElement, int, error) {
 	sh := (*reflect.SliceHeader)(unsafe.Pointer(&data))
 	sh.Data = uintptr(a)
 	sh.Len, sh.Cap = limbSize, limbSize
-	limbSliceFromBytes(data[:], in)
+	if err := limbSliceFromBytes(data[:], in); err != nil {
+		// panic("this is unexpected")
+	}
 	return a, limbSize, nil
 }
 
@@ -419,11 +466,11 @@ func newFieldElementFromBigUnchecked(limbSize int, bi *big.Int) fieldElement {
 	return fe
 }
 
-func limbSliceFromBytes(out []uint64, in []byte) {
+func limbSliceFromBytes(out []uint64, in []byte) error {
 	var byteSize = len(in)
 	var limbSize = len(out)
 	if limbSize*8 != byteSize {
-		panic("non ... input output sizes")
+		return fmt.Errorf("(byteSize != limbSize * 8), %d, %d", byteSize, limbSize)
 	}
 	var a int
 	for i := 0; i < limbSize; i++ {
@@ -433,6 +480,7 @@ func limbSliceFromBytes(out []uint64, in []byte) {
 			uint64(in[a-5])<<32 | uint64(in[a-6])<<40 |
 			uint64(in[a-7])<<48 | uint64(in[a-8])<<56
 	}
+	return nil
 }
 
 func padBytes(in []byte, size int) []byte {
@@ -444,7 +492,7 @@ func padBytes(in []byte, size int) []byte {
 	return out
 }
 
-func (f *field) inverse(inv, e fieldElement) {
+func (f *field) inverse(inv, e fieldElement) bool {
 	u, v, s, r := f.newFieldElement(),
 		f.newFieldElement(),
 		f.newFieldElement(),
@@ -484,14 +532,14 @@ func (f *field) inverse(inv, e fieldElement) {
 	}
 	if !found {
 		f.copy(inv, zero)
-		return
+		return false
 	}
 	if k < bitSize {
 		/*
 			this is unexpected
 		*/
 		f.copy(inv, zero)
-		return
+		return false
 	}
 
 	if f.cmp(r, f.p) != -1 {
@@ -505,4 +553,5 @@ func (f *field) inverse(inv, e fieldElement) {
 		f.double(u, u)
 	}
 	f.copy(inv, u)
+	return true
 }
