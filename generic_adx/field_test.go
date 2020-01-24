@@ -41,7 +41,11 @@ func randField(limbSize int) *field {
 	rawpbytes := pbig.Bytes()
 	pbytes := make([]byte, byteSize)
 	copy(pbytes[byteSize-len(rawpbytes):], pbig.Bytes())
-	return newField(pbytes)
+	field, err := newField(pbytes)
+	if err != nil {
+		panic(err)
+	}
+	return field
 }
 
 func debugBytes(a ...[]byte) {

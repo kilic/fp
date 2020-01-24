@@ -39,10 +39,14 @@ type field struct {
 	mul_two  func(a fieldElement)
 }
 
-func newField(p []byte) *field {
+func newField(p []byte) (*field, error) {
+	var err error
 	f := new(field)
 	f.pbig = new(big.Int).SetBytes(p)
-	f.p, f.limbSize = newFieldElementFromBytes(p)
+	f.p, f.limbSize, err = newFieldElementFromBytes(p)
+	if err != nil {
+		return nil, err
+	}
 	R := new(big.Int)
 	R.SetBit(R, f.byteSize()*8, 1).Mod(R, f.pbig)
 	R2 := new(big.Int)
@@ -55,7 +59,7 @@ func newField(p []byte) *field {
 	f._one = newFieldElementFromBigUnchecked(f.limbSize, big.NewInt(1))
 	f.zero = newFieldElementFromBigUnchecked(f.limbSize, new(big.Int))
 	if inpT == nil {
-		return nil
+		return nil, fmt.Errorf("field is not applicable\n%s", hex.EncodeToString(p))
 	}
 	f.inp = inpT.Uint64()
 	switch f.limbSize {
@@ -151,9 +155,9 @@ func newField(p []byte) *field {
 		f.div_two = div_two_8
 		f.mul_two = mul_two_8
 	default:
-		panic("not implemented")
+		return nil, fmt.Errorf("limb size %d is not implemented", f.limbSize)
 	}
-	return f
+	return f, nil
 }
 
 func (f *field) toMont(c, a fieldElement) {
@@ -209,7 +213,11 @@ func (f *field) isValid(fe []byte) bool {
 }
 
 func (f *field) newFieldElement() fieldElement {
-	return newFieldElement(f.limbSize)
+	fe, err := newFieldElement(f.limbSize)
+	if err != nil {
+		// panic("this is unexpected")
+	}
+	return fe
 }
 
 func (f *field) randFieldElement(r io.Reader) fieldElement {
@@ -224,7 +232,13 @@ func (f *field) newFieldElementFromBytesNoTransform(in []byte) (fieldElement, er
 	if len(in) != f.byteSize() {
 		return nil, fmt.Errorf("bad input size")
 	}
-	fe, _ := newFieldElementFromBytes(in)
+	fe, limbSize, err := newFieldElementFromBytes(in)
+	if err != nil {
+		return nil, err
+	}
+	if limbSize != f.limbSize {
+		// panic("this is unexpected")
+	}
 	return fe, nil
 }
 
@@ -235,8 +249,13 @@ func (f *field) newFieldElementFromBytes(in []byte) (fieldElement, error) {
 	if !f.isValid(in) {
 		return nil, fmt.Errorf("input is a larger number than modulus")
 	}
-	fe, _ := newFieldElementFromBytes(in)
-	// if limbSize != _limbSize { // panic("") // is not expected // }
+	fe, limbSize, err := newFieldElementFromBytes(in)
+	if err != nil {
+		return nil, err
+	}
+	if limbSize != f.limbSize {
+		// panic("this is unexpected")
+	}
 	f.toMont(fe, fe)
 	return fe, nil
 }
@@ -256,7 +275,13 @@ func (f *field) newFieldElementFromString(hexStr string) (fieldElement, error) {
 	if len(in) > f.byteSize() {
 		return nil, fmt.Errorf("bad input size")
 	}
-	fe, _ := newFieldElementFromBytes(padBytes(in, f.byteSize()))
+	fe, limbSize, err := newFieldElementFromBytes(padBytes(in, f.byteSize()))
+	if err != nil {
+		return nil, err
+	}
+	if limbSize != f.limbSize {
+		// panic("this is unexpected")
+	}
 	f.toMont(fe, fe)
 	return fe, nil
 }
@@ -267,9 +292,15 @@ func (f *field) newFieldElementFromBig(a *big.Int) (fieldElement, error) {
 		return nil, fmt.Errorf("input is a larger number than modulus")
 	}
 	if len(in) > f.byteSize() {
-		return nil, fmt.Errorf("bad input size")
+		return nil, fmt.Errorf("bad input size %d", len(in))
 	}
-	fe, _ := newFieldElementFromBytes(padBytes(in, f.byteSize()))
+	fe, limbSize, err := newFieldElementFromBytes(padBytes(in, f.byteSize()))
+	if err != nil {
+		return nil, err
+	}
+	if limbSize != f.limbSize {
+		// panic("this is unexpected")
+	}
 	f.toMont(fe, fe)
 	return fe, nil
 }
@@ -342,46 +373,49 @@ func toBytes(fe []uint64) []byte {
 
 // newFieldElement returns pointer of an uint64 array.
 // limbSize is calculated according to size of input slice
-func newFieldElementFromBytes(in []byte) (fieldElement, int) {
+func newFieldElementFromBytes(in []byte) (fieldElement, int, error) {
 	byteSize := len(in)
 	limbSize := byteSize / 8
 	if byteSize%8 != 0 {
-		panic("bad input byte size")
+		return nil, 0, fmt.Errorf("bad input byte size %d", byteSize)
 	}
-	a := newFieldElement(limbSize)
+	a, err := newFieldElement(limbSize)
+	if err != nil {
+		return nil, 0, err
+	}
 	var data []uint64
 	sh := (*reflect.SliceHeader)(unsafe.Pointer(&data))
 	sh.Data = uintptr(a)
 	sh.Len, sh.Cap = limbSize, limbSize
 	limbSliceFromBytes(data[:], in)
-	return a, limbSize
+	return a, limbSize, nil
 }
 
-func newFieldElement(limbSize int) fieldElement {
+func newFieldElement(limbSize int) (fieldElement, error) {
 	switch limbSize {
 	case 2:
-		return unsafe.Pointer(&[2]uint64{})
+		return unsafe.Pointer(&[2]uint64{}), nil
 	case 3:
-		return unsafe.Pointer(&[3]uint64{})
+		return unsafe.Pointer(&[3]uint64{}), nil
 	case 4:
-		return unsafe.Pointer(&[4]uint64{})
+		return unsafe.Pointer(&[4]uint64{}), nil
 	case 5:
-		return unsafe.Pointer(&[5]uint64{})
+		return unsafe.Pointer(&[5]uint64{}), nil
 	case 6:
-		return unsafe.Pointer(&[6]uint64{})
+		return unsafe.Pointer(&[6]uint64{}), nil
 	case 7:
-		return unsafe.Pointer(&[7]uint64{})
+		return unsafe.Pointer(&[7]uint64{}), nil
 	case 8:
-		return unsafe.Pointer(&[8]uint64{})
+		return unsafe.Pointer(&[8]uint64{}), nil
 	default:
-		panic("not implemented")
+		return nil, fmt.Errorf("limb size %d is not implemented", limbSize)
 	}
 }
 
 func newFieldElementFromBigUnchecked(limbSize int, bi *big.Int) fieldElement {
 	in := bi.Bytes()
 	byteSize := limbSize * 8
-	fe, _ := newFieldElementFromBytes(padBytes(in, byteSize))
+	fe, _, _ := newFieldElementFromBytes(padBytes(in, byteSize))
 	return fe
 }
 
@@ -454,7 +488,7 @@ func (f *field) inverse(inv, e fieldElement) {
 	}
 	if k < bitSize {
 		/*
-			THIS IS UNEXPECTED
+			this is unexpected
 		*/
 		f.copy(inv, zero)
 		return
