@@ -26,16 +26,17 @@ ARCH='ADX'
 ###     Option C
 #######################################
 ### 384 bit field with not-predefined modulus
-go run . -output ./generated -opt C \
--bit 384 \
+# go run . -output ./generated -opt C \
+# -bit 384 \
 # -arch $ARCH
 
 ###     Option D
 #######################################
-### generate only x86 assembly backend for all supported bit sizes
+### x86 backends for all supported bit sizes and architectures (adx or w/o adx)
+### since 'avo' program can generate only one output at a time, 
+### we have to run the program multiple times :/
 #
-# go run . -output $GEN_DIR -opt D
-#
+go run . -output $GEN_DIR -opt D 
 
 #######################################
 # format the code

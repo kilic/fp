@@ -17,7 +17,7 @@ func main() {
 A : Generate a fixed modulus field (no modulus input for backend)
 B : Generate a fixed modulus random field (no modulus input for backend)
 C : Generate a arbitrary modulus field for a fixed bit size
-D : Generate implemented backends only
+D : Generate all implemented backends only
 `
 
 	var output string
@@ -26,7 +26,7 @@ D : Generate implemented backends only
 	var opt string
 	var arch string
 
-	flag.StringVar(&output, "output", "tmp", "outputk directory")
+	flag.StringVar(&output, "output", "tmp", "output directory")
 	flag.IntVar(&bitSize, "bit", 0, "bit size of the field")
 	flag.StringVar(&modulus, "modulus", "", "bit size of the field")
 	flag.StringVar(&opt, "opt", "", options)
@@ -85,7 +85,8 @@ D : Generate implemented backends only
 			panic(err)
 		}
 	case "D":
-		err := x86.GenX86All(output, arch)
+		gocode.GenDeclerationsForMultiple(output, nil)
+		err := x86.GenX86All(output)
 		if err != nil {
 			panic(err)
 		}

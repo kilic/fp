@@ -210,9 +210,9 @@ func genMontMul48Adx(size int, fixedmod bool, single bool) {
 		modulusName = fmt.Sprintf("%s%d", modulusName, size)
 	}
 	if fixedmod {
-		TEXT(funcName, NOSPLIT, fmt.Sprintf("func(c *[%d]uint64, a, b *[%d]uint64)", size*2, size))
+		TEXT(funcName, NOSPLIT, fmt.Sprintf("func(c *[%d]uint64, a, b *[%d]uint64)", size, size))
 	} else {
-		TEXT(funcName, NOSPLIT, fmt.Sprintf("func(c *[%d]uint64, a, b, p *[%d]uint64, inp uint64)", size*2, size))
+		TEXT(funcName, NOSPLIT, fmt.Sprintf("func(c *[%d]uint64, a, b, p *[%d]uint64, inp uint64)", size, size))
 	}
 	comment("inputs")
 	tape := newTape(_NO_SWAP, RDX, RAX, RBX)

@@ -20,6 +20,8 @@ var supportedBitSizes = map[int]bool{
 	512: true,
 }
 
+var supportedLimbSizes = []int{2, 3, 4, 5, 6, 7, 8}
+
 func resolveBitSize(byteSize int) int {
 	size := (byteSize / 8)
 	if byteSize%8 != 0 {
@@ -28,11 +30,22 @@ func resolveBitSize(byteSize int) int {
 	return size * 64
 }
 
+func GenDeclerationsForMultiple(out string, limbSizes []int) {
+	outDir := filepath.Clean(out)
+	_limbSizes := limbSizes
+	if _limbSizes == nil {
+		_limbSizes = supportedLimbSizes
+	}
+	arithmeticDeclerationsCode := pkg("fp") + arithmeticDeclerationsMultiple(_limbSizes)
+	writeToFile(arithmeticDeclerationsCode, filepath.Join(outDir, "arithmetic_decl.go"))
+}
+
 func GenField(out string, bitSize int, modulus string, opt string) error {
 
 	var limbSize int
 	var fixedModulus bool
 	var modulusBig *big.Int
+	outDir := filepath.Clean(out)
 	switch opt {
 	case "A":
 		if modulus == "" {
@@ -75,7 +88,7 @@ func GenField(out string, bitSize int, modulus string, opt string) error {
 		fmt.Printf("Do nothing. No such option %s\n\n", opt)
 		flag.PrintDefaults()
 	}
-	outDir := filepath.Clean(out)
+
 	arithmeticDeclerationsCode := pkg("fp") + arithmeticDeclerations(limbSize, fixedModulus)
 	fieldElementImplCode := pkg("fp") + fieldElementImpl(limbSize)
 	fieldImplCode := pkg("fp") + fieldImpl(limbSize, modulusBig)
@@ -85,7 +98,7 @@ func GenField(out string, bitSize int, modulus string, opt string) error {
 	} else {
 		testCode = fieldTestNonFixedModulus
 	}
-	writeToFile(arithmeticDeclerationsCode, filepath.Join(outDir, "arith_decl.go"))
+	writeToFile(arithmeticDeclerationsCode, filepath.Join(outDir, "arithmetic_decl.go"))
 	writeToFile(fieldElementImplCode, filepath.Join(outDir, "field_element.go"))
 	writeToFile(fieldImplCode, filepath.Join(outDir, "field.go"))
 	writeToFile(pkg("fp")+testCode, filepath.Join(outDir, "field_test.go"))

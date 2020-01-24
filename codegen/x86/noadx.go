@@ -8,14 +8,14 @@ import (
 	. "github.com/mmcloughlin/avo/reg"
 )
 
-func genMontMulNoAdx(size int, fixedmod bool, single bool) {
+func genMontMulNoAdx(size int, fixedmod bool, single bool, archTag bool) {
 	/*
 	   ("func mul%d(c *[%d]uint64, a, b *Fe%d)\n\n", i, i*2, i*64)
 	*/
 	if size < 2 {
 		panic("bad size")
 	} else if size >= 2 || size < 9 {
-		genMontMul48NoAdx(size, fixedmod, single)
+		genMontMul48NoAdx(size, fixedmod, single, archTag)
 	} else {
 		panic("not implemented")
 	}
@@ -205,17 +205,20 @@ func mont48NoAdx(tape *tape, W *repr, inp Op, modulus *repr, u, sCarry, lCarry *
 	}
 }
 
-func genMontMul48NoAdx(size int, fixedmod bool, single bool) {
+func genMontMul48NoAdx(size int, fixedmod bool, single bool, archTag bool) {
 	funcName := "mul"
 	modulusName := "·modulus"
+	if archTag {
+		funcName += "_no_adx_bmi2_"
+	}
 	if !single {
 		funcName = fmt.Sprintf("%s%d", funcName, size)
 		modulusName = fmt.Sprintf("%s%d", modulusName, size)
 	}
 	if fixedmod {
-		TEXT(funcName, NOSPLIT, fmt.Sprintf("func(c *[%d]uint64, a, b *[%d]uint64)", size*2, size))
+		TEXT(funcName, NOSPLIT, fmt.Sprintf("func(c *[%d]uint64, a, b *[%d]uint64)", size, size))
 	} else {
-		TEXT(funcName, NOSPLIT, fmt.Sprintf("func(c *[%d]uint64, a, b, p *[%d]uint64, inp uint64)", size*2, size))
+		TEXT(funcName, NOSPLIT, fmt.Sprintf("func(c *[%d]uint64, a, b, p *[%d]uint64, inp uint64)", size, size))
 	}
 	comment("inputs")
 	tape := newTape(_NO_SWAP, mlo, mhi)

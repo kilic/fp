@@ -42,18 +42,16 @@ func (flag *bitFlags) Set(value string) error {
 	return nil
 }
 
-func GenX86All(output string, arch string) error {
+func GenX86All(output string) error {
 	// a hack for avo output
-	file := filepath.Join(output, "arithmetic.s")
+	file := filepath.Join(output, "x86_arithmetic.s")
 	if err := flag.Set("out", file); err != nil {
 		return err
 	}
-	err := os.MkdirAll(output, os.ModePerm)
-	if err != nil {
+	if err := os.MkdirAll(output, os.ModePerm); err != nil {
 		return err
 	}
-	single := false
-	fixedmod := false
+	fixedmod, single, archTag := false, false, true
 	for _, bitSize := range supportedBitSizes {
 		limbSize := bitSize / 64
 		generateCopy(limbSize, single)
@@ -67,14 +65,11 @@ func GenX86All(output string, arch string) error {
 		generateNeg(limbSize, fixedmod, single)
 		generateMul2(limbSize, single)
 		generateDiv2(limbSize, single)
-		switch arch {
-		case "ADX":
-			genMontMulAdx(limbSize, fixedmod, single)
-		default:
-			genMontMulNoAdx(limbSize, fixedmod, single)
-		}
+		genMontMulAdx(limbSize, fixedmod, single)
+		genMontMulNoAdx(limbSize, fixedmod, single, archTag)
 	}
 	Generate()
+	appendIsEvenCode(file)
 	pretty(file)
 	return nil
 }
@@ -106,7 +101,7 @@ func GenX86(output string, bitSize int, arch string, fixedmod bool, single bool)
 	case "ADX":
 		genMontMulAdx(limbSize, fixedmod, single)
 	default:
-		genMontMulNoAdx(limbSize, fixedmod, single)
+		genMontMulNoAdx(limbSize, fixedmod, single, false)
 	}
 	Generate()
 	pretty(file)
@@ -117,8 +112,19 @@ func comment(str string) {
 	Commentf("| \n\n/* %s \t\t\t\t*/\n", str)
 }
 
-func pretty(file string) {
-	input, err := ioutil.ReadFile(file)
+func appendIsEvenCode(filename string) {
+	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	if _, err = f.WriteString(isEvenCode); err != nil {
+		panic(err)
+	}
+}
+
+func pretty(filename string) {
+	input, err := ioutil.ReadFile(filename)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -129,7 +135,7 @@ func pretty(file string) {
 		lines[i] = strings.Replace(lines[i], "0x00000000", "0x00", -1)
 	}
 	output := strings.Join(lines, "\n")
-	err = ioutil.WriteFile(file, []byte(output), 0600)
+	err = ioutil.WriteFile(filename, []byte(output), 0600)
 	if err != nil {
 		log.Fatalln(err)
 	}
