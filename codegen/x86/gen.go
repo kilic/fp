@@ -18,6 +18,7 @@ var mlo = RAX
 var mhi = RDX
 
 var supportedBitSizes = []int{
+	64,
 	128,
 	192,
 	256,
@@ -65,10 +66,13 @@ func GenX86All(output string) error {
 		generateNeg(limbSize, fixedmod, single)
 		generateMul2(limbSize, single)
 		generateDiv2(limbSize, single)
-		genMontMulAdx(limbSize, fixedmod, single)
-		genMontMulNoAdx(limbSize, fixedmod, single, archTag)
+		if limbSize != 1 {
+			genMontMulAdx(limbSize, fixedmod, single)
+			genMontMulNoAdx(limbSize, fixedmod, single, archTag)
+		}
 	}
 	Generate()
+	appendSingleLimbMultiplicationCode(file)
 	appendIsEvenCode(file)
 	pretty(file)
 	return nil
@@ -119,6 +123,20 @@ func appendIsEvenCode(filename string) {
 	}
 	defer f.Close()
 	if _, err = f.WriteString(isEvenCode); err != nil {
+		panic(err)
+	}
+}
+
+func appendSingleLimbMultiplicationCode(filename string) {
+	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	if _, err = f.WriteString(singleLimbMultiplicationCode); err != nil {
+		panic(err)
+	}
+	if _, err = f.WriteString(singleLimbMultiplicationNonAdxBmi2Code); err != nil {
 		panic(err)
 	}
 }

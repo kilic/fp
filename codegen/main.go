@@ -85,7 +85,8 @@ D : Generate all implemented backends only
 			panic(err)
 		}
 	case "D":
-		gocode.GenDeclerationsForMultiple(output, nil)
+		var supportedLimbSizes = []int{1, 2, 3, 4, 5, 6, 7, 8}
+		gocode.GenDeclerationsForMultiple(output, supportedLimbSizes)
 		err := x86.GenX86All(output)
 		if err != nil {
 			panic(err)

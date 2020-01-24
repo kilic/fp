@@ -20,8 +20,6 @@ var supportedBitSizes = map[int]bool{
 	512: true,
 }
 
-var supportedLimbSizes = []int{2, 3, 4, 5, 6, 7, 8}
-
 func resolveBitSize(byteSize int) int {
 	size := (byteSize / 8)
 	if byteSize%8 != 0 {
@@ -32,11 +30,7 @@ func resolveBitSize(byteSize int) int {
 
 func GenDeclerationsForMultiple(out string, limbSizes []int) {
 	outDir := filepath.Clean(out)
-	_limbSizes := limbSizes
-	if _limbSizes == nil {
-		_limbSizes = supportedLimbSizes
-	}
-	arithmeticDeclerationsCode := pkg("fp") + arithmeticDeclerationsMultiple(_limbSizes)
+	arithmeticDeclerationsCode := pkg("fp") + arithmeticDeclerationsMultiple(limbSizes)
 	writeToFile(arithmeticDeclerationsCode, filepath.Join(outDir, "arithmetic_decl.go"))
 }
 
