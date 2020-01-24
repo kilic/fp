@@ -229,8 +229,6 @@ func genMontMul48Adx(size int, fixedmod bool, single bool) {
 
 	var r *repr
 	switch size {
-	case 1:
-		r = R.slice(0, 1)
 	case 2:
 		r = R.slice(0, 3)
 	case 3:
