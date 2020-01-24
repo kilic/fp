@@ -5,6 +5,45 @@ package fp
 func is_even(a fieldElement) bool
 
 //go:noescape
+func eq1(a, b fieldElement) bool
+	
+//go:noescape
+func mul_two_1(a fieldElement)
+
+//go:noescape
+func div_two_1(a fieldElement)
+
+//go:noescape
+func cpy1(dst, src fieldElement)
+
+//go:noescape
+func cmp1(a, b fieldElement) int8
+
+//go:noescape
+func add1(c, a, b, p fieldElement)
+
+//go:noescape
+func addn1(a, b fieldElement) uint64
+
+//go:noescape
+func sub1(c, a, b, p fieldElement)
+
+//go:noescape
+func subn1(a, b fieldElement) uint64
+
+//go:noescape
+func _neg1(c, a, p fieldElement)
+
+//go:noescape
+func double1(c, a, p fieldElement)
+
+//go:noescape
+func mul1(c, a, b, p fieldElement, inp uint64)
+
+//go:noescape
+func mul_no_adx_bmi2_1(c, a, b, p fieldElement, inp uint64)
+
+//go:noescape
 func eq2(a, b fieldElement) bool
 	
 //go:noescape

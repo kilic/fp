@@ -2,6 +2,175 @@
 
 #include "textflag.h"
 
+// func cpy1(dst *[1]uint64, src *[1]uint64)
+TEXT ·cpy1(SB), NOSPLIT, $0-16
+	MOVQ dst+0(FP), DI
+	MOVQ src+8(FP), SI
+	MOVQ (SI), R8
+	MOVQ R8, (DI)
+	RET
+
+// func eq1(a *[1]uint64, b *[1]uint64) bool
+TEXT ·eq1(SB), NOSPLIT, $0-17
+	MOVQ a+0(FP), DI
+	MOVQ b+8(FP), SI
+	MOVB $0x00, ret+16(FP)
+	MOVQ (DI), R8
+	CMPQ (SI), R8
+	JNE  ret
+	MOVB $0x01, ret+16(FP)
+
+ret:
+	RET
+
+// func cmp1(a *[1]uint64, b *[1]uint64) int8
+TEXT ·cmp1(SB), NOSPLIT, $0-17
+	MOVQ a+0(FP), DI
+	MOVQ b+8(FP), SI
+	MOVQ (DI), R8
+	CMPQ (SI), R8
+	JB   gt
+	JA   lt
+	MOVB $0x00, ret+16(FP)
+	JMP  ret
+
+gt:
+	MOVB $0x01, ret+16(FP)
+	JMP  ret
+
+lt:
+	MOVB $0xff, ret+16(FP)
+
+ret:
+	RET
+
+// func add1(c *[1]uint64, a *[1]uint64, b *[1]uint64, p *[1]uint64)
+TEXT ·add1(SB), NOSPLIT, $0-32
+	// |
+	MOVQ a+8(FP), DI
+	MOVQ b+16(FP), SI
+	XORQ AX, AX
+
+	// |
+	MOVQ (DI), CX
+	ADDQ (SI), CX
+	ADCQ $0x00, AX
+
+	// |
+	MOVQ p+24(FP), SI
+	MOVQ CX, DX
+	SUBQ (SI), DX
+	SBBQ $0x00, AX
+
+	// |
+	MOVQ    c+0(FP), DI
+	CMOVQCC DX, CX
+	MOVQ    CX, (DI)
+	RET
+
+// func addn1(a *[1]uint64, b *[1]uint64) uint64
+TEXT ·addn1(SB), NOSPLIT, $0-24
+	// |
+	MOVQ a+0(FP), DI
+	MOVQ b+8(FP), SI
+
+	// |
+	MOVQ (DI), CX
+	ADDQ (SI), CX
+	ADCQ $0x00, AX
+
+	// |
+	MOVQ CX, (DI)
+	MOVQ AX, ret+16(FP)
+	RET
+
+// func double1(c *[1]uint64, a *[1]uint64, p *[1]uint64)
+TEXT ·double1(SB), NOSPLIT, $0-24
+	// |
+	MOVQ a+8(FP), DI
+	XORQ AX, AX
+	MOVQ (DI), CX
+	ADDQ CX, CX
+	ADCQ $0x00, AX
+
+	// |
+	MOVQ p+16(FP), SI
+	MOVQ CX, DX
+	SUBQ (SI), DX
+	SBBQ $0x00, AX
+
+	// |
+	MOVQ    c+0(FP), DI
+	CMOVQCC DX, CX
+	MOVQ    CX, (DI)
+	RET
+
+// func sub1(c *[1]uint64, a *[1]uint64, b *[1]uint64, p *[1]uint64)
+TEXT ·sub1(SB), NOSPLIT, $0-32
+	// |
+	MOVQ a+8(FP), DI
+	MOVQ b+16(FP), SI
+	XORQ AX, AX
+	MOVQ (DI), CX
+	SUBQ (SI), CX
+
+	// |
+	MOVQ    p+24(FP), SI
+	MOVQ    (SI), DX
+	CMOVQCC AX, DX
+
+	// |
+	MOVQ c+0(FP), DI
+	ADDQ DX, CX
+	MOVQ CX, (DI)
+	RET
+
+// func subn1(a *[1]uint64, b *[1]uint64) uint64
+TEXT ·subn1(SB), NOSPLIT, $0-24
+	// |
+	MOVQ a+0(FP), DI
+	MOVQ b+8(FP), SI
+	XORQ AX, AX
+
+	// |
+	MOVQ (DI), CX
+	SUBQ (SI), CX
+	ADCQ $0x00, AX
+
+	// |
+	MOVQ CX, (DI)
+	MOVQ AX, ret+16(FP)
+	RET
+
+// func _neg1(c *[1]uint64, a *[1]uint64, p *[1]uint64)
+TEXT ·_neg1(SB), NOSPLIT, $0-24
+	// |
+	MOVQ a+8(FP), DI
+
+	// |
+	MOVQ p+16(FP), SI
+	MOVQ (SI), CX
+	SUBQ (DI), CX
+
+	// |
+	MOVQ c+0(FP), DI
+	MOVQ CX, (DI)
+	RET
+
+// func mul_two_1(a *[1]uint64)
+TEXT ·mul_two_1(SB), NOSPLIT, $0-8
+	MOVQ a+0(FP), DI
+	XORQ AX, AX
+	RCLQ $0x01, (DI)
+	RET
+
+// func div_two_1(a *[1]uint64)
+TEXT ·div_two_1(SB), NOSPLIT, $0-8
+	MOVQ a+0(FP), DI
+	XORQ AX, AX
+	RCRQ $0x01, (DI)
+	RET
+
 // func cpy2(dst *[2]uint64, src *[2]uint64)
 TEXT ·cpy2(SB), NOSPLIT, $0-16
 	MOVQ dst+0(FP), DI
@@ -9635,6 +9804,92 @@ TEXT ·mul_no_adx_bmi2_8(SB), NOSPLIT, $56-40
 
 /* end 				*/
 
+
+// func mul1(c *[1]uint64, a *[1]uint64, b *[1]uint64, p *[1]uint64, inp uint64)
+TEXT ·mul1(SB), NOSPLIT, $0-40
+
+/* inputs 								*/
+
+	MOVQ a+8(FP), DI
+	MOVQ b+16(FP), SI
+
+/* multiplication 				*/
+
+	MOVQ (SI), DX
+	MULXQ (DI), R8, R9
+
+/* montgommery reduction	*/
+
+	MOVQ p+24(FP), R15
+  MOVQ  R8, DX
+	MULXQ inp+32(FP), DX, DI
+
+  MULXQ (R15), AX, DI
+  ADDQ AX, R8
+	ADCQ DI, R9
+	ADCQ $0x00, R8
+
+/* modular reduction 			*/
+
+	MOVQ R9, AX
+	SUBQ (R15), AX
+	SBBQ $0x00, R8
+
+/* out 										*/
+
+	MOVQ    c+0(FP), DI
+	CMOVQCC AX, R9
+	MOVQ    R9, (DI)
+	RET
+
+/* end 				*/
+
+// func mul_no_adx_bmi2_1(c *[1]uint64, a *[1]uint64, b *[1]uint64, p *[1]uint64, inp uint64)
+TEXT ·mul_no_adx_bmi2_1(SB), NOSPLIT, $0-40
+
+/* inputs 										*/
+
+	MOVQ a+8(FP), DI
+	MOVQ b+16(FP), SI
+
+	// | 
+
+/* multiplication 						*/
+
+	MOVQ (SI), CX
+	MOVQ (DI), AX
+	MULQ CX
+	MOVQ AX, R8
+	MOVQ DX, R9
+
+/* montgommery reduction 			*/
+
+	MOVQ p+24(FP), R15
+
+	MOVQ R8, AX
+	MULQ inp+32(FP)
+	MOVQ AX, CX
+
+	MOVQ (R15), AX
+	MULQ CX
+	ADDQ AX, R8
+	ADCQ DX, R9
+	ADCQ $0x00, R8
+
+/* modular reduction 				*/
+
+	MOVQ R9, AX
+	SUBQ (R15), AX
+	SBBQ $0x00, R8
+
+/* out 											*/
+
+	MOVQ    c+0(FP), DI
+	CMOVQCC AX, R9
+	MOVQ    R9, (DI)
+	RET
+
+/* end 											*/
 
 TEXT ·is_even(SB), NOSPLIT, $0-9
 	MOVQ a+0(FP), DI
