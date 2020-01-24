@@ -13,7 +13,7 @@ var fuz int = 1
 
 var targetNumberOfLimb int = -1
 
-var from = 4
+var from = 2
 var to = 8
 
 func TestMain(m *testing.M) {
