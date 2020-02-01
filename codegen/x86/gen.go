@@ -14,8 +14,12 @@ import (
 	. "github.com/mmcloughlin/avo/reg"
 )
 
-var mlo = RAX
-var mhi = RDX
+var ax = newLimb(RAX)
+var bx = newLimb(RBX)
+var cx = newLimb(RCX)
+var dx = newLimb(RDX)
+var si = newLimb(RSI)
+var di = newLimb(RDI)
 
 var supportedBitSizes = []int{
 	256,
@@ -67,9 +71,9 @@ func GenX86All(output string, arch string) error {
 		generateDiv2(limbSize, single)
 		switch arch {
 		case "ADX":
-			genMontMulAdx(limbSize, fixedmod, single)
+			// genMontMulAdx(limbSize, fixedmod, single)
 		default:
-			genMontMulNoAdx(limbSize, fixedmod, single)
+			// genMontMulNoAdx(limbSize, fixedmod, single)
 		}
 	}
 	Generate()
@@ -105,17 +109,13 @@ func GenX86(output string, bitSize int, arch string, fixedmod bool, single bool)
 		// if !fixedmod {
 		// 	return fmt.Errorf("architecture ADX with fixed mod to be implemented\n")
 		// }
-		genMontMulAdx(limbSize, fixedmod, single)
+		// genMontMulAdx(limbSize, fixedmod, single)
 	default:
-		genMontMulNoAdx(limbSize, fixedmod, single)
+		// genMontMulNoAdx(limbSize, fixedmod, single)
 	}
 	Generate()
 	pretty(file)
 	return nil
-}
-
-func comment(str string) {
-	Commentf("| \n\n/* %s \t\t\t\t*/\n", str)
 }
 
 func pretty(file string) {

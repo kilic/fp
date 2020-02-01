@@ -5,410 +5,403 @@ import (
 
 	. "github.com/mmcloughlin/avo/build"
 	. "github.com/mmcloughlin/avo/operand"
-	. "github.com/mmcloughlin/avo/reg"
 )
 
-func genMontMulNoAdx(size int, fixedmod bool, single bool) {
-	/*
-	   ("func mul%d(c *[%d]uint64, a, b *Fe%d)\n\n", i, i*2, i*64)
-	*/
-	if size < 4 {
-		panic("not implemented")
-	} else if size >= 4 || size < 9 {
-		genMontMul48NoAdx(size, fixedmod, single)
-	} else {
-		panic("not implemented")
-	}
-}
-
-func mul48NoAdx(tape *tape, A, B, R, Stack *repr, bi, carry *limb) *repr {
-	size := A.size
-	stackSize := Stack.size
-	// Schoolbook multiplication is applied
-	// Lowest limbs (GPRs) are saved to stack after calculated.
-	// Then those idle GPRs are used for higher limbs.
-	for i := 0; i < size; i++ {
-		Commentf("| \n\n/*\ti = %d\t\t\t\t*/\n", i)
-		Commentf("| b%d @ %s", i, bi.Asm())
-		B.next(_ITER).moveTo(bi, _NO_ASSIGN)
-		if i != 0 { // Carry is not used in first round
-			carry.clear()
-		}
-		for j := 0; j < size; j++ {
-			Commentf("| a%d * b%d ", j, i)
-			if stackSize > 0 {
-				R.updateIndex(i + j - 1)
-			} else {
-				R.updateIndex(i + j)
-			}
-			Ra := R.next(_ITER)
-			if i+j == 0 {
-				Rb := R.next(_ITER)
-				if stackSize > 0 {
-					A.next(_ITER).mul(bi, Stack.next(_ITER), Rb, _MUL_MOVE)
-				} else {
-					A.next(_ITER).mul(bi, Ra, Rb, _MUL_MOVE)
-				}
-			} else {
-				if i == size-1 && j == size-1 { // Very last multiplication
-					A.next(_ITER).mul(bi, Ra, carry, _MUL_ADD)
-				} else {
-					Rb := R.next(_ITER)
-					A.next(_ITER).mul(bi, Ra, Rb, _MUL_ADD)
-				}
-			}
-			if i == 0 {
-				// No carry operation is involved in first round
-			} else {
-				if j == 0 {
-					Rc := R.next(_ITER)
-					Rc.addCarry()
-					carry.addCarry()
-					if i < 2*size-9 {
-						Ra.moveTo(Stack.next(_ITER), _NO_ASSIGN)
-						Ra.clear()
-					}
-				} else if j != 0 && j != size-2 && j != size-1 {
-					Rc := R.next(_ITER)
-					Rc.add(carry, _CARRY)
-					carry.clear()
-					carry.addCarry()
-				} else if j == size-2 {
-					if i == size-1 {
-						carry.addCarry()
-					} else {
-						Rc := R.next(_ITER)
-						Rc.add(carry, _CARRY)
-					}
-				}
-			}
-		}
-	}
-	// W is 2n sized output
-	W := tape.newReprNoAlloc(size * 2)
-	if stackSize < 1 {
-		R.updateIndex(0)
-	}
-	// Limbs at stack are lowest ones
-	for i := 0; i < stackSize; i++ {
-		W.next(_ITER).set(Stack.next(_ITER))
-	}
-	if stackSize < 1 {
-		for i := 0; i < R.size-1; i++ {
-			W.next(_ITER).set(R.next(_ITER))
-		}
-	} else {
-		for i := 0; i < R.size; i++ {
-			W.next(_ITER).set(R.next(_ITER))
-		}
-	}
-	W.next(_ITER).set(carry)
-	return W
-}
-
-func mont48NoAdx(tape *tape, W *repr, inp Op, modulus *repr, u, sCarry, lCarry *limb, fixedModulus bool) {
-	// Check for expected size of double-precision input number
-	if W.size%2 != 0 || W.size > 16 {
-		panic("")
-	}
-	size := W.size / 2
-	iCarry := newLimb(RDX, _NO_SWAP)
-	var k int
-	if W.at(0).atMem() || W.at(0).Asm() == lCarry.Asm() {
-		k = 1
-	}
-	for i := 0; i < size; i++ {
-		Commentf("| \n\n/*\ti = %d\t\t\t\t*/\n", i)
-		W.updateIndex(i)
-		W.mul(_NO_ITER, inp, u, nil, _MUL_MOVE)
-		sCarry.clear()
-		Commentf("|")
-		firstI := i == 0
-		for j := 0; j < size; j++ {
-			lastJ := j == size-1
-			if j == 0 {
-				modulus.next(_ITER).mul(u, W.next(_ITER), sCarry, _MUL_ADD)
-			} else {
-				W.commentCurrent("w")
-				w := W.next(_ITER)
-				if !lastJ {
-					modulus.next(_ITER).mul(u, w, nil, _MUL_ADD)
-					iCarry.addCarry()
-					w.add(sCarry, _NO_CARRY)
-					sCarry.clear()
-					sCarry.add(iCarry, _CARRY)
-				} else {
-					if firstI {
-						modulus.next(_ITER).mul(u, w, nil, _MUL_ADD)
-						iCarry.addCarry()
-						w.add(sCarry, _NO_CARRY)
-						// W.commentCurrent("w")
-
-						w2 := W.get()
-						if w2.atMem() {
-							Commentf("| w%d @ %s", W.i, W.at(k))
-							Comment("| move to emptied register")
-							w2.moveTo(W.at(k), _ASSIGN)
-							k++
-						} else {
-							W.commentCurrent("w")
-						}
-						W.next(_ITER).add(iCarry, _CARRY)
-						lCarry.clear()
-						lCarry.addCarry()
-					} else {
-						modulus.next(_ITER).mul(u, w, lCarry, _MUL_ADD)
-						w.add(sCarry, _NO_CARRY)
-						// where rotation happens
-						w2 := W.get()
-						if w2.atMem() {
-							Commentf("| w%d @ %s", W.i, W.at(k))
-							Comment("| move to emptied register")
-							w2.moveTo(W.at(k), _ASSIGN)
-							k++
-						} else {
-							W.commentCurrent("w")
-						}
-						w2.add(lCarry, _CARRY)
-						lCarry.clear()
-						lCarry.addCarry()
-					}
-				}
-			}
-		}
-	}
-	comment("reduction")
-	C_red := W.slice(size, size*2)
-	tape.freeAll()
-	tape.reserveGp(C_red.ops()...)
-	tape.reserveGp(lCarry.s)
-	if !fixedModulus {
-		tape.reserveGp(modulus.base)
-	}
-	tape.swap = tape.newLimb().s.(GPPhysical)
-	T := tape.newReprAlloc(C_red.size)
-	modulus.updateIndex(0)
-	for i := 0; i < C_red.size; i++ {
-		T.next(_ITER).loadSubSafe(
-			*C_red.next(_ITER),
-			*modulus.next(_ITER),
-			i != 0,
-		)
-	}
-	SBBQ(U32(0), lCarry.s)
-	Commentf("|")
-	C := tape.newReprAtParam(C_red.size, "c", lCarry.s.(Register), 0)
-	for i := 0; i < C_red.size; i++ {
-		T.next(_ITER).moveIfNotCFAux(
-			*C_red.next(_ITER),
-			*C.next(_ITER))
-	}
-}
-
-func genMontMul48NoAdx(size int, fixedmod bool, single bool) {
+func montMulNoADX(size int, fixedmod bool) {
+	mulRSize := RSize
 	funcName := "mul"
 	modulusName := "·modulus"
-	if !single {
-		funcName = fmt.Sprintf("%s%d", funcName, size)
-		modulusName = fmt.Sprintf("%s%d", modulusName, size)
-	}
 	if fixedmod {
 		TEXT(funcName, NOSPLIT, fmt.Sprintf("func(c *[%d]uint64, a, b *[%d]uint64)", size*2, size))
 	} else {
 		TEXT(funcName, NOSPLIT, fmt.Sprintf("func(c *[%d]uint64, a, b, p *[%d]uint64, inp uint64)", size*2, size))
 	}
-	comment("inputs")
-	tape := newTape(_NO_SWAP, mlo, mhi)
-	A := tape.newReprAtParam(size, "a", RDI, 0)
-	B := tape.newReprAtParam(size, "b", RSI, 0)
-
-	// Expect all GPRs free,
-	// expect, DI and SI allocated for inputs
-	// AX, DX allocated for multiplication
-	if tape.sizeFreeGp() != 10 {
-		panic("")
-	}
-
-	// `bi` is allocd for limb of a second operand(input b)
-	bi := tape.newLimb()
-	// `carry` will be assigned to last limb of mul result
+	commentHeader("inputs")
+	tape := newTape(_NO_SWAP, ax.s, dx.s)
+	A := tape.newReprAtParam(size, "a", tape.di(), 0)
+	B := tape.newReprAtParam(size, "b", tape.si(), 0)
+	ai := tape.newLimb()
 	carry := tape.newLimb()
-
-	R := tape.newReprAllocRemainingGPRs()
-	// Size of r must be equal 8.
-	// Registers named R8 ... R15 are expected.
-	if R.size != 8 {
-		panic("")
+	r := tape.newReprAllocRemainingGPRs()
+	R := r.slice(0, mulRSize)
+	// R := tape.newReprAllocGPRs(mulRSize)
+	R.debug("R")
+	if size > mulRSize*2 {
+		panic("only upto two partial multiplications is allowed")
 	}
-
-	// Allocate stack if limb size is larger than 4.
-	// Otherwise we don't need stack space.
-	// We mostly use (stackSize > 0) control to apply logic for (limbSize > 4)
-	stackSize := 2*size - 9
-	if stackSize < 0 {
-		stackSize = 0
+	var W *repr
+	if size > RSize {
+		// for larger integers, multiplication is done in two parts
+		// result of these parts are combined afterwards
+		// calculate part 1
+		Wr := partialMulNoADX(tape, A, B, R, ai, carry).commentState("W part 1 multiplication").debug("W part 1 multiplication")
+		// move intermediate resut to stack
+		tape.moveToStack(Wr).commentState("W part 1 moved to stack").debug("W part 1 moved to stack")
+		// calculate part2
+		Wl := partialMulNoADX(tape, A, B, R, ai, carry).commentState("W part 2 multiplication").debug("W part 2 multiplication")
+		Wr.commentState("W part 1").setSwap(ax)
+		// combine results
+		W = combinePartialResults(tape, Wr, Wl).commentState("W combined").debug("W combined")
+	} else {
+		W = partialMulNoADX(tape, A, B, R, ai, carry).commentState("W").debug("mul end")
 	}
-	Stack := tape.allocStack(stackSize)
-
-	// Do zero GPRs
-	for i := 0; i < R.size; i++ {
-		r := R.next(_ITER)
-		if (i != 0 && i != 1) || (stackSize > 0 && i == 1) {
-			r.clear()
-		}
-	}
-
-	W := mul48NoAdx(tape, A, B, R, Stack, bi, carry)
-	if W.size != 2*size {
-		panic("")
-	}
-
 	var modulus *repr
-	var inp Mem // fix: inp to limb type
+	var inp *limb
 	if fixedmod {
-		inp = NewDataAddr(Symbol{Name: fmt.Sprintf("·inp")}, 0)
+		inp = newLimb(NewDataAddr(Symbol{Name: fmt.Sprintf("·inp")}, 0))
 		modulus = tape.newReprAtMemory(size, NewDataAddr(Symbol{Name: modulusName}, 0), 0)
 	} else {
-		inp = NewParamAddr("inp", 32)
+		inp = newLimb(NewParamAddr("inp", 32))
+	}
+	var montRsize int
+	var lCarry, sCarry, u *limb
+	if size == 4 {
+		// fix: should use swap after mul
+		lCarry = W.at(0).clone()
+		sCarry = B.base.clone()
+		u = ai
+	} else if size == 5 {
+		W.updateIndex(0)
+		lCarry = A.base.clone()
+		sCarry = B.base.clone()
+		u = ai
+		W.next().assertAtMem("expected to be in memory").moveAssign(lCarry)
+	} else {
+		// this makes lCarry first limb of the multiplication result
+		lCarry = A.base.clone()
+		aux := []*limb{lCarry.clone(), B.base.clone(), ai}
+		if fixedmod {
+			spared := transitionMulToMont(tape, W, aux, 2)
+			sCarry, u = spared[0], spared[1]
+			montRsize = mulRSize + 1
+		} else {
+			var p *limb
+			spared := transitionMulToMont(tape, W, aux, 3)
+			sCarry, u, p = spared[0], spared[1], spared[2]
+			comment("fetch modulus")
+			modulus = tape.newReprAtParam(size, "p", p, 0)
+			montRsize = mulRSize
+		}
+	}
+	_, _, _ = modulus, inp, sCarry
+	W.commentState("W ready to mont").debug("W ready to mont")
+	tape.setLimbForKey("u", u)
+	tape.setLimbForKey("short_carry", sCarry)
+	tape.setLimbForKey("inp", inp)
+	tape.setReprForKey("modulus", modulus)
+	var lastBit *limb
+	if montRsize >= size { // the case where only q1 part is enough
+		montQ13NoADX(montRsize, tape, W).commentState("W montgomerry reduction ends").debug("W montgomery reduction ends")
+		lastBit = lCarry.clone()
+	} else {
+		montQ13NoADX(montRsize, tape, W).commentState("W q1").debug("W q1")
+		q2SpecialCase := (montRsize+1 == size)
+		if q2SpecialCase {
+			montQ2SpecialCaseNoADX(montRsize, tape, W, sCarry, lCarry).commentState("W q2").debug("W q2")
+			// notice that long and short carry are switched
+			montQ3SpecialCaseNoADX(montRsize, tape, W, lCarry, sCarry).commentState("W q3").debug("W q3")
+			lastBit = lCarry.clone()
+		} else {
+			// long long carry from q1
+			llCarry := tape.next().assertAtMem("long long carry")
+			comment("save the carry from q1")
+			comment(fmt.Sprintf("should be added to w%d", W.i))
+			lCarry.move(llCarry)
+			tape.setLimbForKey("long_long_carry", llCarry)
+			// Q2
+			montQ2NoADX(montRsize, tape, W, lCarry).commentState("q2").debug("q2")
+			// long long carry from q2
+			comment("save the carry from q2")
+			comment(fmt.Sprintf("should be added to w%d", W.i))
+			lCarry.move(llCarry)
+			// swapping to fit to q3 part
+			spare := transitionQ2toQ3(W, lCarry)
+			W.adjustIndex().commentState("W q2 q3 transition").debug("W q2 q3 transition")
+			// u has been used in q2, need new one
+			u.set(spare)
+			tape.setLimbForKey("u", u)
+			// Q3
+			// long carry in q3 will the first non zero element of aggregated result
+			lCarry.set(W.adjustIndex().get())
+			montQ13NoADX(montRsize, tape, W).commentState("W q3").debug("W q3")
+			// we must aggregate carries from q2 and q3
+			// these two carries will be added to same limb
+			comment("aggregate carries from q2 & q3")
+			comment(fmt.Sprintf("should be added to w%d", W.i))
+			llCarry.adc(lCarry)
+			// Q4
+			montQ4NoADX(montRsize, tape, W, lCarry).commentState("W q4").debug("W q4")
+			lastBit = lCarry
+		}
 	}
 
-	comment("swap")
-	var lCarry, sCarry, u *limb
-	switch size {
-	case 4:
-		if !fixedmod {
-			modulus = tape.newReprAtParam(size, "p", R.at(R.size-1).s.(Register), 0)
+	commentHeader("modular reduction")
+	Red := W.slice(size, size*2)
+	var T *repr
+	T = tape.newReprAlloc(Red.size)
+	T.setSwap(dx)
+	modulus.updateIndex(0)
+	for i := 0; i < Red.size; i++ {
+		T.next().loadSubSafe(
+			Red.next(),
+			modulus.next(),
+			i != 0,
+		)
+	}
+	SBBQ(U32(0), lastBit.s)
+	commentHeader("out")
+	C := tape.newReprAtParam(Red.size, "c", lastBit, 0)
+	for i := 0; i < Red.size; i++ {
+		T.next().moveIfNotCFAux(
+			Red.next(), C.next())
+	}
+	tape.ret()
+	_ = lastBit
+}
+
+func mulNoADX(size int) {
+	funcName := "mul"
+	// TEXT(funcName, NOSPLIT, fmt.Sprintf("func(c *[%d]uint64, a, b, p *[%d]uint64, inp uint64)", 2*2, 2))
+	TEXT(funcName, NOSPLIT, fmt.Sprintf("func(c *[%d]uint64, a, b *[%d]uint64)", size*2, size))
+	commentHeader("inputs")
+	tape := newTape(_NO_SWAP, ax.s, dx.s)
+	A := tape.newReprAtParam(size, "a", tape.di(), 0)
+	B := tape.newReprAtParam(size, "b", tape.si(), 0)
+	ai := tape.newLimb()
+	carry := tape.newLimb()
+	R := tape.newReprAllocGPRs(RSize)
+	if size > RSize*2 {
+		panic("only upto two partial multiplications is allowed")
+	}
+	var W *repr
+	if size > RSize {
+		Wr := partialMulNoADX(tape, A, B, R, ai, carry).commentState("Wr").debug("Wr")
+		tape.moveToStack(Wr).commentState("Wr @ stack").debug("W should be in stack")
+		Wl := partialMulNoADX(tape, A, B, R, ai, carry).commentState("Wl").debug("Wl")
+		Wr.commentState("Wr")
+		Wl.setSwap(tape.ax())
+		W = combinePartialResults(tape, Wr, Wl).commentState("W combined").debug("W combined")
+	} else {
+		W = partialMulNoADX(tape, A, B, R, ai, carry).commentState("W").debug("W")
+	}
+	_ = W
+	// C := tape.newReprAtParam(size*2, "c", mlo, 0)
+	// W.setSwap(mhi)
+	// for i := 0; i < W.size; i++ {
+	// 	W.next().moveTo(C.next(), _NO_ASSIGN)
+	// }
+	tape.ret()
+}
+
+func transitionQ2toQ3(W *repr, aux *limb) *limb {
+	W.adjustIndex().next()
+	Ws := W.slice(W.i, W.size)
+	countStack := func() (i int) {
+		ws := Ws.clone()
+		for ws.next().atMem() {
+			i++
 		}
-		lCarry = newLimb(A.base, nil)
-		sCarry = newLimb(B.base, nil)
-		u = bi
-	case 5:
-		lCarry = newLimb(A.base, nil)
-		W.updateIndex(0)
-		W.next(_ITER).moveTo(lCarry, _ASSIGN)
-		sCarry = newLimb(B.base, nil)
-		u = newLimb(bi.s, nil)
-		if !fixedmod {
-			w := W.next(_ITER)
-			t := newLimb(w.s, nil)
-			w.moveTo(Stack.next(_ITER), _ASSIGN)
-			modulus = tape.newReprAtParam(size, "p", t.s.(Register), 0)
+		return i
+	}
+	bound := countStack()
+	if bound == 0 {
+		return aux
+	}
+	commentHeader("q2 q3 transition swap")
+	R := Ws.registerSlice().reverse()
+	var spare *limb
+	for i := 0; i < bound; i++ {
+		s := Ws.next()
+		assert(s.atMem(), "expected to be at stack")
+		t := s.clone()
+		if i == 0 {
+			spare = aux.clone()
 		}
-	case 6:
-		lCarry = newLimb(A.base, nil)
-		Stack.updateIndex(0)
-		W.next(_ITER).moveTo(lCarry, _ASSIGN)
-		W.next(_ITER).moveTo(B.base, _ASSIGN)
-		W.next(_ITER).moveTo(bi, _ASSIGN)
-		if !fixedmod {
-			W.updateIndex(9)
-		} else {
-			W.updateIndex(10)
+		s.moveAssign(spare)
+		r := R.next()
+		spare = r.clone()
+		r.moveAssign(t)
+	}
+	return spare
+}
+
+func transitionMulToMont(tape *tape, W *repr, aux []*limb, spare int) []*limb {
+	// this is kind of pesky too :(
+	commentHeader("swap")
+	W.updateIndex(0)
+	var stackSize int
+	for i := 0; i < W.size; i++ {
+		if W.next().atReg() {
+			stackSize = i
+			break
 		}
-		w := W.next(_ITER)
-		sCarry = newLimb(w.s, nil)
-		w.moveTo(Stack.next(_ITER), _ASSIGN)
-		//
-		w = W.next(_ITER)
-		u = newLimb(w.s, nil)
-		w.moveTo(Stack.next(_ITER), _ASSIGN)
-		//
-		if !fixedmod {
-			w := W.next(_ITER)
-			t := newLimb(w.s, nil)
-			w.moveTo(Stack.next(_ITER), _ASSIGN)
-			modulus = tape.newReprAtParam(size, "p", t.s.(Register), 0)
+	}
+	spared := []*limb{}
+	W.updateIndex(0)
+	regSize := W.size - stackSize
+	if regSize != W.size {
+		regs := W.slice(stackSize, W.size)
+		regs.previous()
+		// ******
+		limit := len(aux) + regSize - spare
+		if stackSize < limit {
+			limit = stackSize
 		}
-	case 7:
-		lCarry = newLimb(A.base, nil)
-		Stack.updateIndex(0)
-		W.next(_ITER).moveTo(lCarry, _ASSIGN)
-		W.next(_ITER).moveTo(B.base, _ASSIGN)
-		W.next(_ITER).moveTo(bi, _ASSIGN)
-		w3 := W.next(_ITER)
-		w4 := W.next(_ITER)
-		if !fixedmod {
-			W.updateIndex(9)
-		} else {
-			W.updateIndex(10)
-		}
-		w10 := W.next(_ITER)
-		t := newLimb(w10.s, nil)
-		w10.moveTo(Stack.next(_ITER), _ASSIGN)
-		w3.moveTo(t, _ASSIGN)
-
-		w11 := W.next(_ITER)
-		t = newLimb(w11.s, nil)
-		w11.moveTo(Stack.next(_ITER), _ASSIGN)
-		w4.moveTo(t, _ASSIGN)
-
-		w := W.next(_ITER)
-		sCarry = newLimb(w.s, nil)
-		w.moveTo(Stack.next(_ITER), _ASSIGN)
-
-		w = W.next(_ITER)
-		u = newLimb(w.s, nil)
-		w.moveTo(Stack.next(_ITER), _ASSIGN)
-
-		if !fixedmod {
-			w := W.next(_ITER)
-			t := newLimb(w.s, nil)
-			w.moveTo(Stack.next(_ITER), _ASSIGN)
-			modulus = tape.newReprAtParam(size, "p", t.s.(Register), 0)
-		}
-	case 8:
-		lCarry = newLimb(A.base, nil)
-		Stack.updateIndex(0)
-		W.next(_ITER).moveTo(lCarry, _ASSIGN)
-		W.next(_ITER).moveTo(B.base, _ASSIGN)
-		W.next(_ITER).moveTo(bi, _ASSIGN)
-		w3 := W.next(_ITER)
-		w4 := W.next(_ITER)
-		w5 := W.next(_ITER)
-		w6 := W.next(_ITER)
-		if !fixedmod {
-			W.updateIndex(9)
-		} else {
-			W.updateIndex(10)
-		}
-		w10 := W.next(_ITER)
-		t := w10.clone()
-		w10.moveTo(Stack.next(_ITER), _ASSIGN)
-		w3.moveTo(t, _ASSIGN)
-
-		w11 := W.next(_ITER)
-		t = w11.clone()
-		w11.moveTo(Stack.next(_ITER), _ASSIGN)
-		w4.moveTo(t, _ASSIGN)
-
-		w12 := W.next(_ITER)
-		t = w12.clone()
-		w12.moveTo(Stack.next(_ITER), _ASSIGN)
-		w5.moveTo(t, _ASSIGN)
-
-		w13 := W.next(_ITER)
-		t = w13.clone()
-		w13.moveTo(Stack.next(_ITER), _ASSIGN)
-		w6.moveTo(t, _ASSIGN)
-
-		w := W.next(_ITER)
-		sCarry = newLimb(w.s, nil)
-		w.moveTo(Stack.next(_ITER), _ASSIGN)
-
-		w = W.next(_ITER)
-		u = newLimb(w.s, nil)
-		w.moveTo(Stack.next(_ITER), _ASSIGN)
-
-		if !fixedmod {
-			w := W.next(_ITER)
-			t := newLimb(w.s, nil)
-			w.moveTo(Stack.next(_ITER), _ASSIGN)
-			modulus = tape.newReprAtParam(size, "p", t.s.(Register), 0)
+		d := limit + spare
+		// ******
+		for i := 0; i < d; i++ {
+			if i < len(aux) { // A
+				Comment("A")
+				w := W.next()
+				tape.free(w.clone())
+				w.moveTo(aux[i], _ASSIGN)
+			} else if i < limit { // B
+				Comment("B")
+				r := regs.get().clone()
+				s := tape.stack.next()
+				regs.previous().moveTo(s, _ASSIGN)
+				w := W.next()
+				tape.free(w.clone())
+				w.moveTo(r, _ASSIGN)
+			} else { // C
+				Comment("C")
+				r := regs.previous()
+				spared = append(spared, r.clone())
+				s := tape.stack.next()
+				r.moveTo(s, _ASSIGN)
+			}
 		}
 	}
 	W.updateIndex(0)
-	mont48NoAdx(tape, W, inp, modulus, u, sCarry, lCarry, fixedmod)
-	tape.ret()
-	RET()
-	comment("end")
+	return spared
 }
+
+func combinePartialResults(tape *tape, Wr, Wl *repr) *repr {
+	size := Wr.size
+	W := tape.newReprNoAlloc(size)
+	Wr.updateIndex(0)
+	Wl.setSwap(tape.ax()).updateIndex(0)
+	car := false
+	for i := 0; i < size; i++ {
+		wr, wl, w := Wr.next(), Wl.next(), W.next()
+		if wl.isEmpty() {
+			w.set(wr.clone())
+			continue
+		}
+		if !wr.isEmpty() {
+			wl.add(wr, car)
+			car = true
+			tape.free(wr)
+		} else {
+			wl.addCarry()
+		}
+		w.set(wl)
+	}
+	return W
+}
+
+// 0eb10f315b19ad325ee1e7cbbf4a9ee9f756f4081fde4f54fdc4467c9d1cc647
+// ffc47f00321b0f64
+// c80fd83a7930eee9
+// 4a6ca7e8d3caa23b
+// 9c59954bb633aab5
+
+// 0eb10f315b19ad325ee1e7cbbf4a9ee9f756f4081fde4f54fdc4467c9d1cc647
+// ffc47f00321b0f65
+// c80fd83a7930eee8
+// 4a6ca7e8d3caa23b
+// 9c59954bb633aab5
+
+// func transitionQ3toQ4(W *repr, aux *limb) *limb {
+// 	commentHeader("q2 q3 transition swap")
+// 	W.adjustIndex()
+// 	Ws := W.stackSlice()
+// 	Wr := W.registerSlice()
+// 	// we will tolerate the last limb at stack
+// 	bound := Ws.size - 1
+// 	var spare *limb
+// 	for i := 0; i < bound; i++ {
+// 		s := Ws.next()
+// 		t := s.clone()
+// 		if i == 0 {
+// 			spare = aux.clone()
+// 		}
+// 		s.moveAssign(spare)
+// 		r := Wr.next()
+// 		spare = r.clone()
+// 		r.moveAssign(t)
+// 	}
+// 	return spare
+// }
+
+// // !!! need to free registers here
+// func swapBetweenPartialMonts(rsize int, W *repr, lCarry *limb) {
+// 	// this is kind of :(
+// 	size := W.size / 2
+// 	tSize := size - rsize
+// 	r := lCarry.clone()
+// 	for i := 0; i < tSize; i++ {
+// 		s := W.updateIndex(rsize + i)
+// 		sc := s.clone()
+// 		s.moveTo(r, _ASSIGN)
+// 		if i != tSize-1 {
+// 			r2 := W.updateIndex(2*rsize + tSize - i - 1)
+// 			r = r2.clone()
+// 			r2.moveTo(sc, _ASSIGN)
+// 		}
+// 	}
+// }
+
+// func swapAfterMul(W *repr, aux []*limb, spare int) []*limb {
+// 	// this is kind of pesky too :(
+// 	commentHeader("swap")
+// 	W.updateIndex(0)
+// 	var stackSize int
+// 	for i := 0; i < W.size; i++ {
+// 		if W.next().atReg() {
+// 			stackSize = i
+// 			break
+// 		}
+// 	}
+// 	spared := []*limb{}
+// 	W.updateIndex(0)
+// 	regSize := W.size - stackSize
+// 	if regSize != W.size {
+// 		regs := W.slice(stackSize, W.size)
+// 		regs.previous()
+// 		idleStack := []*limb{}
+// 		si := 0
+// 		// ******
+// 		limit := len(aux) + regSize - spare
+// 		if stackSize < limit {
+// 			limit = stackSize
+// 		}
+// 		d := limit + spare
+// 		fmt.Println("swap limit", limit)
+// 		// ******
+// 		for i := 0; i < d; i++ {
+// 			if i < len(aux) { // A
+// 				Comment("A")
+// 				w := W.next()
+// 				idleStack = append(idleStack, w.clone())
+// 				w.moveTo(aux[i], _ASSIGN)
+// 			} else if i < limit { // B
+// 				Comment("B")
+// 				r := regs.get().clone()
+// 				regs.previous().moveTo(idleStack[si], _ASSIGN)
+// 				si++
+// 				w := W.next()
+// 				idleStack = append(idleStack, w.clone())
+// 				w.moveTo(r, _ASSIGN)
+// 			} else { // C
+// 				Comment("C")
+// 				r := regs.previous()
+// 				spared = append(spared, r.clone())
+// 				r.moveTo(idleStack[si], _ASSIGN)
+// 				si++
+// 			}
+// 		}
+// 	}
+// 	W.updateIndex(0)
+// 	return spared
+// }
