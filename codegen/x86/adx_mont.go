@@ -34,13 +34,14 @@ func montQ13(rsize int, tape *tape, W *repr) *repr {
 		// q1, with missing span
 		bound = rsize
 		saveU = true // u is required for the next part of reduction
+		// notice that a this is full capacity iteration
 	} else {
 		commentHeader("montgomery reduction q3")
 		// q3, remaining part of q1
 		bound = size - rsize
 		saveU = true // u is required for the next part of reduction
 	}
-	fullCap := rsize == size
+	fullCap := rsize == bound
 	wOffset := W.i
 	comment("clear flags")
 	zero.xorself()
@@ -101,7 +102,8 @@ func montQ13(rsize int, tape *tape, W *repr) *repr {
 					comment("clear flags")
 					ax.xorself()
 				} else {
-					lCarry1.adoxq(lCarry1)
+					// !!!! ????
+					// lCarry1.adoxq(lCarry1)
 				}
 			}
 			if firstJ {
@@ -128,8 +130,7 @@ func montQ13(rsize int, tape *tape, W *repr) *repr {
 	return W
 }
 
-func montQ2SpacialCase(rsize int, tape *tape, W *repr, llCarry *limb) {
-
+func montQ2SpecialCase(rsize int, tape *tape, W *repr, llCarry *limb) *repr {
 	commentHeader("montgomerry reduction q2")
 	modulus := tape.lookupRepr("modulus")
 
@@ -139,6 +140,7 @@ func montQ2SpacialCase(rsize int, tape *tape, W *repr, llCarry *limb) {
 	modulus.updateIndex(-1)
 	modulus.next().move(tape.dx())
 	ax.xorself()
+	hi := tape.lookupLimb("hi")
 	// process where j = size - 1
 	for i := 0; i < bound; i++ {
 		firstI, lastI := i == 0, i == bound-1
@@ -148,12 +150,97 @@ func montQ2SpacialCase(rsize int, tape *tape, W *repr, llCarry *limb) {
 		commentI(i)
 		W.commentCurrent("w")
 		/////////////////////
-		// u := tape.lookupLimb(fmt.Sprintf("u%d", i))
-		// w1, w2 := W.next(), W.next()
-		// u.mulx()
+		u := tape.lookupLimb(fmt.Sprintf("u%d", i))
+		w1, w2 := W.next(), W.next()
+		u.mulx(ax, hi)
+		w1.adoxq(ax)
+		if lastI {
+			w2.assertAtMem("very last element expected to be at memory")
+			comment("aggregate carries")
+			comment(fmt.Sprintf("%v + %v should be added to w%d @ %v", llCarry, hi, W.i-1, w2))
+			comment("notice that aggregated value can be at most (2^64 - 1)")
+			llCarry.adcxq(hi)
+			llCarry.adoxq(ax.clear())
+		} else {
+			w2.adcxq(hi)
+		}
 		_, _ = firstI, lastI
 	}
+	return W
+}
 
+func montQ3SpecialCase(rsize int, tape *tape, W *repr, llCarry *limb) *repr {
+	commentHeader("montgomerry reduction q3 & q4")
+	modulus := tape.lookupRepr("modulus")
+	inp := tape.lookupLimb("inp")
+	hi := tape.lookupLimb("hi")
+
+	size := modulus.size
+	offset, span := size-1, size
+
+	W.updateIndex(offset)
+	modulus.updateIndex(0)
+	commentI(size - 1)
+	commentU(size - 1) // u = Wi * inp
+	ax.xorself()
+
+	W.get().move(dx)
+	// 'u' is stored at dx, 'hi' is just a placeholder here
+	inp.mulx(dx, hi)
+	for j := 0; j < span; j++ {
+		firstJ, lastJ := j == 0, j == span-1
+		W.updateIndex(offset + j)
+		/////////////////////
+		commentJ(j)
+		W.commentCurrent("w")
+		/////////////////////
+		w1, w2 := W.next(), W.next()
+		modulus.next().mulx(ax, hi)
+
+		if !lastJ {
+			w1.adoxq(ax)
+		}
+
+		if firstJ {
+			tape.free(w1.delete())
+		}
+
+		if j < span-2 {
+			w2.adcxq(hi)
+		} else if j == span-2 {
+			// w2.assertAtMem("w2, span - 2")
+			// w2.moveAssign(tape.next().assertAtReg("at fisrt j a register went to zero"))
+			// comment("add aggregated carry")
+			// w2.adcxq(hi)
+			// tape.free(llCarry)
+			w2.assertAtMem("w2, span - 2")
+			llCarry.adcxq(hi)
+		} else {
+			assert(lastJ, "should be last iter")
+			w1.assertAtMem("w1, last j")
+			w2.assertAtMem("w2, last j")
+			r := tape.next().assertAtReg("just above long long carry is freed")
+			llCarry.adoxq(ax)
+			r.adcxq(hi)
+
+			comment("the last bit")
+			hi.clear()
+			r.adoxq(hi)
+
+			llCarry.addNoCarry(w1)
+			r.adc(w2)
+			hi.addCarry()
+			tape.free(w1, w2)
+
+			w1.set(llCarry)
+			w2.set(r)
+			// w2.moveAssign(tape.next().assertAtReg("just above long long carry is freed"))
+			// w2.adcxq(gi)
+		}
+		_, _ = firstJ, lastJ
+	}
+	tape.free(ax)
+	return W
 }
 
 // func montQ13(rsize int, tape *tape, W *repr) *repr {
