@@ -12,9 +12,9 @@ func montMulNoADX(size int, fixedmod bool) {
 	funcName := "mul"
 	modulusName := "·modulus"
 	if fixedmod {
-		TEXT(funcName, NOSPLIT, fmt.Sprintf("func(c *[%d]uint64, a, b *[%d]uint64)", size*2, size))
+		TEXT(funcName, NOSPLIT, fmt.Sprintf("func(c, a, b *[%d]uint64)", size))
 	} else {
-		TEXT(funcName, NOSPLIT, fmt.Sprintf("func(c *[%d]uint64, a, b, p *[%d]uint64, inp uint64)", size*2, size))
+		TEXT(funcName, NOSPLIT, fmt.Sprintf("func(c, a, b, p *[%d]uint64, inp uint64)", size))
 	}
 	commentHeader("inputs")
 	tape := newTape(_NO_SWAP, ax.s, dx.s)
@@ -22,13 +22,11 @@ func montMulNoADX(size int, fixedmod bool) {
 	B := tape.newReprAtParam(size, "b", tape.si(), 0)
 	ai := tape.newLimb()
 	carry := tape.newLimb()
+	// fix:
 	r := tape.newReprAllocRemainingGPRs()
 	R := r.slice(0, mulRSize)
-	// R := tape.newReprAllocGPRs(mulRSize)
 	R.debug("R")
-	if size > mulRSize*2 {
-		panic("only upto two partial multiplications is allowed")
-	}
+	assert(size < RSize*2+1, "only upto two partial multiplications is allowed")
 	var W *repr
 	if size > RSize {
 		// for larger integers, multiplication is done in two parts
@@ -251,11 +249,13 @@ func transitionMulToMont(tape *tape, W *repr, aux []*limb, spare int) []*limb {
 		// ******
 		for i := 0; i < d; i++ {
 			if i < len(aux) { // A
+				fmt.Println("xxx")
 				Comment("A")
 				w := W.next()
 				tape.free(w.clone())
 				w.moveTo(aux[i], _ASSIGN)
 			} else if i < limit { // B
+				fmt.Println("yyy")
 				Comment("B")
 				r := regs.get().clone()
 				s := tape.stack.next()
@@ -264,6 +264,7 @@ func transitionMulToMont(tape *tape, W *repr, aux []*limb, spare int) []*limb {
 				tape.free(w.clone())
 				w.moveTo(r, _ASSIGN)
 			} else { // C
+				fmt.Println("zzz")
 				Comment("C")
 				r := regs.previous()
 				spared = append(spared, r.clone())

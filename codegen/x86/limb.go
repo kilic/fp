@@ -109,6 +109,14 @@ func (r *repr) commentCurrent(name string) {
 	Commentf("| %s%d @ %s", name, r.i, r.get().String())
 }
 
+func (r *repr) commentPrevious(name string) {
+	Commentf("| %s%d @ %s", name, (r.i-1+r.size)%r.size, r.at(r.i-1).String())
+}
+
+func (r *repr) commentNext(name string) {
+	Commentf("| %s%d @ %s", name, (r.i+1)%r.size, r.at(r.i+1).String())
+}
+
 // load will cause changing of source index
 func (r *repr) load(src *repr) *repr {
 	for i := 0; i < r.size; i++ {

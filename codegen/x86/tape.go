@@ -181,33 +181,6 @@ func (t *tape) freeIf(c bool, ops ...*limb) *tape {
 	return t
 }
 
-// func (t *tape) free(ops ...Op) {
-// 	for i := 0; i < len(ops); i++ {
-// 		op := ops[i]
-// 		if isLimb(op) {
-// 			op = op.(*limb).s
-// 		}
-// 		if isGp(op) {
-// 			t.gpSet.free(op)
-// 		} else if isMem(op) {
-// 			t.stack.free(op)
-// 		}
-// 	}
-// }
-
-func (t *tape) freeAll() {
-	t.gpSet.freeAll()
-	t.stack.freeAll()
-}
-
-// func (t *tape) freeGp(gps ...*limb) {
-// 	return t.gpSet.free(gps...)
-// }
-
-// func (t *tape) allocGp(gps ...Op) []Op {
-// 	return t.gpSet.reserve(gps...)
-// }
-
 func (t *tape) allocGp(gps ...*limb) {
 	t.gpSet.alloc(gps...)
 }
@@ -421,21 +394,6 @@ func (s *stack) free(mems ...*limb) {
 		}
 	}
 }
-
-// func (s *stack) free(mems ...Op) []Op {
-// 	_mems := []Op{}
-// 	for _, op := range mems {
-// 		if isLimb(op) {
-// 			op = op.(*limb).s
-// 		}
-// 		if isMem(op) {
-// 			mem := op.(Mem)
-// 			s.allocated[mem.Disp/8] = false
-// 			_mems = append(_mems, op)
-// 		}
-// 	}
-// 	return _mems
-// }
 
 func (s stack) sizeFree() int {
 	c := 0

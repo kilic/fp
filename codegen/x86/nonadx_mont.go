@@ -337,7 +337,7 @@ func montQ2SpecialCaseNoADX(rsize int, tape *tape, W *repr, sCarry, lCarry *limb
 	// process where j = size - 1 only
 	sCarry.clear()
 	for i := 0; i < bound; i++ {
-		firstI, lastI := i == 0, i == size-1
+		firstI, lastI := i == 0, i == bound-1
 		W.updateIndex(offset + i)
 		modulus.updateIndex(-1)
 		/////////////////////
