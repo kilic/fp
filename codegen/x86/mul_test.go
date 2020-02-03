@@ -13,31 +13,37 @@ import (
 
 var limbs int
 var fixed bool
+var noadx bool
 
 func TestMain(m *testing.M) {
 	_limb := flag.Int("limb", 1, "# of iters")
 	_fixed := flag.Bool("fixed", false, "# of iters")
+	_noadx := flag.Bool("noadx", false, "# of iters")
 	flag.Parse()
 	limbs = *_limb
 	fixed = *_fixed
+	noadx = *_noadx
 	m.Run()
 }
 
-func TestGen2(t *testing.T) {
+func TestMont(t *testing.T) {
 	debugOn = true
-	file := "multest.gitign/mul.s"
+	file := "generated/mul.s"
 	if err := flag.Set("out", file); err != nil {
 		panic(err)
 	}
-	RSize = 8
-	fixedmod := false
-	montMulNoADX(limbs, fixedmod)
+	RSize = 9
+	if noadx {
+		montMulNoADX(limbs, fixed)
+	} else {
+		montMul(limbs, fixed)
+	}
 	Generate()
 	pretty(file)
 	generateTestCode(limbs, fixed)
 }
 
-func TestMulOnly(t *testing.T) {
+func TestMul(t *testing.T) {
 	debugOn = true
 	file := "multest.gitign/mul.s"
 	if err := flag.Set("out", file); err != nil {
@@ -45,21 +51,13 @@ func TestMulOnly(t *testing.T) {
 	}
 	RSize = 9
 	mul(limbs)
-	Generate()
-	pretty(file)
-}
-
-func TestGen1(t *testing.T) {
-	debugOn = true
-	file := "generated/mul.s"
-	if err := flag.Set("out", file); err != nil {
-		panic(err)
+	if noadx {
+		mulNoADX(limbs)
+	} else {
+		mul(limbs)
 	}
-	RSize = 9
-	montMul(limbs, fixed)
 	Generate()
 	pretty(file)
-	generateTestCode(limbs, fixed)
 }
 
 func generateTestCode(limbs int, fixedmod bool) {
@@ -178,6 +176,35 @@ func TestHardBox(t *testing.T) {
 		}
 	}
 }
+
+func TestFF(t *testing.T) {
+	for i := 0; i < fuz; i++ {
+		newField()
+		l := modulus[s-1]>>1 | 0xfffffffffffffff
+		a, b := &fe{}, &fe{}
+		for i := 0; i < s-1; i++ {
+			b[i], a[i] = 0xffffffffffffffff, 0xffffffffffffffff
+		}
+		a[s-1], b[s-1] = l, l
+		var c fe
+		mmul(&c, a, b)
+		ri, cw, ch := new(big.Int), new(big.Int), feToBig(c[:])
+		ri.ModInverse(rbig, p)
+		cw.Mul(
+			feToBig(a[:]),
+			feToBig(b[:]),
+		).Mul(cw, ri).Mod(cw, p)
+		if ch.Cmp(cw) != 0 {
+			fmt.Println(i)
+			debugFe(a, "a")
+			fmt.Printf("ch = %#x\n", ch)
+			fmt.Printf("cw = %#x\n", cw)
+			debugFe(r, "r")
+			debugFe(&modulus, "p")
+			t.Fatal("")
+		}
+	}
+}
 `
 
 const _testCode = `
@@ -243,6 +270,35 @@ func TestHardBox(t *testing.T) {
 			fmt.Println(i)
 			debugFe(a, "a")
 			debugFe(b, "b")
+			fmt.Printf("ch = %#x\n", ch)
+			fmt.Printf("cw = %#x\n", cw)
+			debugFe(r, "r")
+			debugFe(&modulus, "p")
+			t.Fatal("")
+		}
+	}
+}
+
+func TestFF(t *testing.T) {
+	for i := 0; i < fuz; i++ {
+		newField()
+		l := modulus[s-1]>>1 | 0xfffffffffffffff
+		a, b := &fe{}, &fe{}
+		for i := 0; i < s-1; i++ {
+			b[i], a[i] = 0xffffffffffffffff, 0xffffffffffffffff
+		}
+		a[s-1], b[s-1] = l, l
+		var c fe
+		mmul(&c, a, b, &modulus, inp)
+		ri, cw, ch := new(big.Int), new(big.Int), feToBig(c[:])
+		ri.ModInverse(rbig, p)
+		cw.Mul(
+			feToBig(a[:]),
+			feToBig(b[:]),
+		).Mul(cw, ri).Mod(cw, p)
+		if ch.Cmp(cw) != 0 {
+			fmt.Println(i)
+			debugFe(a, "a")
 			fmt.Printf("ch = %#x\n", ch)
 			fmt.Printf("cw = %#x\n", cw)
 			debugFe(r, "r")
