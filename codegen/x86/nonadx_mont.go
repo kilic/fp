@@ -391,7 +391,7 @@ func montQ3SpecialCaseNoADX(rsize int, tape *tape, W *repr, sCarry, lCarry *limb
 	W.mul(_NO_ITER, inp, u, nil, _MUL_MOVE)
 	sCarry.clear() // clear short carry
 	for j := 0; j < bound; j++ {
-		firstJ, lastJ := j == 0, j == size-1
+		firstJ, lastJ := j == 0, j == bound-1
 		W.updateIndex(offset + j)
 		commentJ(j)
 		W.commentCurrent("w")
