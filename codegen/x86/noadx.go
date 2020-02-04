@@ -113,7 +113,7 @@ func montMulNoADX(size int, fixedmod bool) {
 			comment(fmt.Sprintf("should be added to w%d", W.i))
 			lCarry.move(llCarry)
 			// swapping to fit to q3 part
-			spare := transitionQ2toQ3(W, lCarry)
+			spare := transitionQ2toQ3NoADX(W, lCarry)
 			W.adjustIndex().commentState("W q2 q3 transition").debug("W q2 q3 transition")
 			// u has been used in q2, need new one
 			u.set(spare)
@@ -191,7 +191,7 @@ func mulNoADX(size int) {
 	tape.ret()
 }
 
-func transitionQ2toQ3(W *repr, aux *limb) *limb {
+func transitionQ2toQ3NoADX(W *repr, aux *limb) *limb {
 	W.adjustIndex().next()
 	Ws := W.slice(W.i, W.size)
 	countStack := func() (i int) {

@@ -81,7 +81,7 @@ func montMul(size int, fixedmod bool) {
 	var montRsize int
 	// var lCarry, hi *limb
 	var hi *limb
-	if size < 6 {
+	if size < 0 {
 		montRsize = mulRSize
 		tape.free(B.base.clone())
 		if !fixedmod {
@@ -124,8 +124,33 @@ func montMul(size int, fixedmod bool) {
 			comment(fmt.Sprintf("long carry %s should be added to w%d", llCarry.String(), W.i))
 			montQ2SpecialCase(montRsize, tape, W, llCarry).commentState("q2 ends").debug("q2 ends")
 			montQ3SpecialCase(montRsize, tape, W, llCarry).commentState("q3 ends").debug("q3 ends")
-
 			lastBit = hi
+		} else {
+			lCarry := llCarry.clone()
+			comment(fmt.Sprintf("carry from q1 should be added to w%d", W.i))
+			llCarry.moveAssign(tape.next().assertAtMem("idle register not expected here"))
+			// Q2
+			montQ2(montRsize, tape, W, lCarry).commentState("q2 ends").debug("q2 ends")
+			// long long carry from q2
+			comment("save the carry from q2")
+			comment(fmt.Sprintf("should be added to w%d", W.i))
+			lCarry.move(llCarry)
+			tape.free(lCarry)
+			// swapping to fit to q3 part
+			transitionQ2toQ3(tape, W)
+			W.adjustIndex().commentState("W q2 q3 transition").debug("W q2 q3 transition")
+			// Q3
+			montQ13(montRsize, tape, W).commentState("W q3").debug("W q3")
+			lCarry = tape.lookupLimb("long_long_carry").assertAtReg("must exist")
+			// we can aggregate carries from q2 and q3
+			// these two carries will be added to same limb
+			comment("aggregate carries from q2 & q3")
+			comment(fmt.Sprintf("should be added to w%d", W.i))
+			lCarry.adc(llCarry)
+			tape.setLimbForKey("long_long_carry", llCarry)
+			// Q4
+			montQ4(montRsize, tape, W, lCarry).commentState("W q4").debug("W q4")
+			lastBit = lCarry
 		}
 	}
 	tape.alloc(lastBit) // just in case
@@ -145,8 +170,8 @@ func modularReduction(tape *tape, W *repr, lastBit *limb) (*repr, *repr) {
 	var T *repr
 	swap := tape.dx()
 	// use swap register for last limb
-	T = tape.newReprAlloc(Red.size - 1).extend(swap)
-	// T = tape.newReprAlloc(Red.size)
+	// T = tape.newReprAlloc(Red.size - 1).extend(swap)
+	T = tape.newReprAlloc(Red.size)
 	T.setSwap(swap)
 	modulus.updateIndex(0)
 	for i := 0; i < Red.size; i++ {
@@ -167,44 +192,6 @@ func out(tape *tape, T, Red *repr, r *limb) {
 		T.next().moveIfNotCFAux(
 			Red.next(), C.next())
 	}
-}
-
-func transitionMulToMontOld(tape *tape, W *repr, spare int) {
-	hasAux := false
-	ws := W.stackSlice()
-	wr := W.registerSlice().reverse()
-	// auxSize := tape.sizeFreeGp()
-	// bound := auxSize + wr.size - spare
-	for i := 0; i < ws.size; i++ {
-		// for i := 0; i < bound; i++ {
-		o := tape.next()
-		if o.atReg() {
-			// comment("A")
-			s := ws.next()
-			tape.free(s)
-			s.moveAssign(o)
-			hasAux = true
-		} else {
-			// comment("B")
-			assert(hasAux, "transition should be done with auxilarry registers")
-			r := wr.next()
-			t := r.clone()
-			r.moveAssign(o)
-			s := ws.next()
-			tape.free(s)
-			s.moveAssign(t)
-		}
-	}
-	spared := []*limb{}
-	for i := 0; i < spare; i++ {
-		// comment("C")
-		r := wr.next()
-		s := tape.next()
-		s.assertAtMem("sparing to stack")
-		spared = append(spared, r.clone())
-		r.moveAssign(s)
-	}
-	tape.free(spared...)
 }
 
 func transitionMulToMont2(tape *tape, W *repr, spare int) {
@@ -247,3 +234,75 @@ func transitionMulToMont2(tape *tape, W *repr, spare int) {
 	}
 	tape.free(spared...)
 }
+
+func transitionQ2toQ3(tape *tape, W *repr) {
+	aux := tape.next().assertAtReg("long carry from q2 should be freed")
+	W.adjustIndex().next()
+	Ws := W.slice(W.i, W.size)
+	countStack := func() (i int) {
+		ws := Ws.clone()
+		for ws.next().atMem() {
+			i++
+		}
+		return i
+	}
+	bound := countStack()
+	if bound == 0 {
+		return
+	}
+	commentHeader("q2 q3 transition swap")
+	R := Ws.registerSlice().reverse()
+	var spare *limb
+	for i := 0; i < bound; i++ {
+		s := Ws.next()
+		t := s.clone()
+		if i == 0 {
+			spare = aux.clone()
+		}
+		s.moveAssign(spare)
+		if i != bound-1 {
+			r := R.next()
+			spare = r.clone()
+			r.moveAssign(t)
+		}
+	}
+	return
+}
+
+// func transitionMulToMontOld(tape *tape, W *repr, spare int) {
+// 	hasAux := false
+// 	ws := W.stackSlice()
+// 	wr := W.registerSlice().reverse()
+// 	// auxSize := tape.sizeFreeGp()
+// 	// bound := auxSize + wr.size - spare
+// 	for i := 0; i < ws.size; i++ {
+// 		// for i := 0; i < bound; i++ {
+// 		o := tape.next()
+// 		if o.atReg() {
+// 			// comment("A")
+// 			s := ws.next()
+// 			tape.free(s)
+// 			s.moveAssign(o)
+// 			hasAux = true
+// 		} else {
+// 			// comment("B")
+// 			assert(hasAux, "transition should be done with auxilarry registers")
+// 			r := wr.next()
+// 			t := r.clone()
+// 			r.moveAssign(o)
+// 			s := ws.next()
+// 			tape.free(s)
+// 			s.moveAssign(t)
+// 		}
+// 	}
+// 	spared := []*limb{}
+// 	for i := 0; i < spare; i++ {
+// 		// comment("C")
+// 		r := wr.next()
+// 		s := tape.next()
+// 		s.assertAtMem("sparing to stack")
+// 		spared = append(spared, r.clone())
+// 		r.moveAssign(s)
+// 	}
+// 	tape.free(spared...)
+// }

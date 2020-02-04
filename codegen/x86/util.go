@@ -32,7 +32,7 @@ func commentU(i int) {
 }
 
 func commentJ(j int) {
-	comment(fmt.Sprintf("j%[1]d", j))
+	comment(fmt.Sprintf("j%[1]d\n", j))
 }
 
 func commentI(i int) {

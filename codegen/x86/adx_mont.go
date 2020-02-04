@@ -41,7 +41,8 @@ func montQ13(rsize int, tape *tape, W *repr) *repr {
 		bound = size - rsize
 		saveU = true // u is required for the next part of reduction
 	}
-	fullCap := rsize == bound
+	// fullCap := rsize == bound
+	fullCap := rsize == span
 	wOffset := W.i
 	comment("clear flags")
 	zero.xorself()
@@ -76,6 +77,7 @@ func montQ13(rsize int, tape *tape, W *repr) *repr {
 			tmp := false
 			if lastJ {
 				if w2.atMem() {
+					fmt.Println("will free 1", w2)
 					tape.free(w2)
 					W.commentPrevious("w")
 					if fullCap {
@@ -91,6 +93,7 @@ func montQ13(rsize int, tape *tape, W *repr) *repr {
 			w2.adcxq(hi)
 			if lastJ {
 				w2.adoxq(lCarry0)
+				fmt.Println("will free 2", lCarry0)
 				tape.free(lCarry0)
 				if tmp {
 					comment("move to an idle register")
@@ -240,6 +243,176 @@ func montQ3SpecialCase(rsize int, tape *tape, W *repr, llCarry *limb) *repr {
 		_, _ = firstJ, lastJ
 	}
 	tape.free(ax)
+	return W
+}
+
+func montQ2(rsize int, tape *tape, W *repr, lCarry *limb) *repr {
+	commentHeader("montgomerry reduction q2")
+
+	modulus := tape.lookupRepr("modulus")
+	hi := tape.lookupLimb("hi")
+	llCarry := tape.lookupLimb("long_long_carry").assertAtMem("should exist at memory")
+
+	dx, ax := tape.dx(), tape.ax()
+	size := modulus.size
+
+	// bounds of upper and inner iteration
+	bound, span := rsize, size-rsize
+	assert(span < rsize, "q2 is not implemented for full capacity spanning")
+
+	// high limbs of modulus will be used in q2
+	modulusOffset := rsize
+
+	spaceRequired := span + bound
+	stackRequired := spaceRequired - bound
+	fmt.Println("stack required", stackRequired, spaceRequired, bound, span)
+	comment("clear flags")
+	lCarry.xorself()
+	for i := 0; i < bound; i++ {
+		firstI, lastI := i == 0, i == bound-1
+		W.updateIndex(i + modulusOffset)
+		modulus.updateIndex(modulusOffset)
+		/////////////////////
+		commentI(i)
+		W.commentState("W")
+		/////////////////////
+		// fetch 'u' calculated at q1
+		u := tape.lookupLimb(fmt.Sprintf("u%d", i))
+		comment(fmt.Sprintf("u%d @ %v", i, u))
+		u.move(dx)
+		// free 'u' from memory
+		tape.free(u)
+		commentSeperator()
+		for j := 0; j < span; j++ {
+			firstJ, lastJ := j == 0, j == span-1
+			W.updateIndex(i + j + modulusOffset)
+			/////////////////////
+			commentJ(modulusOffset + j)
+			W.commentCurrent("w")
+			/////////////////////
+			w1, w2 := W.next(), W.next()
+			modulus.next().mulx(ax, hi)
+			w1.adoxq(ax)
+			if firstJ {
+				needStack := !firstI && stackRequired > 0
+				if needStack {
+					m := tape.stack.next()
+					tape.free(w1.clone())
+					w1.moveAssign(m)
+					stackRequired -= 1
+				}
+			}
+			if !lastJ {
+				w2.adcxq(hi)
+			} else {
+				if w2.atMem() {
+					W.commentPrevious("w")
+					comment("move to an idle register")
+					w2.moveAssign(tape.next().assertAtReg("there should be idle register"))
+					W.commentPrevious("w")
+				}
+				w2.adcxq(hi)
+				w2.adoxq(lCarry)
+				if i == rsize-span-1 {
+					// at this point we bring the carry from q1
+					comment("bring the carry from q1")
+					llCarry.move(lCarry)
+					lCarry.addCarry()
+				} else {
+					lCarry.clear()
+					lCarry.adcxq(lCarry)
+				}
+			}
+			_, _ = firstJ, lastJ // fix: remove if not necesaary
+		}
+		if !lastI {
+			comment("clear flags")
+			ax.xorself()
+		}
+		_, _ = firstI, lastI // fix: remove if not necessary
+	}
+	return W
+}
+
+func montQ4(rsize int, tape *tape, W *repr, lCarry *limb) *repr {
+	commentHeader("montgomerry reduction q4")
+
+	modulus := tape.lookupRepr("modulus")
+	hi := tape.lookupLimb("hi")
+	dx, ax := tape.dx(), tape.ax()
+	size := modulus.size
+
+	bound, span := size-rsize, size-rsize
+	modulusOffset := rsize
+	wOffset := 2 * rsize
+	comment("clear flags")
+	ax.xorself()
+	for i := 0; i < bound; i++ {
+		firstI, lastI := i == 0, i == bound-1
+		W.updateIndex(i + wOffset)
+		modulus.updateIndex(modulusOffset)
+		/////////////////////
+		commentI(i)
+		W.commentState("W")
+		/////////////////////
+		// fetch 'u' calculated at q1
+		u := tape.lookupLimb(fmt.Sprintf("u%d", i+modulusOffset))
+		comment(fmt.Sprintf("u%d @ %v", i, u))
+		u.move(dx)
+		// free 'u' from memory
+		tape.free(u)
+		commentSeperator()
+		for j := 0; j < span; j++ {
+			firstJ, lastJ := j == 0, j == span-1
+			W.updateIndex(i + j + wOffset)
+			/////////////////////
+			commentJ(modulusOffset + j)
+			W.commentCurrent("w")
+			/////////////////////
+			w1, w2 := W.next(), W.next()
+			fmt.Println("w", w1, w2)
+			modulus.next().mulx(ax, hi)
+			w1.adoxq(ax)
+			if firstJ {
+				w2.adcxq(hi)
+				if !lastI {
+					s := tape.next()
+					fmt.Println(s)
+					s.assertAtMem("no free register is expected here")
+					tape.free(w1.clone())
+					w1.moveAssign(s)
+				}
+				continue
+			}
+			if !lastJ {
+				w2.adcxq(hi)
+			} else {
+				W.commentPrevious("w")
+				w2.assertAtMem("expected at mem w2")
+				tape.free(w2)
+				comment("move to an idle register")
+				var r *limb
+				if !lastI {
+					r = tape.next().assertAtReg("there should be free register")
+				} else {
+					r = tape.ax().clone()
+				}
+				w2.moveAssign(r)
+				w2.adcxq(hi)
+				if firstI {
+					comment("bring carry from q2 & q3")
+				}
+				W.commentPrevious("w")
+				w2.adoxq(lCarry)
+				lCarry.clear()
+				lCarry.adcxq(lCarry)
+			}
+
+			_, _ = firstJ, lastJ // fix: remove if not necesaary
+		}
+		_, _ = firstI, lastI // fix: remove if not necessary
+	}
+	tape.free(hi)
 	return W
 }
 

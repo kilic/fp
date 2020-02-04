@@ -32,7 +32,7 @@ func TestMont(t *testing.T) {
 	if err := flag.Set("out", file); err != nil {
 		panic(err)
 	}
-	RSize = 9
+	RSize = 4
 	if noadx {
 		montMulNoADX(limbs, fixed)
 	} else {
