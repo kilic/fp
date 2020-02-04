@@ -60,17 +60,23 @@ func montMulNoADX(size int, fixedmod bool) {
 	}
 	var montRsize int
 	var lCarry, sCarry, u *limb
-	if size == 4 {
-		// fix: should use swap after mul
-		lCarry = W.at(0).clone()
+	if size < 6 {
+		montRsize = mulRSize
 		sCarry = B.base.clone()
 		u = ai
-	} else if size == 5 {
-		W.updateIndex(0)
-		lCarry = A.base.clone()
-		sCarry = B.base.clone()
-		u = ai
-		W.next().assertAtMem().moveAssign(lCarry)
+		w0 := W.at(0)
+		if w0.atMem() {
+			lCarry := A.base.clone()
+			w0.moveAssign(lCarry)
+		} else {
+			tape.free(A.base)
+			lCarry = w0.clone()
+		}
+		if !fixedmod {
+			p := tape.next().assertAtReg()
+			comment("fetch modulus")
+			modulus = tape.newReprAtParam(size, "p", p, 0)
+		}
 	} else {
 		// this makes lCarry first limb of the multiplication result
 		lCarry = A.base.clone()
@@ -88,6 +94,18 @@ func montMulNoADX(size int, fixedmod bool) {
 			montRsize = mulRSize
 		}
 	}
+	// else if size == 4 {
+	// 	// fix: should use swap after mul
+	// 	lCarry = W.at(0).clone()
+	// 	sCarry = B.base.clone()
+	// 	u = ai
+	// } else if size == 5 {
+	// 	W.updateIndex(0)
+	// 	lCarry = A.base.clone()
+	// 	sCarry = B.base.clone()
+	// 	u = ai
+	// 	W.next().assertAtMem().moveAssign(lCarry)
+	// }
 	_, _, _ = modulus, inp, sCarry
 	W.commentState("W ready to mont").debug("W ready to mont")
 	tape.setLimbForKey("u", u)
