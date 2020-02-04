@@ -11,15 +11,9 @@ import (
 	"strings"
 
 	. "github.com/mmcloughlin/avo/build"
-	. "github.com/mmcloughlin/avo/reg"
 )
 
-var ax = newLimb(RAX)
-var bx = newLimb(RBX)
-var cx = newLimb(RCX)
-var dx = newLimb(RDX)
-var si = newLimb(RSI)
-var di = newLimb(RDI)
+const RSize int = 9
 
 var supportedBitSizes = []int{
 	256,

@@ -98,8 +98,7 @@ func montQ13NoADX(rsize int, tape *tape, W *repr) *repr {
 					// bring it to a register that should have
 					// been zeroed before
 					if w2.atMem() {
-						r := tape.free(w2).next().assertAtReg(
-							fmt.Sprintf("a register must have been idle, %d, %d", i, j))
+						r := tape.free(w2).next().assertAtReg()
 						comment("move to idle register")
 						w2.moveTo(r, _ASSIGN)
 					}
@@ -277,7 +276,7 @@ func montQ4NoADX(rsize int, tape *tape, W *repr, lCarry *limb) *repr {
 			if firstJ {
 				modulus.next().mul(u, w, sCarry, _MUL_ADD)
 				if !firstI && !lastI {
-					tape.moveAssign(w)
+					tape.moveAssignNext(w)
 				}
 				continue
 			}
@@ -287,7 +286,7 @@ func montQ4NoADX(rsize int, tape *tape, W *repr, lCarry *limb) *repr {
 				w.addNoCarry(sCarry)
 				sCarry.clear().adc(iCarry)
 			} else {
-				w2 := W.next().assertAtMem("expected at mem w2")
+				w2 := W.next().assertAtMem()
 				if firstI {
 					modulus.next().mul(u, w, nil, _MUL_ADD)
 					iCarry.adc(llCarry)
@@ -408,8 +407,7 @@ func montQ3SpecialCaseNoADX(rsize int, tape *tape, W *repr, sCarry, lCarry *limb
 			sCarry.clear().adc(iCarry)
 		} else {
 			assert(w.atMem(), "expected to be at stack")
-			r := tape.next().assertAtReg(
-				fmt.Sprintf("a register must have been idle"))
+			r := tape.next().assertAtReg()
 			comment("move to idle register")
 			w.moveTo(r, _ASSIGN)
 			w2 := W.next()
@@ -425,154 +423,3 @@ func montQ3SpecialCaseNoADX(rsize int, tape *tape, W *repr, sCarry, lCarry *limb
 	}
 	return W
 }
-
-// func montQ3NoADX(rsize int, tape *tape, W *repr, inp *limb, modulus *repr, u, sCarry *limb) {
-// 	commentHeader("montgomery reduction q3")
-// 	stack := tape.stack
-// 	size := modulus.size
-// 	iCarry := tape.dx()       // internal carry
-// 	lCarry := W.get().clone() // use first limb as long carry
-
-// 	span := rsize // inner iteration bound
-// 	bound := size - rsize
-// 	offset := W.adjustIndex().i // start from non zero elements
-
-// 	for i := 0; i < bound; i++ { // (size - rsize) x (rsize) in q3
-// 		firstI, lastI := i == 0, i == bound-1
-// 		W.updateIndex(offset + i)
-// 		modulus.updateIndex(0)
-// 		commentI(i + offset)
-// 		W.commentState("W")
-// 		commentU(i + offset) // u = Wi * inp
-// 		// calculate u
-// 		W.mul(_NO_ITER, inp, u, nil, _MUL_MOVE)
-// 		sCarry.clear() // clear short carry
-// 		// save u to a stack for the next part of reductions
-// 		comment(fmt.Sprintf("save u%d", i+offset))
-// 		u.move(tape.setLimbForKey(fmt.Sprintf("u%d", i+offset), stack.next()))
-// 		commentHeader("")
-// 		for j := 0; j < span; j++ {
-// 			firstJ, lastJ := j == 0, j == span-1
-// 			commentJ(j)
-// 			W.commentCurrent("w")
-// 			w := W.next() // w_(i+j)
-// 			if firstJ {
-// 				modulus.next().mul(u, w, sCarry, _MUL_ADD)
-// 				tape.freeIf(!firstI, w.delete())
-// 				continue
-// 			}
-// 			if !lastJ {
-// 				modulus.next().mul(u, w, nil, _MUL_ADD)
-// 				iCarry.addCarry()
-// 				w.addNoCarry(sCarry)
-// 				sCarry.clear().adc(iCarry)
-// 			} else {
-// 				w2 := W.next()
-// 				if firstI {
-// 					modulus.next().mul(u, w, nil, _MUL_ADD)
-// 					iCarry.addCarry()
-// 					w.add(sCarry, _NO_CARRY)
-// 					w2.comment("w", W.i-1)
-// 					w2.add(iCarry, _CARRY)
-// 				} else {
-// 					modulus.next().mul(u, w, lCarry, _MUL_ADD)
-// 					w.add(sCarry, _NO_CARRY)
-// 					// rotation
-// 					if w2.atMem() {
-// 						r := tape.free(w2).next().assertAtReg(
-// 							fmt.Sprintf("a register must have been idle, %d, %d", i, j))
-// 						comment("move to idle register")
-// 						w2.moveTo(r, _ASSIGN)
-// 					}
-// 					w2.comment("w", W.i-1)
-// 					w2.add(lCarry, _CARRY)
-// 				}
-// 				lCarry.clearIf(!firstI).addCarry()
-// 			}
-// 			_, _ = firstJ, lastJ // fix: remove declaration if not necessary
-// 		}
-// 		_, _ = firstI, lastI // fix: remove declaration if not necessary
-// 	}
-// }
-
-// func montQ1NoADX(rsize int, tape *tape, W *repr, inp *limb, modulus *repr, u, sCarry *limb) {
-// 	commentHeader("montgomerry reduction q1")
-// 	stack := tape.stack
-// 	W.updateIndex(0)
-// 	size := modulus.size
-// 	// iteration bound of q1 part
-// 	bound := rsize
-// 	if size < rsize {
-// 		bound = size
-// 	}
-// 	// u is required for the next part of reduction
-// 	// if q1 only is not enough for whole reduction
-// 	saveU := size > rsize
-// 	iCarry := tape.dx()          // internal carry
-// 	lCarry := W.get().clone()    // use first limb as long carry
-// 	for i := 0; i < bound; i++ { // we go (span x span) in q1
-// 		firstI, lastI := i == 0, i == bound-1
-// 		W.updateIndex(i)
-// 		modulus.updateIndex(0)
-// 		commentI(i)
-// 		W.commentState("W")
-// 		commentU(i) // u = Wi * inp
-// 		// calculate u
-// 		W.mul(_NO_ITER, inp, u, nil, _MUL_MOVE)
-// 		sCarry.clear() // clear short carry
-// 		commentHeader("")
-// 		if saveU { // save u to a stack for the next part of reductions
-// 			comment(fmt.Sprintf("save u%d", i))
-// 			u.move(tape.setLimbForKey(fmt.Sprintf("u%d", i), stack.next()))
-// 		}
-// 		for j := 0; j < bound; j++ {
-// 			firstJ, lastJ := j == 0, j == bound-1
-// 			commentJ(j)
-// 			W.commentCurrent("w")
-// 			w := W.next() // w_(i+j)
-// 			if firstJ {
-// 				// (w_(i+j), scarry) := mi * ui
-// 				modulus.next().mul(u, w, sCarry, _MUL_ADD)
-// 				// make a register idle when it goes to zero
-// 				// special case at i = 0, for w0 which is used as long carry, we don't free this register
-// 				tape.freeIf(!firstI, w.delete())
-// 				continue
-// 			}
-// 			if !lastJ {
-// 				modulus.next().mul(u, w, nil, _MUL_ADD)
-// 				iCarry.addCarry()
-// 				w.addNoCarry(sCarry)
-// 				sCarry.clear().adc(iCarry)
-// 			} else { // lastJ
-// 				// w_(i+j+1)
-// 				w2 := W.next()
-// 				if firstI {
-// 					// (w_(i+j), icarry) := mi * ui
-// 					modulus.next().mul(u, w, nil, _MUL_ADD)
-// 					iCarry.addCarry()
-// 					w.add(sCarry, _NO_CARRY)
-// 					w2.comment("w", W.i-1)
-// 					w2.add(iCarry, _CARRY)
-// 				} else {
-// 					modulus.next().mul(u, w, lCarry, _MUL_ADD)
-// 					w.add(sCarry, _NO_CARRY)
-// 					// where register rotation happens
-// 					// if next wi is at memory
-// 					// bring it to a register that should have
-// 					// been zeroed before
-// 					if w2.atMem() {
-// 						r := tape.free(w2).next().assertAtReg(
-// 							fmt.Sprintf("a register must have been idle, %d, %d", i, j))
-// 						comment("move to idle register")
-// 						w2.moveTo(r, _ASSIGN)
-// 					}
-// 					w2.comment("w", W.i-1)
-// 					w2.add(lCarry, _CARRY)
-// 				}
-// 				lCarry.clearIf(!firstI).addCarry()
-// 			}
-// 			_, _ = firstJ, lastJ // fix: remove declaration if not necesaary
-// 		}
-// 		_, _ = firstI, lastI // fix: remove declaration if not necessary
-// 	}
-// }

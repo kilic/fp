@@ -350,16 +350,16 @@ func (l *limb) comment(tag string, index int) *limb {
 	return l
 }
 
-func (l *limb) assertAtReg(desc string) *limb {
+func (l *limb) assertAtReg() *limb {
 	if !l.atReg() {
-		panic(desc)
+		panic(fmt.Sprintf("%v is not at register", l))
 	}
 	return l
 }
 
-func (l *limb) assertAtMem(desc string) *limb {
+func (l *limb) assertAtMem() *limb {
 	if !l.atMem() {
-		panic(desc)
+		panic(fmt.Sprintf("%v is not at memory", l))
 	}
 	return l
 }

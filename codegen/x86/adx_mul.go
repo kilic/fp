@@ -1,7 +1,5 @@
 package x86
 
-var RSize int
-
 func partialMulADX(tape *tape, A, B, R *repr) *repr {
 	stack := tape.stack
 	size := B.size
@@ -118,18 +116,6 @@ func partialMulADX(tape *tape, A, B, R *repr) *repr {
 		}
 	}
 	commentHeader("\t\t\t")
-	// Get back to the beginning of last iteration
-	// R.rotate(-span)
-	// for W.i != resultOffset+resultWindow-1 { // Go until last one
-	// 	W.next().set(R.next())
-	// }
-	// // Highest limb of the result was kept in carry register
-	// wLast := W.next()
-	// if W.i != (resultOffset+resultWindow)%(size*2) {
-	// 	panic("result should go end of the span")
-	// }
-	// wLast.set(A.base.clone())
-	// return W
 	R.rotate(-span)
 	for W.i != resultOffset+resultWindow-1 { // Go until last one
 		W.next().set(R.next())

@@ -32,7 +32,6 @@ func TestMont(t *testing.T) {
 	if err := flag.Set("out", file); err != nil {
 		panic(err)
 	}
-	RSize = 4
 	if noadx {
 		montMulNoADX(limbs, fixed)
 	} else {
@@ -41,23 +40,6 @@ func TestMont(t *testing.T) {
 	Generate()
 	pretty(file)
 	generateTestCode(limbs, fixed)
-}
-
-func TestMul(t *testing.T) {
-	debugOn = true
-	file := "multest.gitign/mul.s"
-	if err := flag.Set("out", file); err != nil {
-		panic(err)
-	}
-	RSize = 9
-	mul(limbs)
-	if noadx {
-		mulNoADX(limbs)
-	} else {
-		mul(limbs)
-	}
-	Generate()
-	pretty(file)
 }
 
 func generateTestCode(limbs int, fixedmod bool) {

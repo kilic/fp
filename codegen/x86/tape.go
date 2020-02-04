@@ -8,6 +8,13 @@ import (
 	. "github.com/mmcloughlin/avo/reg"
 )
 
+var ax = newLimb(RAX)
+var bx = newLimb(RBX)
+var cx = newLimb(RCX)
+var dx = newLimb(RDX)
+var si = newLimb(RSI)
+var di = newLimb(RDI)
+
 func isMem(op *limb) bool {
 	return IsM64(op.s)
 }
@@ -87,7 +94,6 @@ func (t *tape) allocStack(size int) *repr {
 	return r
 }
 
-// func (t *tape) newReprAtParam(size int, param string, dst Register, offset int) *repr {
 func (t *tape) newReprAtParam(size int, param string, dst *limb, offset int) *repr {
 	t.allocGp(dst)
 	r, ok := dst.asPhysical()
@@ -206,10 +212,15 @@ func (t *tape) ret() {
 	commentHeader("end")
 }
 
-func (t *tape) moveAssign(r *limb) {
+func (t *tape) moveAssignNext(r *limb) *limb {
 	a := t.next()
 	t.free(r.clone())
-	r.moveAssign(a)
+	return r.moveAssign(a)
+}
+
+func (t *tape) moveAssign(r, dst *limb) *limb {
+	t.free(r.clone())
+	return r.moveAssign(dst)
 }
 
 func (t *tape) setLimbForKey(s string, limb *limb) *limb {
