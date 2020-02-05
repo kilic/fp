@@ -14,7 +14,7 @@ func genMontMulNoADX(size int, fixedmod bool, single, archTag bool) {
 		funcName += "_no_adx_bmi2_"
 	}
 	if !single {
-		funcName = fmt.Sprintf("%s_%d", funcName, size)
+		funcName = fmt.Sprintf("%s%d", funcName, size)
 		modulusName = fmt.Sprintf("%s%d", modulusName, size)
 	}
 	if fixedmod {

@@ -11,7 +11,7 @@ func genMontMulADX(size int, fixedmod bool, single bool) {
 	funcName := "mul"
 	modulusName := "·modulus"
 	if !single {
-		funcName = fmt.Sprintf("%s_%d", funcName, size)
+		funcName = fmt.Sprintf("%s%d", funcName, size)
 		modulusName = fmt.Sprintf("%s%d", modulusName, size)
 	}
 	if fixedmod {
