@@ -177,60 +177,6 @@ func transitionQ2toQ3NoADX(W *repr, aux *limb) *limb {
 	return spare
 }
 
-func transitionMulToMont(tape *tape, W *repr, aux []*limb, spare int) []*limb {
-	// this is kind of pesky too :(
-	commentHeader("swap")
-	W.updateIndex(0)
-	var stackSize int
-	for i := 0; i < W.size; i++ {
-		if W.next().atReg() {
-			stackSize = i
-			break
-		}
-	}
-	spared := []*limb{}
-	W.updateIndex(0)
-	regSize := W.size - stackSize
-	if regSize != W.size {
-		regs := W.slice(stackSize, W.size)
-		regs.previous()
-		// ******
-		limit := len(aux) + regSize - spare
-		if stackSize < limit {
-			limit = stackSize
-		}
-		d := limit + spare
-		// ******
-		for i := 0; i < d; i++ {
-			if i < len(aux) { // A
-				fmt.Println("xxx")
-				Comment("A")
-				w := W.next()
-				tape.free(w.clone())
-				w.moveTo(aux[i], _ASSIGN)
-			} else if i < limit { // B
-				fmt.Println("yyy")
-				Comment("B")
-				r := regs.get().clone()
-				s := tape.stack.next()
-				regs.previous().moveTo(s, _ASSIGN)
-				w := W.next()
-				tape.free(w.clone())
-				w.moveTo(r, _ASSIGN)
-			} else { // C
-				fmt.Println("zzz")
-				Comment("C")
-				r := regs.previous()
-				spared = append(spared, r.clone())
-				s := tape.stack.next()
-				r.moveTo(s, _ASSIGN)
-			}
-		}
-	}
-	W.updateIndex(0)
-	return spared
-}
-
 func combinePartialResults(tape *tape, Wr, Wl *repr) *repr {
 	size := Wr.size
 	W := tape.newReprNoAlloc(size)
