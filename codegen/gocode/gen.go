@@ -11,13 +11,8 @@ import (
 )
 
 var supportedBitSizes = map[int]bool{
-	128: true,
-	192: true,
-	256: true,
-	320: true,
-	384: true,
-	448: true,
-	512: true,
+	128: true, 192: true, 256: true, 320: true, 384: true, 448: true, 512: true,
+	576: true, 640: true, 704: true, 768: true, 832: true, 896: true, 960: true, 1024: true,
 }
 
 func resolveBitSize(byteSize int) int {

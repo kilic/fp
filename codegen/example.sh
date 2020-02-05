@@ -33,9 +33,6 @@ ARCH='ADX'
 ###     Option D
 #######################################
 ### x86 backends for all supported bit sizes and architectures (adx or w/o adx)
-### since 'avo' program can generate only one output at a time, 
-### we have to run the program multiple times :/
-#
 go run . -output $GEN_DIR -opt D 
 
 #######################################
