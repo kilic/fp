@@ -55,3 +55,27 @@ pStr := "0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001"
 pBytes, _ := hex.DecodeString(pStr[2:])
 field := newField(pBytes)
 ```
+
+## Benchmark
+
+Benchmarked on 2,7 GHz i5 machine
+
+Table below shows multiplication delays corresponding field sizes in bits.
+
+```
+128:  10.5 ns/op
+192:  15.8 ns/op
+256:  23.9 ns/op
+320:  33.3 ns/op
+384:  43.4 ns/op
+448:  59.2 ns/op
+512:  67.2 ns/op
+576:  81.9 ns/op
+640:  103 ns/op
+704:  130 ns/op
+768:  153 ns/op
+832:  177 ns/op
+896:  202 ns/op
+960:  228 ns/op
+1024: 256 ns/op
+```
