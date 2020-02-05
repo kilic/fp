@@ -9,8 +9,6 @@ import (
 	. "github.com/mmcloughlin/avo/reg"
 )
 
-var debugOn = false
-
 const (
 	_MUL_ADD   = true
 	_MUL_MOVE  = false
@@ -49,7 +47,7 @@ func (r *repr) ops() []Op {
 }
 
 func (r *repr) debug(desc string) *repr {
-	if debugOn {
+	if logs {
 		fmt.Printf("--------------\n")
 		fmt.Printf("Repr\n%s\n", desc)
 		fmt.Printf("Size: %d\n", r.size)
@@ -64,39 +62,6 @@ func (r *repr) debug(desc string) *repr {
 			}
 			if i == p {
 				fmt.Printf("\t*")
-			}
-			fmt.Printf("\n")
-		}
-		fmt.Printf("--------------\n")
-	}
-	return r
-}
-
-func (r *repr) debug2(desc string, j int) *repr {
-	if debugOn {
-		fmt.Printf("--------------\n")
-		fmt.Printf("Repr\n%s\n", desc)
-		fmt.Printf("Size: %d\n", r.size)
-		p := r.i
-		var k int
-		countK := false
-		for i := 0; i < len(r.limbs); i++ {
-			fmt.Printf("[%d]: ", i)
-			limb := r.limbs[i]
-			if limb == nil || limb.s == nil {
-				fmt.Printf("NN")
-			} else {
-				fmt.Printf("%s", limb.String())
-			}
-			if i == p {
-				fmt.Printf("\t*")
-				countK = true
-			}
-			if k == j {
-				fmt.Printf("\t&")
-			}
-			if countK {
-				k++
 			}
 			fmt.Printf("\n")
 		}

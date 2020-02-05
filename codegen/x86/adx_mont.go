@@ -65,7 +65,6 @@ func montQ13(rsize int, tape *tape, W *repr) *repr {
 			comment(fmt.Sprintf("save u%d", i+wOffset))
 			s := stack.next()
 			dx.move(tape.setLimbForKey(fmt.Sprintf("u%d", i+wOffset), s))
-			fmt.Println("u saved @", s)
 		}
 		commentSeperator()
 		for j := 0; j < span; j++ {

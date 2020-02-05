@@ -8,8 +8,7 @@ import (
 )
 
 func montMul(size int, fixedmod bool) {
-	mulRSize := RSize
-	funcName := "mmul"
+	funcName := "mul"
 	modulusName := "·modulus"
 	if fixedmod {
 		TEXT(funcName, NOSPLIT, fmt.Sprintf("func(c, a, b *[%d]uint64)", size))
@@ -21,10 +20,13 @@ func montMul(size int, fixedmod bool) {
 	A := tape.newReprAtParam(size, "a", tape.di(), 0)
 	B := tape.newReprAtParam(size, "b", tape.si(), 0)
 
-	R := tape.newReprAllocGPRs(RSize).debug("R")
-	if R.size != mulRSize {
-		panic("bad register size setting")
+	mulRSize := RSize
+	if size < 5 {
+		mulRSize = size*2 - 1
 	}
+	R := tape.newReprAllocGPRs(mulRSize).debug("R")
+	// R := tape.newReprAllocGPRs(RSize).debug("R")
+
 	// debug: leaving it here for debugging and testing purposes
 	// it is easier to eye debug when making register size artificially small
 	// r := tape.newReprAllocRemainingGPRs()
@@ -53,7 +55,8 @@ func montMul(size int, fixedmod bool) {
 	}
 	var montRsize int
 	var hi *limb
-	if size < 0 {
+
+	if size < 6 {
 		montRsize = mulRSize
 		tape.free(B.base.clone())
 		if !fixedmod {
@@ -71,11 +74,9 @@ func montMul(size int, fixedmod bool) {
 			montRsize = mulRSize
 			transitionMulToMont2(tape, W, 2)
 			comment("fetch modulus")
-			// should be spared at transition
 			p := tape.next().assertAtReg()
 			modulus = tape.newReprAtParam(size, "p", p, 0)
 		}
-		// should be spared at transition
 		hi = tape.next().assertAtReg()
 	}
 
@@ -197,11 +198,11 @@ func transitionMulToMont2(tape *tape, W *repr, spare int) {
 			s.moveAssign(t)
 		}
 	}
+
 	spared := []*limb{}
-	for i := 0; i < spare; i++ {
+	for i := 0; i < spare-tape.sizeFreeGp(); i++ {
 		r := wr.next()
-		s := tape.next()
-		s.assertAtMem()
+		s := tape.stack.next()
 		spared = append(spared, r.clone())
 		r.moveAssign(s)
 	}
