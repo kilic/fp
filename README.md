@@ -1,11 +1,12 @@
+`fp` generates prime fields, field elements and x86 optimized, high speed field operations.
 
-# Usage
+## Generating Field
 
-## Code Genetation
+Example commands to generate fields can be found [here](codegen/example.sh). 
 
-Examples can be found here. There are four generation modes.
+There are four generation modes.
 
-## A. Predefined Modulus
+### A. Predefined Modulus
 
 Given modulus input you get a field implementation with its precomputed constants.
 
@@ -15,17 +16,17 @@ MODULUS=0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabff
 go run . -output $GEN_DIR -bit 384 -opt A -modulus $MODULUS
 ```
 
-## B. Random Field
+### B. Random Field
 
-For testing or playing purposes you can get a field implementation with random prime modulus and its precomputed constant values at desired bit lenght.
+Option B helps to generate a random field with random prime modulus at desired bit length.
 
-## C. Arbitrary modulus
+### C. Arbitrary modulus
 
 With this option you get a field implementation where you feed the modulus while construction of a field in runtime.
 
-## D. Generic
+### D. Generic
 
-In generic case, field elements are `unsafe pointers`. This helps us to decide size of field element and its arithmetic functions in runtime. It also help us to represent field element with single type independent from their size.
+In generic case, field elements are `unsafe pointers`. This helps us to decide size of field element and its arithmetic functions in runtime. It also helps us to represent field element with single type independent from their size. [Generic field implementation](generic/field.go) is already generated.
 
 ```go
 type fieldElement = unsafe.Pointer
