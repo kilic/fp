@@ -8,7 +8,6 @@ import (
 )
 
 func montMulNoADX(size int, fixedmod bool) {
-	mulRSize := RSize - 1
 	funcName := "mul"
 	modulusName := "·modulus"
 	if fixedmod {
@@ -22,20 +21,16 @@ func montMulNoADX(size int, fixedmod bool) {
 	B := tape.newReprAtParam(size, "b", tape.si(), 0)
 	ai := tape.newLimb()
 	carry := tape.newLimb()
-	// fix:
-	R := tape.newReprAllocRemainingGPRs().debug("R")
-	if R.size != mulRSize {
-		panic("bad register size setting")
+
+	mulRSize := RSize - 1
+	if size < 5 {
+		mulRSize = size*2 - 1
 	}
-	// debug: leaving it here for debugging and testing purposes
-	// it is easier to eye debug when making register size artificially small
-	// r := tape.newReprAllocRemainingGPRs()
-	// R := r.slice(0, mulRSize)
-	// R.debug("R")
+	R := tape.newReprAllocGPRs(mulRSize).debug("R")
 
 	assert(size < RSize*2+1, "only upto two partial multiplications is allowed")
 	var W *repr
-	if size > RSize {
+	if size > RSize-1 {
 		// for larger integers, multiplication is done in two parts
 		// result of these parts are combined afterwards
 		// calculate part 1
@@ -60,54 +55,22 @@ func montMulNoADX(size int, fixedmod bool) {
 	}
 	var montRsize int
 	var lCarry, sCarry, u *limb
-	if size < 6 {
-		montRsize = mulRSize
-		sCarry = B.base.clone()
-		u = ai
-		w0 := W.at(0)
-		if w0.atMem() {
-			lCarry := A.base.clone()
-			w0.moveAssign(lCarry)
-		} else {
-			tape.free(A.base)
-			lCarry = w0.clone()
-		}
-		if !fixedmod {
-			p := tape.next().assertAtReg()
-			comment("fetch modulus")
-			modulus = tape.newReprAtParam(size, "p", p, 0)
-		}
+	tape.free(A.base.clone(), B.base.clone(), ai)
+	if fixedmod {
+		transitionMulToMont2(tape, W, 2)
+		sCarry = tape.next().assertAtReg()
+		u = tape.next().assertAtReg()
+		montRsize = mulRSize + 1
 	} else {
-		// this makes lCarry first limb of the multiplication result
-		lCarry = A.base.clone()
-		aux := []*limb{lCarry.clone(), B.base.clone(), ai}
-		if fixedmod {
-			spared := transitionMulToMont(tape, W, aux, 2)
-			sCarry, u = spared[0], spared[1]
-			montRsize = mulRSize + 1
-		} else {
-			var p *limb
-			spared := transitionMulToMont(tape, W, aux, 3)
-			sCarry, u, p = spared[0], spared[1], spared[2]
-			comment("fetch modulus")
-			modulus = tape.newReprAtParam(size, "p", p, 0)
-			montRsize = mulRSize
-		}
+		transitionMulToMont2(tape, W, 3)
+		sCarry = tape.next().assertAtReg()
+		u = tape.next().assertAtReg()
+		p := tape.next().assertAtReg()
+		comment("fetch modulus")
+		modulus = tape.newReprAtParam(size, "p", p, 0)
+		montRsize = mulRSize
 	}
-	// else if size == 4 {
-	// 	// fix: should use swap after mul
-	// 	lCarry = W.at(0).clone()
-	// 	sCarry = B.base.clone()
-	// 	u = ai
-	// } else if size == 5 {
-	// 	W.updateIndex(0)
-	// 	lCarry = A.base.clone()
-	// 	sCarry = B.base.clone()
-	// 	u = ai
-	// 	W.next().assertAtMem().moveAssign(lCarry)
-	// }
-	_, _, _ = modulus, inp, sCarry
-	W.commentState("W ready to mont").debug("W ready to mont")
+	lCarry = W.at(0).clone()
 	tape.setLimbForKey("u", u)
 	tape.setLimbForKey("short_carry", sCarry)
 	tape.setLimbForKey("inp", inp)
