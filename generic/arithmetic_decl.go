@@ -315,3 +315,315 @@ func mul8(c, a, b, p fieldElement, inp uint64)
 
 //go:noescape
 func mul_no_adx_bmi2_8(c, a, b, p fieldElement, inp uint64)
+
+//go:noescape
+func eq9(a, b fieldElement) bool
+	
+//go:noescape
+func mul_two_9(a fieldElement)
+
+//go:noescape
+func div_two_9(a fieldElement)
+
+//go:noescape
+func cpy9(dst, src fieldElement)
+
+//go:noescape
+func cmp9(a, b fieldElement) int8
+
+//go:noescape
+func add9(c, a, b, p fieldElement)
+
+//go:noescape
+func addn9(a, b fieldElement) uint64
+
+//go:noescape
+func sub9(c, a, b, p fieldElement)
+
+//go:noescape
+func subn9(a, b fieldElement) uint64
+
+//go:noescape
+func _neg9(c, a, p fieldElement)
+
+//go:noescape
+func double9(c, a, p fieldElement)
+
+//go:noescape
+func mul9(c, a, b, p fieldElement, inp uint64)
+
+//go:noescape
+func mul_no_adx_bmi2_9(c, a, b, p fieldElement, inp uint64)
+
+//go:noescape
+func eq10(a, b fieldElement) bool
+	
+//go:noescape
+func mul_two_10(a fieldElement)
+
+//go:noescape
+func div_two_10(a fieldElement)
+
+//go:noescape
+func cpy10(dst, src fieldElement)
+
+//go:noescape
+func cmp10(a, b fieldElement) int8
+
+//go:noescape
+func add10(c, a, b, p fieldElement)
+
+//go:noescape
+func addn10(a, b fieldElement) uint64
+
+//go:noescape
+func sub10(c, a, b, p fieldElement)
+
+//go:noescape
+func subn10(a, b fieldElement) uint64
+
+//go:noescape
+func _neg10(c, a, p fieldElement)
+
+//go:noescape
+func double10(c, a, p fieldElement)
+
+//go:noescape
+func mul10(c, a, b, p fieldElement, inp uint64)
+
+//go:noescape
+func mul_no_adx_bmi2_10(c, a, b, p fieldElement, inp uint64)
+
+//go:noescape
+func eq11(a, b fieldElement) bool
+	
+//go:noescape
+func mul_two_11(a fieldElement)
+
+//go:noescape
+func div_two_11(a fieldElement)
+
+//go:noescape
+func cpy11(dst, src fieldElement)
+
+//go:noescape
+func cmp11(a, b fieldElement) int8
+
+//go:noescape
+func add11(c, a, b, p fieldElement)
+
+//go:noescape
+func addn11(a, b fieldElement) uint64
+
+//go:noescape
+func sub11(c, a, b, p fieldElement)
+
+//go:noescape
+func subn11(a, b fieldElement) uint64
+
+//go:noescape
+func _neg11(c, a, p fieldElement)
+
+//go:noescape
+func double11(c, a, p fieldElement)
+
+//go:noescape
+func mul11(c, a, b, p fieldElement, inp uint64)
+
+//go:noescape
+func mul_no_adx_bmi2_11(c, a, b, p fieldElement, inp uint64)
+
+//go:noescape
+func eq12(a, b fieldElement) bool
+	
+//go:noescape
+func mul_two_12(a fieldElement)
+
+//go:noescape
+func div_two_12(a fieldElement)
+
+//go:noescape
+func cpy12(dst, src fieldElement)
+
+//go:noescape
+func cmp12(a, b fieldElement) int8
+
+//go:noescape
+func add12(c, a, b, p fieldElement)
+
+//go:noescape
+func addn12(a, b fieldElement) uint64
+
+//go:noescape
+func sub12(c, a, b, p fieldElement)
+
+//go:noescape
+func subn12(a, b fieldElement) uint64
+
+//go:noescape
+func _neg12(c, a, p fieldElement)
+
+//go:noescape
+func double12(c, a, p fieldElement)
+
+//go:noescape
+func mul12(c, a, b, p fieldElement, inp uint64)
+
+//go:noescape
+func mul_no_adx_bmi2_12(c, a, b, p fieldElement, inp uint64)
+
+//go:noescape
+func eq13(a, b fieldElement) bool
+	
+//go:noescape
+func mul_two_13(a fieldElement)
+
+//go:noescape
+func div_two_13(a fieldElement)
+
+//go:noescape
+func cpy13(dst, src fieldElement)
+
+//go:noescape
+func cmp13(a, b fieldElement) int8
+
+//go:noescape
+func add13(c, a, b, p fieldElement)
+
+//go:noescape
+func addn13(a, b fieldElement) uint64
+
+//go:noescape
+func sub13(c, a, b, p fieldElement)
+
+//go:noescape
+func subn13(a, b fieldElement) uint64
+
+//go:noescape
+func _neg13(c, a, p fieldElement)
+
+//go:noescape
+func double13(c, a, p fieldElement)
+
+//go:noescape
+func mul13(c, a, b, p fieldElement, inp uint64)
+
+//go:noescape
+func mul_no_adx_bmi2_13(c, a, b, p fieldElement, inp uint64)
+
+//go:noescape
+func eq14(a, b fieldElement) bool
+	
+//go:noescape
+func mul_two_14(a fieldElement)
+
+//go:noescape
+func div_two_14(a fieldElement)
+
+//go:noescape
+func cpy14(dst, src fieldElement)
+
+//go:noescape
+func cmp14(a, b fieldElement) int8
+
+//go:noescape
+func add14(c, a, b, p fieldElement)
+
+//go:noescape
+func addn14(a, b fieldElement) uint64
+
+//go:noescape
+func sub14(c, a, b, p fieldElement)
+
+//go:noescape
+func subn14(a, b fieldElement) uint64
+
+//go:noescape
+func _neg14(c, a, p fieldElement)
+
+//go:noescape
+func double14(c, a, p fieldElement)
+
+//go:noescape
+func mul14(c, a, b, p fieldElement, inp uint64)
+
+//go:noescape
+func mul_no_adx_bmi2_14(c, a, b, p fieldElement, inp uint64)
+
+//go:noescape
+func eq15(a, b fieldElement) bool
+	
+//go:noescape
+func mul_two_15(a fieldElement)
+
+//go:noescape
+func div_two_15(a fieldElement)
+
+//go:noescape
+func cpy15(dst, src fieldElement)
+
+//go:noescape
+func cmp15(a, b fieldElement) int8
+
+//go:noescape
+func add15(c, a, b, p fieldElement)
+
+//go:noescape
+func addn15(a, b fieldElement) uint64
+
+//go:noescape
+func sub15(c, a, b, p fieldElement)
+
+//go:noescape
+func subn15(a, b fieldElement) uint64
+
+//go:noescape
+func _neg15(c, a, p fieldElement)
+
+//go:noescape
+func double15(c, a, p fieldElement)
+
+//go:noescape
+func mul15(c, a, b, p fieldElement, inp uint64)
+
+//go:noescape
+func mul_no_adx_bmi2_15(c, a, b, p fieldElement, inp uint64)
+
+//go:noescape
+func eq16(a, b fieldElement) bool
+	
+//go:noescape
+func mul_two_16(a fieldElement)
+
+//go:noescape
+func div_two_16(a fieldElement)
+
+//go:noescape
+func cpy16(dst, src fieldElement)
+
+//go:noescape
+func cmp16(a, b fieldElement) int8
+
+//go:noescape
+func add16(c, a, b, p fieldElement)
+
+//go:noescape
+func addn16(a, b fieldElement) uint64
+
+//go:noescape
+func sub16(c, a, b, p fieldElement)
+
+//go:noescape
+func subn16(a, b fieldElement) uint64
+
+//go:noescape
+func _neg16(c, a, p fieldElement)
+
+//go:noescape
+func double16(c, a, p fieldElement)
+
+//go:noescape
+func mul16(c, a, b, p fieldElement, inp uint64)
+
+//go:noescape
+func mul_no_adx_bmi2_16(c, a, b, p fieldElement, inp uint64)

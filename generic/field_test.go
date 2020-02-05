@@ -14,7 +14,7 @@ var fuz int = 1
 var targetNumberOfLimb int = -1
 
 var from = 1
-var to = 8
+var to = 16
 
 func TestArch(t *testing.T) {
 	answer := "Yes."

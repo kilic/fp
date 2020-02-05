@@ -204,6 +204,142 @@ func newField(p []byte) (*field, error) {
 		} else {
 			f._mul = mul8
 		}
+	case 9:
+		f.equal = eq9
+		f.copy = cpy9
+		f.cmp = cmp9
+		f.addn = addn9
+		f.subn = subn9
+		f._add = add9
+		f._sub = sub9
+		f._double = double9
+		f._neg = _neg9
+		f.div_two = div_two_9
+		f.mul_two = mul_two_9
+		if nonADXBMI2 {
+			f._mul = mul_no_adx_bmi2_9
+		} else {
+			f._mul = mul9
+		}
+	case 10:
+		f.equal = eq10
+		f.copy = cpy10
+		f.cmp = cmp10
+		f.addn = addn10
+		f.subn = subn10
+		f._add = add10
+		f._sub = sub10
+		f._double = double10
+		f._neg = _neg10
+		f.div_two = div_two_10
+		f.mul_two = mul_two_10
+		if nonADXBMI2 {
+			f._mul = mul_no_adx_bmi2_10
+		} else {
+			f._mul = mul10
+		}
+	case 11:
+		f.equal = eq11
+		f.copy = cpy11
+		f.cmp = cmp11
+		f.addn = addn11
+		f.subn = subn11
+		f._add = add11
+		f._sub = sub11
+		f._double = double11
+		f._neg = _neg11
+		f.div_two = div_two_11
+		f.mul_two = mul_two_11
+		if nonADXBMI2 {
+			f._mul = mul_no_adx_bmi2_11
+		} else {
+			f._mul = mul11
+		}
+	case 12:
+		f.equal = eq12
+		f.copy = cpy12
+		f.cmp = cmp12
+		f.addn = addn12
+		f.subn = subn12
+		f._add = add12
+		f._sub = sub12
+		f._double = double12
+		f._neg = _neg12
+		f.div_two = div_two_12
+		f.mul_two = mul_two_12
+		if nonADXBMI2 {
+			f._mul = mul_no_adx_bmi2_12
+		} else {
+			f._mul = mul12
+		}
+	case 13:
+		f.equal = eq13
+		f.copy = cpy13
+		f.cmp = cmp13
+		f.addn = addn13
+		f.subn = subn13
+		f._add = add13
+		f._sub = sub13
+		f._double = double13
+		f._neg = _neg13
+		f.div_two = div_two_13
+		f.mul_two = mul_two_13
+		if nonADXBMI2 {
+			f._mul = mul_no_adx_bmi2_13
+		} else {
+			f._mul = mul13
+		}
+	case 14:
+		f.equal = eq14
+		f.copy = cpy14
+		f.cmp = cmp14
+		f.addn = addn14
+		f.subn = subn14
+		f._add = add14
+		f._sub = sub14
+		f._double = double14
+		f._neg = _neg14
+		f.div_two = div_two_14
+		f.mul_two = mul_two_14
+		if nonADXBMI2 {
+			f._mul = mul_no_adx_bmi2_14
+		} else {
+			f._mul = mul14
+		}
+	case 15:
+		f.equal = eq15
+		f.copy = cpy15
+		f.cmp = cmp15
+		f.addn = addn15
+		f.subn = subn15
+		f._add = add15
+		f._sub = sub15
+		f._double = double15
+		f._neg = _neg15
+		f.div_two = div_two_15
+		f.mul_two = mul_two_15
+		if nonADXBMI2 {
+			f._mul = mul_no_adx_bmi2_15
+		} else {
+			f._mul = mul15
+		}
+	case 16:
+		f.equal = eq16
+		f.copy = cpy16
+		f.cmp = cmp16
+		f.addn = addn16
+		f.subn = subn16
+		f._add = add16
+		f._sub = sub16
+		f._double = double16
+		f._neg = _neg16
+		f.div_two = div_two_16
+		f.mul_two = mul_two_16
+		if nonADXBMI2 {
+			f._mul = mul_no_adx_bmi2_16
+		} else {
+			f._mul = mul16
+		}
 	default:
 		return nil, fmt.Errorf("limb size %d is not implemented", f.limbSize)
 	}
@@ -391,6 +527,22 @@ func (f *field) toBytesNoTransform(in fieldElement) []byte {
 		return toBytes((*[7]uint64)(in)[:])
 	case 8:
 		return toBytes((*[8]uint64)(in)[:])
+	case 9:
+		return toBytes((*[9]uint64)(in)[:])
+	case 10:
+		return toBytes((*[10]uint64)(in)[:])
+	case 11:
+		return toBytes((*[11]uint64)(in)[:])
+	case 12:
+		return toBytes((*[12]uint64)(in)[:])
+	case 13:
+		return toBytes((*[13]uint64)(in)[:])
+	case 14:
+		return toBytes((*[14]uint64)(in)[:])
+	case 15:
+		return toBytes((*[15]uint64)(in)[:])
+	case 16:
+		return toBytes((*[16]uint64)(in)[:])
 	default:
 		panic("not implemented")
 	}
@@ -475,6 +627,22 @@ func newFieldElement(limbSize int) (fieldElement, error) {
 		return unsafe.Pointer(&[7]uint64{}), nil
 	case 8:
 		return unsafe.Pointer(&[8]uint64{}), nil
+	case 9:
+		return unsafe.Pointer(&[9]uint64{}), nil
+	case 10:
+		return unsafe.Pointer(&[10]uint64{}), nil
+	case 11:
+		return unsafe.Pointer(&[11]uint64{}), nil
+	case 12:
+		return unsafe.Pointer(&[12]uint64{}), nil
+	case 13:
+		return unsafe.Pointer(&[13]uint64{}), nil
+	case 14:
+		return unsafe.Pointer(&[14]uint64{}), nil
+	case 15:
+		return unsafe.Pointer(&[15]uint64{}), nil
+	case 16:
+		return unsafe.Pointer(&[16]uint64{}), nil
 	default:
 		return nil, fmt.Errorf("limb size %d is not implemented", limbSize)
 	}
