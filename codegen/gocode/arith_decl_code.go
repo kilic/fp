@@ -38,7 +38,7 @@ func is_even(a fieldElement) bool
 func eq%[1]d(a, b fieldElement) bool
 	
 //go:noescape
-func mul_two_%[1]d(a fieldElement)
+func mul_two_%[1]d(a fieldElement) uint64
 
 //go:noescape
 func div_two_%[1]d(a fieldElement)

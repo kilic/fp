@@ -29,14 +29,16 @@ func generateMul2(size int, single bool) {
 	if !single {
 		funcName = fmt.Sprintf("%s_%d", funcName, size)
 	}
-	TEXT(funcName, NOSPLIT, fmt.Sprintf("func(a *[%d]uint64)", size))
+	TEXT(funcName, NOSPLIT, fmt.Sprintf("func(a *[%d]uint64) uint64", size))
 	tape := newTape(nil)
 	A := tape.newReprAtParam(size, "a", tape.di(), 0)
 	tape.ax().xorself()
 	for i := 0; i < size; i++ {
 		RCLQ(Imm(1), A.next().s)
 	}
-	RET()
+	RCLQ(Imm(1), RAX)
+	Store(RAX, ReturnIndex(0))
+	tape.ret()
 }
 
 func generateEq(size int, single bool) {
