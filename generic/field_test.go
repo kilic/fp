@@ -29,7 +29,7 @@ func TestMain(m *testing.M) {
 	_fuz := flag.Int("fuzz", 1, "# of iters")
 	nol := flag.Int("nol", 0, "backend bit size")
 	_offset := flag.Int("offset", -1, "random field modulus offset")
-	_from := flag.Int("from", 1, "limb size from")
+	_from := flag.Int("from", 2, "limb size from")
 	_to := flag.Int("to", 16, "limb size to")
 	flag.Parse()
 	fuz = *_fuz
