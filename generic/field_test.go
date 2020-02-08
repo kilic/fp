@@ -10,11 +10,12 @@ import (
 )
 
 var fuz int = 1
+var randFieldOffset int = -1
 
 var targetNumberOfLimb int = -1
 
-var from = 1
-var to = 16
+var from int
+var to int
 
 func TestArch(t *testing.T) {
 	answer := "Yes."
@@ -27,22 +28,45 @@ func TestArch(t *testing.T) {
 func TestMain(m *testing.M) {
 	_fuz := flag.Int("fuzz", 1, "# of iters")
 	nol := flag.Int("nol", 0, "backend bit size")
+	_offset := flag.Int("offset", -1, "random field modulus offset")
+	_from := flag.Int("from", 1, "limb size from")
+	_to := flag.Int("to", 16, "limb size to")
 	flag.Parse()
 	fuz = *_fuz
 	if *nol > 0 {
 		targetNumberOfLimb = *nol
-		if !(targetNumberOfLimb >= from && targetNumberOfLimb <= to) {
+		if targetNumberOfLimb > 16 {
 			panic(fmt.Sprintf("limb size %d not supported", targetNumberOfLimb))
 		}
 		from = targetNumberOfLimb
 		to = targetNumberOfLimb
+	} else {
+		from = *_from
+		to = *_to
+	}
+	if *_offset > -1 {
+		randFieldOffset = *_offset
 	}
 	m.Run()
 }
 
 func randField(limbSize int) *field {
+	var offset int
+	if randFieldOffset > -1 {
+		offset = 63 - randFieldOffset
+	} else {
+		t, err := rand.Int(rand.Reader, new(big.Int).SetUint64(64))
+		if err != nil {
+			panic(err)
+		}
+		offset = int(t.Uint64())
+	}
 	byteSize := limbSize * 8
-	pbig, err := rand.Prime(rand.Reader, 8*byteSize-1)
+	bitSize := ((limbSize-1)*64 + 1) + offset
+	if bitSize < 3 {
+		bitSize = 3
+	}
+	pbig, err := rand.Prime(rand.Reader, bitSize)
 	if err != nil {
 		panic(err)
 	}
@@ -50,6 +74,9 @@ func randField(limbSize int) *field {
 	pbytes := make([]byte, byteSize)
 	copy(pbytes[byteSize-len(rawpbytes):], pbig.Bytes())
 	field, err := newField(pbytes)
+	if field.limbSize != limbSize {
+		panic("bad random field construction")
+	}
 	if err != nil {
 		panic(err)
 	}
@@ -83,6 +110,25 @@ func randBig(max *big.Int) *big.Int {
 		panic(err)
 	}
 	return bi
+}
+
+func BenchmarkInverse(t *testing.B) {
+	var limbSize int
+	if targetNumberOfLimb > 0 {
+		limbSize = targetNumberOfLimb
+	} else {
+		return
+	}
+	field := randField(limbSize)
+	if field.limbSize != limbSize {
+		t.Fatalf("bad field construction")
+	}
+	a := field.randFieldElement(rand.Reader)
+	c := field.newFieldElement()
+	t.ResetTimer()
+	for i := 0; i < t.N; i++ {
+		field.inverse(c, a)
+	}
 }
 
 func BenchmarkField(t *testing.B) {
@@ -129,23 +175,19 @@ func BenchmarkField(t *testing.B) {
 
 func TestShift(t *testing.T) {
 	two := big.NewInt(2)
+	one := big.NewInt(1)
 	for limbSize := from; limbSize < to+1; limbSize++ {
 		t.Run(fmt.Sprintf("%d_shift", limbSize*64), func(t *testing.T) {
 			field := randField(limbSize)
 			a := field.randFieldElement(rand.Reader)
 			bi := field.toBigNoTransform(a)
-			da := field.newFieldElement()
-			field.copy(da, a)
-			field.div_two(da)
-			dbi := new(big.Int).Div(bi, two)
-			dbi_2 := field.toBigNoTransform(da)
-			if dbi.Cmp(dbi_2) != 0 {
-				t.Fatalf("bad div 2 operation")
-			}
 			ma := field.newFieldElement()
 			field.copy(ma, a)
 			field.mul_two(ma)
-			mbi := new(big.Int).Mul(bi, two)
+			mask := new(big.Int)
+			mask.SetBit(mask, field.byteSize()*8, 1).Sub(mask, one)
+			mbi := new(big.Int)
+			mbi.Mul(bi, two).And(mbi, mask)
 			mbi_2 := field.toBigNoTransform(ma)
 			if mbi.Cmp(mbi_2) != 0 {
 				t.Fatalf("bad mul 2 operation")
@@ -506,4 +548,12 @@ func TestInversion(t *testing.T) {
 			}
 		})
 	}
+}
+
+// fmt.Printf("u = %#x\n", field.toBytesNoTransform(u))
+func (f *field) debug() {
+	fmt.Println(f.limbSize)
+	fmt.Println(f.pbig.BitLen())
+	fmt.Printf("p = %#x\n", f.pbig)
+	fmt.Printf("r = %#x\n", f.rbig)
 }
