@@ -14,7 +14,10 @@ func TestFuzzMultiplicationAgainstBigInt(t *testing.T) {
 			for i := 0; i < fuz; i++ {
 				field := randField(limbSize)
 				if field.limbSize != limbSize {
-					t.Fatalf("bad field construction")
+					fmt.Println("---")
+					fmt.Println(i)
+					fmt.Println("bad field construction")
+					field.debug()
 				}
 				a := field.randFieldElement(rand.Reader)
 				b := field.randFieldElement(rand.Reader)
@@ -33,7 +36,6 @@ func TestFuzzMultiplicationAgainstBigInt(t *testing.T) {
 					fmt.Printf("bR\n%#x\n", field.toBytesNoTransform(b))
 					fmt.Printf("cR\n%#x\n", field.toBytesNoTransform(c))
 					fmt.Printf("c\n%#x\n", out_2)
-					t.Fatal("i", i)
 				}
 			}
 		})
@@ -54,7 +56,6 @@ func TestFuzzExponentiation(t *testing.T) {
 					fmt.Println(i)
 					field.debug()
 					fmt.Printf("aR\n%#x\n", field.toBytesNoTransform(a))
-					t.Fatal("i", i)
 				}
 			}
 		})
