@@ -19,28 +19,30 @@ type fieldElement = unsafe.Pointer
 var nonADXBMI2 = !(cpu.X86.HasADX && cpu.X86.HasBMI2) || forceNonADXBMI2()
 
 type field struct {
-	limbSize int
-	p        fieldElement
-	inp      uint64
-	one      fieldElement
-	_one     fieldElement
-	zero     fieldElement
-	r        fieldElement
-	r2       fieldElement
-	pbig     *big.Int
-	rbig     *big.Int
-	equal    func(a, b fieldElement) bool
-	cmp      func(a, b fieldElement) int8
-	copy     func(dst, stc fieldElement)
-	_mul     func(c, a, b, p fieldElement, inp uint64)
-	_add     func(c, a, b, p fieldElement)
-	_double  func(c, a, p fieldElement)
-	_sub     func(c, a, b, p fieldElement)
-	_neg     func(c, a, p fieldElement)
-	addn     func(a, b fieldElement) uint64
-	subn     func(a, b fieldElement) uint64
-	div_two  func(a fieldElement)
-	mul_two  func(a fieldElement)
+	limbSize       int
+	fieldBitSize   int
+	modulusBitSize int
+	p              fieldElement
+	inp            uint64
+	one            fieldElement
+	_one           fieldElement
+	zero           fieldElement
+	r              fieldElement
+	r2             fieldElement
+	pbig           *big.Int
+	rbig           *big.Int
+	equal          func(a, b fieldElement) bool
+	cmp            func(a, b fieldElement) int8
+	copy           func(dst, stc fieldElement)
+	_mul           func(c, a, b, p fieldElement, inp uint64)
+	_add           func(c, a, b, p fieldElement)
+	_double        func(c, a, p fieldElement)
+	_sub           func(c, a, b, p fieldElement)
+	_neg           func(c, a, p fieldElement)
+	addn           func(a, b fieldElement) uint64
+	subn           func(a, b fieldElement) uint64
+	div_two        func(a fieldElement)
+	mul_two        func(a fieldElement) uint64
 }
 
 func newField(p []byte) (*field, error) {
@@ -66,6 +68,8 @@ func newField(p []byte) (*field, error) {
 		return nil, fmt.Errorf("field is not applicable\n%s", hex.EncodeToString(p))
 	}
 	f.inp = inpT.Uint64()
+	f.fieldBitSize = f.limbSize * 64
+	f.modulusBitSize = f.pbig.BitLen()
 	switch f.limbSize {
 	case 1:
 		f.equal = eq1
@@ -368,7 +372,7 @@ func (f *field) sub(c, a, b fieldElement) {
 
 func (f *field) neg(c, a fieldElement) {
 	if f.equal(a, f.zero) {
-		f.copy(a, f.zero)
+		f.copy(c, a)
 		return
 	}
 	f._neg(c, a, f.p)
@@ -682,6 +686,10 @@ func padBytes(in []byte, size int) []byte {
 }
 
 func (f *field) inverse(inv, e fieldElement) bool {
+	if f.isZero(e) {
+		f.copy(inv, e)
+		return true
+	}
 	u, v, s, r := f.newFieldElement(),
 		f.newFieldElement(),
 		f.newFieldElement(),
@@ -692,10 +700,9 @@ func (f *field) inverse(inv, e fieldElement) bool {
 	f.copy(s, f._one)
 	var k int
 	var found = false
-	byteSize := f.byteSize()
-	bitSize := byteSize * 8
 	// Phase 1
-	for i := 0; i < bitSize*2; i++ {
+	var z uint64
+	for i := 0; i < f.fieldBitSize*2; i++ {
 		if f.equal(v, zero) {
 			found = true
 			break
@@ -715,7 +722,7 @@ func (f *field) inverse(inv, e fieldElement) bool {
 			f.subn(v, u)
 			f.div_two(v)
 			f.addn(s, r)
-			f.mul_two(r)
+			z = f.mul_two(r)
 		}
 		k += 1
 	}
@@ -723,22 +730,42 @@ func (f *field) inverse(inv, e fieldElement) bool {
 		f.copy(inv, zero)
 		return false
 	}
-	if k < bitSize {
-		/*
-			this is unexpected
-		*/
+
+	if k < f.modulusBitSize || k > f.fieldBitSize+f.modulusBitSize {
 		f.copy(inv, zero)
 		return false
 	}
 
-	if f.cmp(r, f.p) != -1 {
+	if f.cmp(r, f.p) != -1 || z > 0 {
 		f.subn(r, f.p)
 	}
 	f.copy(u, f.p)
 	f.subn(u, r)
 
 	// Phase 2
-	for i := k; i < bitSize*2; i++ {
+
+	// alternative 1
+
+	// if f.modulusBitSize <= k && k <= f.fieldBitSize {
+	// 	f.mul(u, u, f.r2)
+	// 	k += f.fieldBitSize
+	// } else {
+
+	// }
+	// f.mul(u, u, f.r2)
+	// z := new(big.Int)
+	// z.SetBit(z, 2*f.fieldBitSize-k, 1)
+	// ze, err := f.newFieldElementFromBytesNoTransform(padBytes(z.Bytes(), f.byteSize()))
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// f.mul(u, ze, u)
+	// f.copy(inv, u)
+	// return true
+
+	// alternative 2
+
+	for i := k; i < f.fieldBitSize*2; i++ {
 		f.double(u, u)
 	}
 	f.copy(inv, u)

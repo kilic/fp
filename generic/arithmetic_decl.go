@@ -1,14 +1,13 @@
 package fp
 
-
 //go:noescape
 func is_even(a fieldElement) bool
 
 //go:noescape
 func eq1(a, b fieldElement) bool
-	
+
 //go:noescape
-func mul_two_1(a fieldElement)
+func mul_two_1(a fieldElement) uint64
 
 //go:noescape
 func div_two_1(a fieldElement)
@@ -45,9 +44,9 @@ func mul_no_adx_bmi2_1(c, a, b, p fieldElement, inp uint64)
 
 //go:noescape
 func eq2(a, b fieldElement) bool
-	
+
 //go:noescape
-func mul_two_2(a fieldElement)
+func mul_two_2(a fieldElement) uint64
 
 //go:noescape
 func div_two_2(a fieldElement)
@@ -84,9 +83,9 @@ func mul_no_adx_bmi2_2(c, a, b, p fieldElement, inp uint64)
 
 //go:noescape
 func eq3(a, b fieldElement) bool
-	
+
 //go:noescape
-func mul_two_3(a fieldElement)
+func mul_two_3(a fieldElement) uint64
 
 //go:noescape
 func div_two_3(a fieldElement)
@@ -123,9 +122,9 @@ func mul_no_adx_bmi2_3(c, a, b, p fieldElement, inp uint64)
 
 //go:noescape
 func eq4(a, b fieldElement) bool
-	
+
 //go:noescape
-func mul_two_4(a fieldElement)
+func mul_two_4(a fieldElement) uint64
 
 //go:noescape
 func div_two_4(a fieldElement)
@@ -162,9 +161,9 @@ func mul_no_adx_bmi2_4(c, a, b, p fieldElement, inp uint64)
 
 //go:noescape
 func eq5(a, b fieldElement) bool
-	
+
 //go:noescape
-func mul_two_5(a fieldElement)
+func mul_two_5(a fieldElement) uint64
 
 //go:noescape
 func div_two_5(a fieldElement)
@@ -201,9 +200,9 @@ func mul_no_adx_bmi2_5(c, a, b, p fieldElement, inp uint64)
 
 //go:noescape
 func eq6(a, b fieldElement) bool
-	
+
 //go:noescape
-func mul_two_6(a fieldElement)
+func mul_two_6(a fieldElement) uint64
 
 //go:noescape
 func div_two_6(a fieldElement)
@@ -240,9 +239,9 @@ func mul_no_adx_bmi2_6(c, a, b, p fieldElement, inp uint64)
 
 //go:noescape
 func eq7(a, b fieldElement) bool
-	
+
 //go:noescape
-func mul_two_7(a fieldElement)
+func mul_two_7(a fieldElement) uint64
 
 //go:noescape
 func div_two_7(a fieldElement)
@@ -279,9 +278,9 @@ func mul_no_adx_bmi2_7(c, a, b, p fieldElement, inp uint64)
 
 //go:noescape
 func eq8(a, b fieldElement) bool
-	
+
 //go:noescape
-func mul_two_8(a fieldElement)
+func mul_two_8(a fieldElement) uint64
 
 //go:noescape
 func div_two_8(a fieldElement)
@@ -318,9 +317,9 @@ func mul_no_adx_bmi2_8(c, a, b, p fieldElement, inp uint64)
 
 //go:noescape
 func eq9(a, b fieldElement) bool
-	
+
 //go:noescape
-func mul_two_9(a fieldElement)
+func mul_two_9(a fieldElement) uint64
 
 //go:noescape
 func div_two_9(a fieldElement)
@@ -357,9 +356,9 @@ func mul_no_adx_bmi2_9(c, a, b, p fieldElement, inp uint64)
 
 //go:noescape
 func eq10(a, b fieldElement) bool
-	
+
 //go:noescape
-func mul_two_10(a fieldElement)
+func mul_two_10(a fieldElement) uint64
 
 //go:noescape
 func div_two_10(a fieldElement)
@@ -396,9 +395,9 @@ func mul_no_adx_bmi2_10(c, a, b, p fieldElement, inp uint64)
 
 //go:noescape
 func eq11(a, b fieldElement) bool
-	
+
 //go:noescape
-func mul_two_11(a fieldElement)
+func mul_two_11(a fieldElement) uint64
 
 //go:noescape
 func div_two_11(a fieldElement)
@@ -435,9 +434,9 @@ func mul_no_adx_bmi2_11(c, a, b, p fieldElement, inp uint64)
 
 //go:noescape
 func eq12(a, b fieldElement) bool
-	
+
 //go:noescape
-func mul_two_12(a fieldElement)
+func mul_two_12(a fieldElement) uint64
 
 //go:noescape
 func div_two_12(a fieldElement)
@@ -474,9 +473,9 @@ func mul_no_adx_bmi2_12(c, a, b, p fieldElement, inp uint64)
 
 //go:noescape
 func eq13(a, b fieldElement) bool
-	
+
 //go:noescape
-func mul_two_13(a fieldElement)
+func mul_two_13(a fieldElement) uint64
 
 //go:noescape
 func div_two_13(a fieldElement)
@@ -513,9 +512,9 @@ func mul_no_adx_bmi2_13(c, a, b, p fieldElement, inp uint64)
 
 //go:noescape
 func eq14(a, b fieldElement) bool
-	
+
 //go:noescape
-func mul_two_14(a fieldElement)
+func mul_two_14(a fieldElement) uint64
 
 //go:noescape
 func div_two_14(a fieldElement)
@@ -552,9 +551,9 @@ func mul_no_adx_bmi2_14(c, a, b, p fieldElement, inp uint64)
 
 //go:noescape
 func eq15(a, b fieldElement) bool
-	
+
 //go:noescape
-func mul_two_15(a fieldElement)
+func mul_two_15(a fieldElement) uint64
 
 //go:noescape
 func div_two_15(a fieldElement)
@@ -591,9 +590,9 @@ func mul_no_adx_bmi2_15(c, a, b, p fieldElement, inp uint64)
 
 //go:noescape
 func eq16(a, b fieldElement) bool
-	
+
 //go:noescape
-func mul_two_16(a fieldElement)
+func mul_two_16(a fieldElement) uint64
 
 //go:noescape
 func div_two_16(a fieldElement)
