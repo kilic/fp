@@ -727,13 +727,11 @@ func (f *field) inverse(inv, e fieldElement) bool {
 		k += 1
 	}
 	if !found {
-		fmt.Println("not found")
 		f.copy(inv, zero)
 		return false
 	}
 
 	if k < f.modulusBitSize || k > f.fieldBitSize+f.modulusBitSize {
-		fmt.Println(k, f.modulusBitSize, "unexpected")
 		f.copy(inv, zero)
 		return false
 	}
