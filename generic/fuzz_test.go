@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestMultiplicationFuzzAgainstBigInt(t *testing.T) {
+func TestFuzzMultiplicationAgainstBigInt(t *testing.T) {
 	for limbSize := from; limbSize < to+1; limbSize++ {
 		t.Run(fmt.Sprintf("%d", limbSize*64), func(t *testing.T) {
 			for i := 0; i < fuz; i++ {
@@ -32,6 +32,7 @@ func TestMultiplicationFuzzAgainstBigInt(t *testing.T) {
 					fmt.Printf("aR\n%#x\n", field.toBytesNoTransform(a))
 					fmt.Printf("bR\n%#x\n", field.toBytesNoTransform(b))
 					fmt.Printf("cR\n%#x\n", field.toBytesNoTransform(c))
+					fmt.Printf("c\n%#x\n", out_2)
 					t.Fatal("i", i)
 				}
 			}
@@ -39,7 +40,7 @@ func TestMultiplicationFuzzAgainstBigInt(t *testing.T) {
 	}
 }
 
-func TestExponentiationFuzz(t *testing.T) {
+func TestFuzzExponentiation(t *testing.T) {
 	for limbSize := from; limbSize < to+1; limbSize++ {
 		t.Run(fmt.Sprintf("%d", limbSize*64), func(t *testing.T) {
 			for i := 0; i < fuz; i++ {
@@ -60,7 +61,7 @@ func TestExponentiationFuzz(t *testing.T) {
 	}
 }
 
-func TestInversionFuzz(t *testing.T) {
+func TestFuzzInversion(t *testing.T) {
 	for limbSize := from; limbSize < to+1; limbSize++ {
 		t.Run(fmt.Sprintf("%d", limbSize*64), func(t *testing.T) {
 			for i := 0; i < fuz; i++ {
@@ -75,6 +76,20 @@ func TestInversionFuzz(t *testing.T) {
 					fmt.Printf("u\n%#x\n", field.toBytesNoTransform(u))
 				}
 				a := field.randFieldElement(rand.Reader)
+				inv := field.toBig(a)
+				inv.ModInverse(inv, field.pbig)
+				field.inverse(u, a)
+				inv2 := field.toBig(u)
+				if inv.Cmp(inv2) != 0 {
+					fmt.Println("---")
+					fmt.Println("cross against big int")
+					fmt.Println(i)
+					field.debug()
+					fmt.Printf("a\n%#x\n", field.toBytesNoTransform(a))
+					fmt.Printf("u\n%#x\n", field.toBytesNoTransform(u))
+					fmt.Printf("u2\n%#x\n", inv2.Bytes())
+				}
+				a = field.randFieldElement(rand.Reader)
 				v := field.randFieldElement(rand.Reader)
 				field.inverse(v, a)
 				field.mul(u, v, a)
