@@ -180,7 +180,7 @@ func TestShift(t *testing.T) {
 	two := big.NewInt(2)
 	one := big.NewInt(1)
 	for limbSize := from; limbSize < to+1; limbSize++ {
-		t.Run(fmt.Sprintf("%d_shift", limbSize*64), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%d", limbSize*64), func(t *testing.T) {
 			field := randField(limbSize)
 			a := field.randFieldElement(rand.Reader)
 			bi := field.toBigNoTransform(a)
@@ -201,7 +201,7 @@ func TestShift(t *testing.T) {
 
 func TestCompare(t *testing.T) {
 	for limbSize := from; limbSize < to+1; limbSize++ {
-		t.Run(fmt.Sprintf("%d_compare", limbSize*64), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%d", limbSize*64), func(t *testing.T) {
 			field := randField(limbSize)
 			if field.cmp(field.r, field.r) != 0 {
 				t.Fatalf("r == r (cmp)")
@@ -233,7 +233,7 @@ func TestCompare(t *testing.T) {
 
 func TestCopy(t *testing.T) {
 	for limbSize := from; limbSize < to+1; limbSize++ {
-		t.Run(fmt.Sprintf("%d_copy", limbSize*64), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%d", limbSize*64), func(t *testing.T) {
 			field := randField(limbSize)
 			a := field.randFieldElement(rand.Reader)
 			b := field.newFieldElement()
@@ -247,7 +247,7 @@ func TestCopy(t *testing.T) {
 
 func TestSerialization(t *testing.T) {
 	for limbSize := from; limbSize < to+1; limbSize++ {
-		t.Run(fmt.Sprintf("%d_serialization", limbSize*64), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%d", limbSize*64), func(t *testing.T) {
 			field := randField(limbSize)
 			if field.limbSize != limbSize {
 				t.Fatalf("bad field construction\n")
@@ -310,7 +310,7 @@ func TestSerialization(t *testing.T) {
 
 func TestAdditionCrossAgainstBigInt(t *testing.T) {
 	for limbSize := from; limbSize < to+1; limbSize++ {
-		t.Run(fmt.Sprintf("%d_addition_cross", limbSize*64), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%d", limbSize*64), func(t *testing.T) {
 			for i := 0; i < fuz; i++ {
 				field := randField(limbSize)
 				for j := 0; j < fieldLifetime; j++ {
@@ -355,7 +355,7 @@ func TestAdditionCrossAgainstBigInt(t *testing.T) {
 
 func TestAdditionProperties(t *testing.T) {
 	for limbSize := from; limbSize < to+1; limbSize++ {
-		t.Run(fmt.Sprintf("%d_addition_properties", limbSize*64), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%d", limbSize*64), func(t *testing.T) {
 			for i := 0; i < fuz; i++ {
 				field := randField(limbSize)
 				for j := 0; j < fieldLifetime; j++ {
@@ -426,7 +426,7 @@ func TestAdditionProperties(t *testing.T) {
 
 func TestMultiplicationCrossAgainstBigInt(t *testing.T) {
 	for limbSize := from; limbSize < to+1; limbSize++ {
-		t.Run(fmt.Sprintf("%d_multiplication_cross", limbSize*64), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%d", limbSize*64), func(t *testing.T) {
 			for i := 0; i < fuz; i++ {
 				field := randField(limbSize)
 				for j := 0; j < fieldLifetime; j++ {
@@ -453,7 +453,7 @@ func TestMultiplicationCrossAgainstBigInt(t *testing.T) {
 
 func TestMultiplicationProperties(t *testing.T) {
 	for limbSize := from; limbSize < to+1; limbSize++ {
-		t.Run(fmt.Sprintf("%d_multiplication_properties", limbSize*64), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%d", limbSize*64), func(t *testing.T) {
 			for i := 0; i < fuz; i++ {
 				field := randField(limbSize)
 				for j := 0; j < fieldLifetime; j++ {
@@ -493,7 +493,7 @@ func TestMultiplicationProperties(t *testing.T) {
 
 func TestExponentiation(t *testing.T) {
 	for limbSize := from; limbSize < to+1; limbSize++ {
-		t.Run(fmt.Sprintf("%d_exponention", limbSize*64), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%d", limbSize*64), func(t *testing.T) {
 			for i := 0; i < fuz; i++ {
 				field := randField(limbSize)
 				for j := 0; j < fieldLifetime; j++ {
@@ -535,7 +535,7 @@ func TestExponentiation(t *testing.T) {
 
 func TestInversion(t *testing.T) {
 	for limbSize := from; limbSize < to+1; limbSize++ {
-		t.Run(fmt.Sprintf("%d_inversion", limbSize*64), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%d", limbSize*64), func(t *testing.T) {
 			for i := 0; i < fuz; i++ {
 				field := randField(limbSize)
 				for j := 0; j < fieldLifetime; j++ {
